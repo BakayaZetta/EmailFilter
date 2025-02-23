@@ -33,37 +33,25 @@ def extract_email(address: str) -> str:
     adr = re.search(r'<(.*?)>', address) 
     return adr.group(1) if adr else address 
 
-def check_spf(eml_file_path: str) -> SPFStatus:
+def check_spf(email_obj) -> SPFStatus:
     """
     Checks the SPF status of an email.
-
-    :param eml_file_path: Path to the .eml file containing the email.
+    :param email_obj: The email object.
     :return: SPFStatus enum indicating the SPF status of the email.
     """
-
-    # Opening the email and parsing
-    with open(eml_file_path, 'rb') as f:
-        msg = BytesParser(policy=policy.default).parse(f)
-
-    sender = msg.get('Sender', msg['From'])
+    sender = email_obj.get('Sender', email_obj['From'])
     sender_email = extract_email(sender)
     domain = sender_email.split('@')[-1].strip()
-
     ip_address = None
     # Finding the IP of the sender
-    # ex : Received: from 20.84.152.113 by 65.23.81.142; ...
-    for header in msg.get_all('Received', []):
+    for header in email_obj.get_all('Received', []):
         match = re.search(r'\[([\d\.]+)\]', header)
         if match:
             ip_address = match.group(1)
             break
-    
-    # ip not found
     if not ip_address:
-        return SPFStatus.NO_IP 
-
+        return SPFStatus.NO_IP
     try:
-        # getting the SPF record
         answers = dns.resolver.resolve(domain, 'TXT')
         spf_record = None
         for r in answers:
@@ -71,17 +59,14 @@ def check_spf(eml_file_path: str) -> SPFStatus:
             if 'v=spf1' in txt_record:
                 spf_record = txt_record
                 break
-
         if not spf_record:
             return SPFStatus.NO_SPF_RECORD
     except (dns.resolver.NoAnswer, dns.resolver.NXDOMAIN):
         return SPFStatus.INVALID_DOMAIN
     except Exception as e:
         return SPFStatus.DNS_ERROR
-
     try:
-        # checking the SPF record
-        result = spf.check2(i=ip_address, s=sender_email, h=msg.get('X-HELO', 'N/A'))
+        result = spf.check2(i=ip_address, s=sender_email, h=email_obj.get('X-HELO', 'N/A'))
         spf_status = result[0]
         if spf_status == 'pass':
             return SPFStatus.VALID

@@ -44,27 +44,19 @@ def extract_dkim_domain_selector(dkim_header: str):
     #(d,s)
     return d.group(1), s.group(1)
 
-def check_dkim(eml_file_path: str) -> DKIMStatus:
+def check_dkim(email_obj) -> DKIMStatus:
     """
     Checks the DKIM status of an email.
-
-    :param eml_file_path: Path to the .eml file containing the email.
+    :param email_obj: The email object.
     :return: DKIMStatus enum indicating the DKIM status of the email.
     """
-    with open(eml_file_path, 'rb') as f:
-        msg = BytesParser(policy=policy.default).parse(f)
-
-    dkim_header = msg.get('DKIM-Signature')
+    dkim_header = email_obj.get('DKIM-Signature')
     if not dkim_header:
         return DKIMStatus.NO_DKIM
-
     domain, selector = extract_dkim_domain_selector(dkim_header)
     if not domain or not selector:
         return DKIMStatus.NO_DKIM
-
     try:
-        # now that we have (d,s)
-        # we look for the public key in the dns.txt
         dns_txt_record = dns.resolver.resolve(f'{selector}._domainkey.{domain}', 'TXT')
         public_key = None
         for record in dns_txt_record:
@@ -72,14 +64,10 @@ def check_dkim(eml_file_path: str) -> DKIMStatus:
                 if txt_string.decode().startswith('v=DKIM1'):
                     public_key = txt_string.decode()
                     break
-
         if not public_key:
             return DKIMStatus.NO_DKIM
-
-        # a public key exist, so the dkim was signed
-        # dkim.Verifier exists, and allow us to check if the dkim is valid
         try:
-            verifier = dkim.DKIM(msg.as_bytes())
+            verifier = dkim.DKIM(email_obj.as_bytes())
             if verifier.verify():
                 return DKIMStatus.VALID
             else:
@@ -88,7 +76,6 @@ def check_dkim(eml_file_path: str) -> DKIMStatus:
             return DKIMStatus.INVALID
         except Exception as e:
             return DKIMStatus.DKIM_ERROR
-
     except dns.resolver.NoAnswer:
         return DKIMStatus.DNS_ERROR
     except dns.resolver.NXDOMAIN:

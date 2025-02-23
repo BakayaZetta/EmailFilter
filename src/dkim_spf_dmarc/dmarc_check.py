@@ -18,41 +18,31 @@ def extract_email(address: str) -> str:
     match = re.search(r'<(.*?)>', address)
     return match.group(1) if match else address
 
-def check_dmarc(eml_file_path: str) -> DMARCStatus:
+def check_dmarc(email_obj) -> DMARCStatus:
     """
-    Checks the DMARC status of an email. 
-    If it exists and spf + dkim OK, Pass
+    Checks the DMARC status of an email.
+    :param email_obj: The email object.
+    :return: DMARCStatus enum indicating the DMARC status of the email.
     """
-    # getting spf + dkim status
-    spf_status = check_spf(eml_file_path)
-    dkim_status = check_dkim(eml_file_path)
-
-    with open(eml_file_path, 'rb') as f:
-        msg = BytesParser(policy=policy.default).parse(f)
-
-    sender = msg.get('Sender', msg['From'])
+    spf_status = check_spf(email_obj)
+    dkim_status = check_dkim(email_obj)
+    sender = email_obj.get('Sender', email_obj['From'])
     sender_email = extract_email(sender)
     domain = sender_email.split('@')[-1].strip()
-
     try:
         dmarc_record = dns.resolver.resolve(f'_dmarc.{domain}', 'TXT')
         dmarc_policy = None
         for record in dmarc_record:
             for txt_string in record.strings:
-                # check if there is dmarc1 label 
                 if txt_string.decode().startswith('v=DMARC1'):
                     dmarc_policy = txt_string.decode()
                     break
-
         if not dmarc_policy:
             return DMARCStatus.NO_DMARC
-
-        # there is a dmark policy, check if spf and dkim ok
         if (spf_status == SPFStatus.VALID or dkim_status == DKIMStatus.VALID):
             return DMARCStatus.PASS
         else:
             return DMARCStatus.FAIL
-
     except (dns.resolver.NoAnswer, dns.resolver.NXDOMAIN):
         return DMARCStatus.NO_DMARC
     except Exception as e:
