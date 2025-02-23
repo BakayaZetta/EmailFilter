@@ -2,7 +2,3 @@ transformers
 datasets
 evaluate
 accelerate
-torch
-html2text
-nltk
-bs4
