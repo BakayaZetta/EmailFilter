@@ -6,3 +6,6 @@ torch
 html2text
 nltk
 bs4
+dmarc-check
+spf-check
+dkim-check

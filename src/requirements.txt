@@ -2,3 +2,5 @@ asyncio
 pyspf
 dnspython
 dkimpy
+mysql-connector-python
+

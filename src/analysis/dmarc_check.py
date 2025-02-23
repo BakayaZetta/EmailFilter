@@ -2,8 +2,8 @@ import dns.resolver
 from email import policy
 from email.parser import BytesParser
 from enum import Enum
-from spf_check import check_spf, SPFStatus
-from dkim_check import check_dkim, DKIMStatus
+from .spf_check import check_spf, SPFStatus
+from .dkim_check import check_dkim, DKIMStatus
 
 class DMARCStatus(Enum):
     PASS = "DMARC pass: email is aligned with DMARC policy."
