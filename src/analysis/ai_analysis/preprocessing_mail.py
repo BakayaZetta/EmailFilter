@@ -3,8 +3,28 @@ import html2text
 import re
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
 import nltk
+import chardet
+import codecs
 
 nltk.download('punkt_tab')
+
+
+def detect_encoding(file_path):
+    """Détecte et valide l'encodage d'un fichier."""
+    with open(file_path, 'rb') as f:
+        raw_data = f.read(4096)
+    
+    result = chardet.detect(raw_data)
+    encoding = result.get('encoding', 'latin-1')
+    
+    # Validation de l'encodage détecté
+    try:
+        codecs.lookup(encoding)
+    except (LookupError, TypeError):
+        encoding = 'latin-1'
+    
+    return encoding
+
 
 def clean_email_text(text:str)->str:
     """
@@ -28,88 +48,89 @@ def clean_email_text(text:str)->str:
     text = re.sub(r'(?<=\s)\|(?=\s)|^\||\|$', '', text) # isolated pipes
     return text
 
-def extract_email_text(file_path)->str:
-    """
-    @brief Extracts and cleans email text from a file.
 
-    This function opens the email file located at the specified file_path, parses it into an email message object,
-    and extracts the text content. For multipart emails, it walks through the parts to retrieve either the "text/plain"
-    or "text/html" content. If HTML content is found, it converts it to plain text using html2text. Finally, the extracted
-    text is cleaned using the clean_email_text function.
+def extract_email_text(file_path) -> str:
+    """Extrait le texte d'un email avec gestion renforcée des encodages."""
+    encoding = detect_encoding(file_path)
+    text = ""
 
-    @param file_path The path to the email file.
-    @return The cleaned text extracted from the email.
-    """
-    with open(file_path, 'r', encoding='utf-8') as f:
+    with open(file_path, 'r', encoding=encoding, errors='replace') as f:
         msg = email.message_from_file(f)
+
+    def decode_payload(payload, charset):
+        """Décode le payload avec gestion des erreurs et validation de charset."""
+        # Validation du charset
+        try:
+            codecs.lookup(charset)
+        except (LookupError, TypeError):
+            charset = encoding  # Fallback à l'encodage principal
+            
+        try:
+            return payload.decode(charset, errors='replace')
+        except:
+            return payload.decode('latin-1', errors='replace')
 
     if msg.is_multipart():
         for part in msg.walk():
             content_type = part.get_content_type()
+            payload = part.get_payload(decode=True)
+            
+            if not payload:
+                continue
+                
+            charset = part.get_content_charset() or encoding
+            decoded = decode_payload(payload, charset)
+
             if content_type == "text/plain":
-                text = part.get_payload(decode=True).decode(part.get_content_charset() or 'utf-8')
+                text += decoded
             elif content_type == "text/html":
-                html = part.get_payload(decode=True).decode(part.get_content_charset() or 'utf-8')
-                text = html2text.html2text(html)
+                text += html2text.html2text(decoded)
     else:
-        content_type = msg.get_content_type()
-        if content_type == "text/plain":
-            text = msg.get_payload(decode=True).decode(msg.get_content_charset() or 'utf-8')
-        elif content_type == "text/html":
-            html = msg.get_payload(decode=True).decode(msg.get_content_charset() or 'utf-8')
-            text = html2text.html2text(html)
+        payload = msg.get_payload(decode=True)
+        if payload:
+            charset = msg.get_content_charset() or encoding
+            decoded = decode_payload(payload, charset)
+            text = decoded if msg.get_content_type() == "text/plain" else html2text.html2text(decoded)
 
     return clean_email_text(text)
 
-def split_512_token(text: str):
+
+
+
+def split_512_token(text: str) -> list:
     """
-    Splits a given text into groups of sentences, ensuring each group does not exceed 512 tokens.
-
-    This function tokenizes the input text into sentences and groups them such that the total number
-    of tokens in each group does not exceed 512. It uses a pre-trained tokenizer from the Hugging Face
-    transformers library.
-
-    Parameters:
-    text (str): The input text to be split into groups of sentences.
-
-    Returns:
-    list: A list of lists, where each sublist contains sentences whose total token count does not exceed 512.
+    Split text into chunks that will NEVER exceed 512 tokens when processed by the model.
+    Uses direct tokenization/encoding to ensure accuracy.
     """
-
-    # Initialiser le tokenizer
     tokenizer = AutoTokenizer.from_pretrained("ealvaradob/bert-finetuned-phishing")
-
-    # tokenizer = AutoTokenizer.from_pretrained("cybersectony/phishing-email-detection-distilbert_v2.4.1")
-
-    # Segmenter le texte en phrases
-    sentences = nltk.sent_tokenize(text)
-
-    # Initialiser des variables pour suivre les groupes de tokens
-    current_group = []
-    current_group_tokens = 0
-    all_groups = []
-
-    # Parcourir chaque phrase
-    for sentence in sentences:
-
-        # Tokeniser la phrase
-        tokens = tokenizer.tokenize(sentence)
-        num_tokens = len(tokens)
-
-        # Vérifier si l'ajout de cette phrase dépasse la limite de 512 tokens
-        if current_group_tokens + num_tokens > 512:
-            # Si oui, finaliser le groupe actuel et commencer un nouveau groupe
-            all_groups.append(current_group)
-            current_group = []
-            current_group_tokens = 0
-
-        # Ajouter la phrase au groupe actuel
-        current_group.append(sentence)
-        current_group_tokens += num_tokens
-
-    # Ajouter le dernier groupe s'il n'est pas vide
-    if current_group:
-        all_groups.append(current_group)
-
-    return all_groups
-
+    
+    # First, handle empty text
+    if not text.strip():
+        return []
+    
+    # Tokenize entire text while keeping track of word positions
+    tokens = tokenizer.tokenize(text)
+    
+    # Split into chunks of 510 tokens (leaving room for [CLS] and [SEP])
+    chunk_size = 510
+    chunks = [tokens[i:i+chunk_size] for i in range(0, len(tokens), chunk_size)]
+    
+    # Convert token chunks back to text
+    text_chunks = [tokenizer.convert_tokens_to_string(chunk) for chunk in chunks]
+    
+    # Final safety check: verify encoded length
+    validated_chunks = []
+    for chunk in text_chunks:
+        encoded = tokenizer.encode(chunk, add_special_tokens=True)
+        if len(encoded) > 512:
+            # If somehow still too long, truncate using official method
+            encoded = tokenizer.encode(
+                chunk,
+                add_special_tokens=True,
+                max_length=512,
+                truncation=True
+            )
+            chunk = tokenizer.decode(encoded, skip_special_tokens=True)
+        validated_chunks.append([chunk])
+    
+    return validated_chunks
