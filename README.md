@@ -16,13 +16,13 @@
 
 ### Installation
 
-####From Docker Hub
+**From Docker Hub**
 
 ```bash
 docker pull matthl2002/detectish
 ```
 
-####From Git
+**From Git**
 
 1. **Clone the repository**:
    ```bash
