@@ -1,0 +1,6 @@
+torch
+html2text
+nltk
+bs4
+chardet
+seaborn

@@ -5,6 +5,8 @@ from bs4 import BeautifulSoup
 from email.policy import default
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
 import torch
+import json 
+
 
 def analyze_emails(file_path):
     """
@@ -83,5 +85,23 @@ model = AutoModelForSequenceClassification.from_pretrained("ealvaradob/bert-fine
 
 classifier = pipeline('text-classification', model=model, tokenizer=tokenizer)
 
-mail = analyze_emails('phishing_email_example/0.eml')
-print(phishing_statistics_1(mail))
+directory = "phishing_email_example"
+results = []
+
+for filename in os.listdir(directory):
+    file_path = os.path.join(directory, filename)
+    if os.path.isfile(file_path):
+        print(f"Processing file: {filename}")
+
+        mail = analyze_emails(file_path)
+        statistics = phishing_statistics_1(mail)
+        results.append({'file': filename, 'statistics': statistics})
+        
+        print(f"Completed analysis for file: {filename}")
+
+
+output_file = "phishing_analysis_results.json"
+with open(output_file, 'w') as f:
+    json.dump(results, f, indent=4)
+
+print(f"Results saved to {output_file}")
