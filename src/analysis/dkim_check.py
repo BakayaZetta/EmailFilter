@@ -6,6 +6,10 @@ from email.parser import BytesParser
 from enum import Enum
 import dkim
 import asyncio
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class DKIMStatus(Enum):
     """

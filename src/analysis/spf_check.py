@@ -4,9 +4,13 @@ import spf
 import dns.resolver
 import time
 import asyncio
+import logging
 from email import policy
 from email.parser import BytesParser
 from enum import Enum
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class SPFStatus(Enum):
     """ 

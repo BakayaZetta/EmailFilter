@@ -5,6 +5,10 @@ from enum import Enum
 from .spf_check import check_spf, SPFStatus
 from .dkim_check import check_dkim, DKIMStatus
 import asyncio
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class DMARCStatus(Enum):
     PASS = "DMARC pass: email is aligned with DMARC policy."

@@ -6,6 +6,10 @@ from email.policy import default
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
 import torch
 import json 
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 def analyze_emails(file_path):
@@ -91,17 +95,17 @@ results = []
 for filename in os.listdir(directory):
     file_path = os.path.join(directory, filename)
     if os.path.isfile(file_path):
-        print(f"Processing file: {filename}")
+        logging.info(f"Processing file: {filename}")
 
         mail = analyze_emails(file_path)
         statistics = phishing_statistics_1(mail)
         results.append({'file': filename, 'statistics': statistics})
         
-        print(f"Completed analysis for file: {filename}")
+        logging.info(f"Completed analysis for file: {filename}")
 
 
 output_file = "phishing_analysis_results.json"
 with open(output_file, 'w') as f:
     json.dump(results, f, indent=4)
 
-print(f"Results saved to {output_file}")
+logging.info(f"Results saved to {output_file}")

@@ -5,6 +5,10 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipe
 import nltk
 import chardet
 import codecs
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 nltk.download('punkt_tab')
 
