@@ -4,6 +4,7 @@ from email.parser import BytesParser
 from enum import Enum
 from .spf_check import check_spf, SPFStatus
 from .dkim_check import check_dkim, DKIMStatus
+import asyncio
 
 class DMARCStatus(Enum):
     PASS = "DMARC pass: email is aligned with DMARC policy."
@@ -18,19 +19,19 @@ def extract_email(address: str) -> str:
     match = re.search(r'<(.*?)>', address)
     return match.group(1) if match else address
 
-def check_dmarc(email_obj) -> DMARCStatus:
+async def check_dmarc(email_obj) -> DMARCStatus:
     """
     Checks the DMARC status of an email.
     :param email_obj: The email object.
     :return: DMARCStatus enum indicating the DMARC status of the email.
     """
-    spf_status = check_spf(email_obj)
-    dkim_status = check_dkim(email_obj)
+    spf_status = await check_spf(email_obj)
+    dkim_status = await check_dkim(email_obj)
     sender = email_obj.get('Sender', email_obj['From'])
     sender_email = extract_email(sender)
     domain = sender_email.split('@')[-1].strip()
     try:
-        dmarc_record = dns.resolver.resolve(f'_dmarc.{domain}', 'TXT')
+        dmarc_record = await asyncio.to_thread(dns.resolver.resolve, f'_dmarc.{domain}', 'TXT')
         dmarc_policy = None
         for record in dmarc_record:
             for txt_string in record.strings:

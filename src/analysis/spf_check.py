@@ -3,6 +3,7 @@ import re
 import spf
 import dns.resolver
 import time
+import asyncio
 from email import policy
 from email.parser import BytesParser
 from enum import Enum
@@ -34,7 +35,7 @@ def extract_email(address: str) -> str:
     adr = re.search(r'<(.*?)>', address) 
     return adr.group(1) if adr else address 
 
-def check_spf(email_obj) -> SPFStatus:
+async def check_spf(email_obj) -> SPFStatus:
     """
     Checks the SPF status of an email.
     :param email_obj: The email object.
@@ -55,7 +56,7 @@ def check_spf(email_obj) -> SPFStatus:
     try:
         for _ in range(3):
             try:
-                answers = dns.resolver.resolve(domain, 'TXT')
+                answers = await asyncio.to_thread(dns.resolver.resolve, domain, 'TXT')
                 spf_record = None
                 for r in answers:
                     txt_record = r.to_text()
@@ -68,13 +69,13 @@ def check_spf(email_obj) -> SPFStatus:
             except (dns.resolver.NoAnswer, dns.resolver.NXDOMAIN):
                 return SPFStatus.INVALID_DOMAIN
             except Exception as e:
-                time.sleep(1)  # Wait for 1 second before retrying
+                await asyncio.sleep(1)  # Wait for 1 second before retrying
         else:
             return SPFStatus.DNS_ERROR
     except Exception as e:
         return SPFStatus.DNS_ERROR
     try:
-        result = spf.check2(i=ip_address, s=sender_email, h=email_obj.get('X-HELO', 'N/A'))
+        result = await asyncio.to_thread(spf.check2, i=ip_address, s=sender_email, h=email_obj.get('X-HELO', 'N/A'))
         spf_status = result[0]
         if spf_status == 'pass':
             return SPFStatus.VALID
