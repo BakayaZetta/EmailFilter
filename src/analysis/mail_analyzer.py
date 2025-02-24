@@ -125,7 +125,6 @@ async def analyze_email(email_obj, db):
     conclusion = determine_conclusion(spf_status, dkim_status, dmarc_status)
     db.update_mail_status(id_mail, conclusion)
 
-    # ai analysis 
     ai_result = ai_analysis(email_obj)
     db.add_analyse(
         id_mail=id_mail,
