@@ -2,6 +2,7 @@ import email
 import re
 import spf
 import dns.resolver
+import time
 from email import policy
 from email.parser import BytesParser
 from enum import Enum
@@ -52,17 +53,24 @@ def check_spf(email_obj) -> SPFStatus:
     if not ip_address:
         return SPFStatus.NO_IP
     try:
-        answers = dns.resolver.resolve(domain, 'TXT')
-        spf_record = None
-        for r in answers:
-            txt_record = r.to_text()
-            if 'v=spf1' in txt_record:
-                spf_record = txt_record
+        for _ in range(3):
+            try:
+                answers = dns.resolver.resolve(domain, 'TXT')
+                spf_record = None
+                for r in answers:
+                    txt_record = r.to_text()
+                    if 'v=spf1' in txt_record:
+                        spf_record = txt_record
+                        break
+                if not spf_record:
+                    return SPFStatus.NO_SPF_RECORD
                 break
-        if not spf_record:
-            return SPFStatus.NO_SPF_RECORD
-    except (dns.resolver.NoAnswer, dns.resolver.NXDOMAIN):
-        return SPFStatus.INVALID_DOMAIN
+            except (dns.resolver.NoAnswer, dns.resolver.NXDOMAIN):
+                return SPFStatus.INVALID_DOMAIN
+            except Exception as e:
+                time.sleep(1)  # Wait for 1 second before retrying
+        else:
+            return SPFStatus.DNS_ERROR
     except Exception as e:
         return SPFStatus.DNS_ERROR
     try:
@@ -74,6 +82,10 @@ def check_spf(email_obj) -> SPFStatus:
             return SPFStatus.INVALID
         elif spf_status == 'softfail':
             return SPFStatus.SOFT_WARNING
+        elif spf_status == 'neutral':
+            return SPFStatus.NEUTRAL
+        elif spf_status == 'none':
+            return SPFStatus.NO_SPF_RECORD
         else:
             return SPFStatus.NEUTRAL
     except Exception as e:
