@@ -15,7 +15,15 @@ nltk.download('punkt_tab')
 
 
 def detect_encoding(file_path: str) -> str:
-    """Detects and validates the encoding of a file."""
+    '''
+    Detects and validates the encoding of a file.
+
+    Parameters:
+        file_path (str): Path to the file.
+
+    Returns:
+        str: Detected encoding of the file.
+    '''
     with open(file_path, 'rb') as f:
         raw_data = f.read(4096)
     
@@ -32,19 +40,15 @@ def detect_encoding(file_path: str) -> str:
 
 
 def clean_email_text(text: str) -> str:
-    """
+    '''
     Cleans an email text.
-    
-    This function cleans the input email text by performing the following operations:
-      - Replaces newline characters (both '\\n' and actual newlines) with a space.
-      - Removes HTML tags.
-      - Removes any sequences of two or more dashes.
-      - Replaces multiple consecutive whitespace characters with a single space and trims extra spaces.
-      - Removes isolated pipe characters ('|') that appear between spaces or at the beginning/end of the text.
-    
-    :param text: The raw email text to be cleaned.
-    :return: The cleaned email text.
-    """
+
+    Parameters:
+        text (str): The raw email text to be cleaned.
+
+    Returns:
+        str: The cleaned email text.
+    '''
     text = re.sub(r'(\\n|\n)', ' ', text)  # newline
     text = re.sub(r'<[^>]+>', '', text)  # html tags
     text = re.sub(r'-{2,}', '', text)  # remove --, --- etc.
@@ -54,12 +58,29 @@ def clean_email_text(text: str) -> str:
 
 
 def extract_email_text(email_obj: EmailMessage) -> str:
-    """Extracts the text from an email with enhanced encoding handling from an email object."""
+    '''
+    Extracts the text from an email with enhanced encoding handling from an email object.
+
+    Parameters:
+        email_obj (EmailMessage): The email object.
+
+    Returns:
+        str: The extracted email text.
+    '''
     text = ""
     fallback_encoding = 'latin-1'
 
     def decode_payload(payload: bytes, charset: str) -> str:
-        """Decodes the payload with error handling and charset validation."""
+        '''
+        Decodes the payload with error handling and charset validation.
+
+        Parameters:
+            payload (bytes): The payload to decode.
+            charset (str): The charset to use for decoding.
+
+        Returns:
+            str: The decoded payload.
+        '''
         try:
             codecs.lookup(charset)
         except (LookupError, TypeError):
@@ -92,13 +113,15 @@ def extract_email_text(email_obj: EmailMessage) -> str:
 
 
 def split_512_token(text: str) -> list[list[str]]:
-    """
+    '''
     Split text into chunks that will NEVER exceed 512 tokens when processed by the model.
-    Uses direct tokenization/encoding to ensure accuracy.
-    
-    :param text: The text to be split.
-    :return: A list of text chunks, each chunk is a list of strings.
-    """
+
+    Parameters:
+        text (str): The text to be split.
+
+    Returns:
+        list[list[str]]: A list of text chunks, each chunk is a list of strings.
+    '''
     tokenizer = AutoTokenizer.from_pretrained("ealvaradob/bert-finetuned-phishing")
     
     # First, handle empty text

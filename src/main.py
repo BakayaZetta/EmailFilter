@@ -14,9 +14,15 @@ from email.message import EmailMessage
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 async def main() -> None:
-    """
+    '''
     Main function to analyze emails and save results to the database.
-    """
+
+    Parameters:
+        None
+
+    Returns:
+        None
+    '''
     db = Database()
     # Add a default user
     user_id = db.add_utilisateur(
