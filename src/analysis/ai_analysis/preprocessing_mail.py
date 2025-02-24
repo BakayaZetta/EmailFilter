@@ -49,52 +49,42 @@ def clean_email_text(text:str)->str:
     return text
 
 
-def extract_email_text(file_path) -> str:
-    """Extrait le texte d'un email avec gestion renforcée des encodages."""
-    encoding = detect_encoding(file_path)
+def extract_email_text(email_obj) -> str:
+    """Extrait le texte d'un email avec gestion renforcée des encodages à partir d'un objet email."""
     text = ""
-
-    with open(file_path, 'r', encoding=encoding, errors='replace') as f:
-        msg = email.message_from_file(f)
+    fallback_encoding = 'latin-1'
 
     def decode_payload(payload, charset):
         """Décode le payload avec gestion des erreurs et validation de charset."""
-        # Validation du charset
         try:
             codecs.lookup(charset)
         except (LookupError, TypeError):
-            charset = encoding  # Fallback à l'encodage principal
-            
+            charset = fallback_encoding
         try:
             return payload.decode(charset, errors='replace')
-        except:
-            return payload.decode('latin-1', errors='replace')
+        except Exception:
+            return payload.decode(fallback_encoding, errors='replace')
 
-    if msg.is_multipart():
-        for part in msg.walk():
+    if email_obj.is_multipart():
+        for part in email_obj.walk():
             content_type = part.get_content_type()
             payload = part.get_payload(decode=True)
-            
             if not payload:
                 continue
-                
-            charset = part.get_content_charset() or encoding
+            charset = part.get_content_charset() or fallback_encoding
             decoded = decode_payload(payload, charset)
-
             if content_type == "text/plain":
                 text += decoded
             elif content_type == "text/html":
                 text += html2text.html2text(decoded)
     else:
-        payload = msg.get_payload(decode=True)
+        payload = email_obj.get_payload(decode=True)
         if payload:
-            charset = msg.get_content_charset() or encoding
+            charset = email_obj.get_content_charset() or fallback_encoding
             decoded = decode_payload(payload, charset)
-            text = decoded if msg.get_content_type() == "text/plain" else html2text.html2text(decoded)
+            text = decoded if email_obj.get_content_type() == "text/plain" else html2text.html2text(decoded)
 
     return clean_email_text(text)
-
-
 
 
 def split_512_token(text: str) -> list:

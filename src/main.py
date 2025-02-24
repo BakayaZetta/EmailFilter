@@ -1,6 +1,7 @@
-from database import Database
+from database import Database 
 from analysis.mail_analyzer import load_email, analyze_email
 import os
+from analysis.ai_analysis.ai_analysis import ai_analysis
 
 if __name__ == "__main__":
     db = Database()
@@ -17,4 +18,6 @@ if __name__ == "__main__":
         print(f"Analyzing {email_file}")
         email_obj = load_email(email_file)
         analyze_email(email_obj, db)
+        
+
 
