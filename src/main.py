@@ -14,5 +14,7 @@ if __name__ == "__main__":
     )
     email_files = [f"phishing_email_example/{file}" for file in os.listdir("phishing_email_example") if file.endswith(".eml")]
     for email_file in email_files:
+        print(f"Analyzing {email_file}")
         email_obj = load_email(email_file)
         analyze_email(email_obj, db)
+
