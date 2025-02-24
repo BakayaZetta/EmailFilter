@@ -5,6 +5,11 @@ from email import policy
 from email.parser import BytesParser
 from enum import Enum
 import dkim
+import asyncio
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class DKIMStatus(Enum):
     """
@@ -44,7 +49,7 @@ def extract_dkim_domain_selector(dkim_header: str):
     #(d,s)
     return d.group(1), s.group(1)
 
-def check_dkim(email_obj) -> DKIMStatus:
+async def check_dkim(email_obj) -> DKIMStatus:
     """
     Checks the DKIM status of an email.
     :param email_obj: The email object.
@@ -57,7 +62,7 @@ def check_dkim(email_obj) -> DKIMStatus:
     if not domain or not selector:
         return DKIMStatus.NO_DKIM
     try:
-        dns_txt_record = dns.resolver.resolve(f'{selector}._domainkey.{domain}', 'TXT')
+        dns_txt_record = await asyncio.to_thread(dns.resolver.resolve, f'{selector}._domainkey.{domain}', 'TXT')
         public_key = None
         for record in dns_txt_record:
             for txt_string in record.strings:

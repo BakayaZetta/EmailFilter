@@ -7,6 +7,10 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipe
 import torch
 import json 
 from ...database import add_analysis 
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 tokenizer = AutoTokenizer.from_pretrained("ealvaradob/bert-finetuned-phishing")
@@ -79,8 +83,6 @@ def phishing_statistics_1(group):
         'benign_count': count_benign,
         'benign_avg_score': score_avg_benign
     }
-
-
 
 def ai_analysis(email_obj):
     ai_result = read_split_ai_analysis(email_obj)

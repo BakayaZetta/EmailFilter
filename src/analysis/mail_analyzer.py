@@ -1,5 +1,7 @@
 import sys
 import os
+import asyncio
+import logging
 
 # Adjust the import paths dynamically based on the script's execution context
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -14,6 +16,9 @@ from database import Database
 from datetime import datetime
 from ai_analysis.ai_analysis import ai_analysis
 
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
 def load_email(eml_file_path: str):
     """
     Loads an email from a .eml file and returns the email object.
@@ -24,7 +29,7 @@ def load_email(eml_file_path: str):
 
 def check_and_save_spf(email_obj, db, id_mail):
     spf_status = check_spf(email_obj)
-    print(f"SPF Status: {spf_status.value}")
+    logging.info(f"SPF Status for mail {id_mail}: {spf_status.value}")
     db.add_analyse(
         id_mail=id_mail,
         resultat_analyse=f"SPF: {spf_status.value}",
@@ -34,7 +39,7 @@ def check_and_save_spf(email_obj, db, id_mail):
 
 def check_and_save_dkim(email_obj, db, id_mail):
     dkim_status = check_dkim(email_obj)
-    print(f"DKIM Status: {dkim_status.value}")
+    logging.info(f"DKIM Status for mail {id_mail}: {dkim_status.value}")
     db.add_analyse(
         id_mail=id_mail,
         resultat_analyse=f"DKIM: {dkim_status.value}",
@@ -44,7 +49,7 @@ def check_and_save_dkim(email_obj, db, id_mail):
 
 def check_and_save_dmarc(email_obj, db, id_mail):
     dmarc_status = check_dmarc(email_obj)
-    print(f"DMARC Status: {dmarc_status.value}")
+    logging.info(f"DMARC Status for mail {id_mail}: {dmarc_status.value}")
     db.add_analyse(
         id_mail=id_mail,
         resultat_analyse=f"DMARC: {dmarc_status.value}",
@@ -52,8 +57,23 @@ def check_and_save_dmarc(email_obj, db, id_mail):
         type_analyse='DMARC'
     )
 
-def analyze_email(email_obj, db):
+def determine_conclusion(spf_status, dkim_status, dmarc_status):
+    if spf_status in [SPFStatus.DNS_ERROR, SPFStatus.SPF_ERROR] or \
+       dkim_status in [DKIMStatus.DNS_ERROR, DKIMStatus.DKIM_ERROR] or \
+       dmarc_status in [DMARCStatus.DNS_ERROR, DMARCStatus.DMARC_ERROR]:
+        return 'ERROR'
+    elif spf_status == SPFStatus.INVALID or dkim_status == DKIMStatus.INVALID or dmarc_status == DMARCStatus.FAIL:
+        return 'QUARANTINE'
+    elif (spf_status in [SPFStatus.VALID, SPFStatus.SOFT_WARNING, SPFStatus.NEUTRAL, SPFStatus.NO_SPF_RECORD] and
+          dkim_status in [DKIMStatus.VALID, DKIMStatus.NO_DKIM] and
+          dmarc_status in [DMARCStatus.PASS, DMARCStatus.NO_DMARC]):
+        return 'PASS'
+    else:
+        return 'ERROR'
+
+async def analyze_email(email_obj, db):
     """Analyzes an email for SPF, DKIM, and DMARC status and saves the results to the database"""
+    id_mail = None  # Initialize id_mail
     try:
         # Save all email data
         email_data = {
@@ -67,7 +87,7 @@ def analyze_email(email_obj, db):
             'raw': email_obj.as_string().encode('utf-8', errors='replace').decode('utf-8')
         }
     except Exception as e:
-        print(f"Error processing email headers: {e}")
+        logging.error(f"Error processing email headers for mail {id_mail}: {e}")
         return
     id_mail = db.add_mail(
         id_utilisateur=1,  # Assuming a default user ID for now
@@ -77,12 +97,33 @@ def analyze_email(email_obj, db):
         statut='Analyse_pending'
     )
     
-    check_and_save_spf(email_obj, db, id_mail)
-    check_and_save_dkim(email_obj, db, id_mail)
-    check_and_save_dmarc(email_obj, db, id_mail)
-    
-    # Update status to Analyzed after analysis
-    db.update_mail_status(id_mail, 'Analyzed')
+    spf_status = await check_spf(email_obj)
+    logging.info(f"SPF Status for mail {id_mail}: {spf_status.value}")
+    db.add_analyse(
+        id_mail=id_mail,
+        resultat_analyse=f"SPF: {spf_status.value}",
+        date_analyse=datetime.now(),
+        type_analyse='SPF'
+    )
+    dkim_status = await check_dkim(email_obj)
+    logging.info(f"DKIM Status for mail {id_mail}: {dkim_status.value}")
+    db.add_analyse(
+        id_mail=id_mail,
+        resultat_analyse=f"DKIM: {dkim_status.value}",
+        date_analyse=datetime.now(),
+        type_analyse='DKIM'
+    )
+    dmarc_status = await check_dmarc(email_obj)
+    logging.info(f"DMARC Status for mail {id_mail}: {dmarc_status.value}")
+    db.add_analyse(
+        id_mail=id_mail,
+        resultat_analyse=f"DMARC: {dmarc_status.value}",
+        date_analyse=datetime.now(),
+        type_analyse='DMARC'
+    )
+
+    conclusion = determine_conclusion(spf_status, dkim_status, dmarc_status)
+    db.update_mail_status(id_mail, conclusion)
 
     # ai analysis 
     ai_result = ai_analysis(email_obj)
@@ -98,4 +139,4 @@ if __name__ == "__main__":
     email_files = ["phishing_email_example/1.eml", "phishing_email_example/2.eml", "phishing_email_example/3.eml"]
     for email_file in email_files:
         email_obj = load_email(email_file)
-        analyze_email(email_obj, db)
+        asyncio.run(analyze_email(email_obj, db))

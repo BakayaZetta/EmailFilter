@@ -2,6 +2,10 @@ import mysql.connector
 from mysql.connector import errorcode
 import os
 from dotenv import load_dotenv
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 load_dotenv()
 
@@ -30,11 +34,11 @@ class Database:
             self.conn.database = self.db_name
         except mysql.connector.Error as err:
             if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-                print("Something is wrong with your user name or password")
+                logging.error("Something is wrong with your user name or password")
             elif err.errno == errorcode.ER_BAD_DB_ERROR:
-                print("Database does not exist")
+                logging.error("Database does not exist")
             else:
-                print(err)
+                logging.error(err)
 
     def create_tables(self):
         tables = {
@@ -100,15 +104,15 @@ class Database:
         for table_name in tables:
             table_description = tables[table_name]
             try:
-                print(f"Creating table {table_name}: ", end='')
+                logging.info(f"Creating table {table_name}: ")
                 self.cursor.execute(table_description)
             except mysql.connector.Error as err:
                 if err.errno == errorcode.ER_TABLE_EXISTS_ERROR:
-                    print("already exists.")
+                    logging.info("already exists.")
                 else:
-                    print(err.msg)
+                    logging.error(err.msg)
             else:
-                print("OK")
+                logging.info("OK")
 
     def add_mail(self, id_utilisateur, sujet, contenu, date_reception, statut):
         add_mail_query = (

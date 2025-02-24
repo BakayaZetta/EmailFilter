@@ -4,3 +4,5 @@ nltk
 bs4
 chardet
 seaborn
+logging
+matplotlib

@@ -2,9 +2,15 @@ import email
 import re
 import spf
 import dns.resolver
+import time
+import asyncio
+import logging
 from email import policy
 from email.parser import BytesParser
 from enum import Enum
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class SPFStatus(Enum):
     """ 
@@ -33,7 +39,7 @@ def extract_email(address: str) -> str:
     adr = re.search(r'<(.*?)>', address) 
     return adr.group(1) if adr else address 
 
-def check_spf(email_obj) -> SPFStatus:
+async def check_spf(email_obj) -> SPFStatus:
     """
     Checks the SPF status of an email.
     :param email_obj: The email object.
@@ -52,21 +58,28 @@ def check_spf(email_obj) -> SPFStatus:
     if not ip_address:
         return SPFStatus.NO_IP
     try:
-        answers = dns.resolver.resolve(domain, 'TXT')
-        spf_record = None
-        for r in answers:
-            txt_record = r.to_text()
-            if 'v=spf1' in txt_record:
-                spf_record = txt_record
+        for _ in range(3):
+            try:
+                answers = await asyncio.to_thread(dns.resolver.resolve, domain, 'TXT')
+                spf_record = None
+                for r in answers:
+                    txt_record = r.to_text()
+                    if 'v=spf1' in txt_record:
+                        spf_record = txt_record
+                        break
+                if not spf_record:
+                    return SPFStatus.NO_SPF_RECORD
                 break
-        if not spf_record:
-            return SPFStatus.NO_SPF_RECORD
-    except (dns.resolver.NoAnswer, dns.resolver.NXDOMAIN):
-        return SPFStatus.INVALID_DOMAIN
+            except (dns.resolver.NoAnswer, dns.resolver.NXDOMAIN):
+                return SPFStatus.INVALID_DOMAIN
+            except Exception as e:
+                await asyncio.sleep(1)  # Wait for 1 second before retrying
+        else:
+            return SPFStatus.DNS_ERROR
     except Exception as e:
         return SPFStatus.DNS_ERROR
     try:
-        result = spf.check2(i=ip_address, s=sender_email, h=email_obj.get('X-HELO', 'N/A'))
+        result = await asyncio.to_thread(spf.check2, i=ip_address, s=sender_email, h=email_obj.get('X-HELO', 'N/A'))
         spf_status = result[0]
         if spf_status == 'pass':
             return SPFStatus.VALID
@@ -74,6 +87,10 @@ def check_spf(email_obj) -> SPFStatus:
             return SPFStatus.INVALID
         elif spf_status == 'softfail':
             return SPFStatus.SOFT_WARNING
+        elif spf_status == 'neutral':
+            return SPFStatus.NEUTRAL
+        elif spf_status == 'none':
+            return SPFStatus.NO_SPF_RECORD
         else:
             return SPFStatus.NEUTRAL
     except Exception as e:
