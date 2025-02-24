@@ -1,7 +1,11 @@
+import logging
 from database import Database
 from analysis.mail_analyzer import load_email, analyze_email
 import os
 import asyncio
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 async def main():
     db = Database()
@@ -16,7 +20,7 @@ async def main():
     email_files = [f"phishing_email_example/{file}" for file in os.listdir("phishing_email_example") if file.endswith(".eml")]
     tasks = []
     for email_file in email_files:
-        print(f"Analyzing {email_file}")
+        logging.info(f"Analyzing {email_file}")
         email_obj = load_email(email_file)
         tasks.append(analyze_email(email_obj, db))
     await asyncio.gather(*tasks)

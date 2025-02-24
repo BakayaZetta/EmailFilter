@@ -1,6 +1,10 @@
 import json
 import matplotlib.pyplot as plt
 import seaborn as sns
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Function to load data from a JSON file
 def load_data_from_json(file_path):
@@ -57,12 +61,12 @@ def analyze_data(file_path):
     data = load_data_from_json(file_path)
     avg_phishing_score, avg_benign_score, total_phishing_count, total_benign_count, phishing_percentage, benign_percentage = calculate_statistics(data)
 
-    print(f"Average Phishing Score: {avg_phishing_score}")
-    print(f"Average Benign Score: {avg_benign_score}")
-    print(f"Total Phishing Count: {total_phishing_count}")
-    print(f"Total Benign Count: {total_benign_count}")
-    print(f"Phishing Percentage: {phishing_percentage:.2f}%")
-    print(f"Benign Percentage: {benign_percentage:.2f}%")
+    logging.info(f"Average Phishing Score: {avg_phishing_score}")
+    logging.info(f"Average Benign Score: {avg_benign_score}")
+    logging.info(f"Total Phishing Count: {total_phishing_count}")
+    logging.info(f"Total Benign Count: {total_benign_count}")
+    logging.info(f"Phishing Percentage: {phishing_percentage:.2f}%")
+    logging.info(f"Benign Percentage: {benign_percentage:.2f}%")
 
     plot_counts_and_percentages(total_phishing_count, total_benign_count, phishing_percentage, benign_percentage)
 
