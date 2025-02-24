@@ -6,6 +6,7 @@ from .spf_check import check_spf, SPFStatus
 from .dkim_check import check_dkim, DKIMStatus
 import asyncio
 import logging
+from email.message import EmailMessage
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -18,17 +19,29 @@ class DMARCStatus(Enum):
     DMARC_ERROR = "Error during DMARC verification."
 
 def extract_email(address: str) -> str:
-    """Extracts the email address from a From or Sender field."""
+    '''
+    Extracts the email address from a From or Sender field.
+
+    Parameters:
+        address (str): The address string to extract from.
+
+    Returns:
+        str: The extracted email address.
+    '''
     import re
     match = re.search(r'<(.*?)>', address)
     return match.group(1) if match else address
 
-async def check_dmarc(email_obj) -> DMARCStatus:
-    """
+async def check_dmarc(email_obj: EmailMessage) -> DMARCStatus:
+    '''
     Checks the DMARC status of an email.
-    :param email_obj: The email object.
-    :return: DMARCStatus enum indicating the DMARC status of the email.
-    """
+
+    Parameters:
+        email_obj (EmailMessage): The email object.
+
+    Returns:
+        DMARCStatus: DMARC status of the email.
+    '''
     spf_status = await check_spf(email_obj)
     dkim_status = await check_dkim(email_obj)
     sender = email_obj.get('Sender', email_obj['From'])

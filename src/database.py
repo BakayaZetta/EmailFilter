@@ -3,25 +3,32 @@ from mysql.connector import errorcode
 import os
 from dotenv import load_dotenv
 import logging
-
+from typing import Optional, Dict, Any
+from datetime import datetime
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
 load_dotenv()
-
 class Database:
     def __init__(self):
-        self.db_name = os.getenv('DB_NAME')
-        self.db_user = os.getenv('DB_USER')
-        self.db_password = os.getenv('DB_PASSWORD')
-        self.db_host = os.getenv('DB_HOST')
-        self.db_port = os.getenv('DB_PORT')
-        self.conn = None
-        self.cursor = None
+        self.db_name: str = os.getenv('DB_NAME')
+        self.db_user: str = os.getenv('DB_USER')
+        self.db_password: str = os.getenv('DB_PASSWORD')
+        self.db_host: str = os.getenv('DB_HOST')
+        self.db_port: str = os.getenv('DB_PORT')
+        self.conn: Optional[mysql.connector.connection.MySQLConnection] = None
+        self.cursor: Optional[mysql.connector.cursor.MySQLCursor] = None
         self.connect()
         self.create_tables()
+    def connect(self) -> None:
+        '''
+        Connects to the database and creates the database if it does not exist.
 
-    def connect(self):
+        Parameters:
+            None
+
+        Returns:
+            None
+        '''
         try:
             self.conn = mysql.connector.connect(
                 user=self.db_user,
@@ -39,9 +46,17 @@ class Database:
                 logging.error("Database does not exist")
             else:
                 logging.error(err)
+    def create_tables(self) -> None:
+        '''
+        Creates the necessary tables in the database.
 
-    def create_tables(self):
-        tables = {
+        Parameters:
+            None
+
+        Returns:
+            None
+        '''
+        tables: Dict[str, str] = {
             "Utilisateur": (
                 "CREATE TABLE IF NOT EXISTS Utilisateur ("
                 "  ID_Utilisateur INT AUTO_INCREMENT PRIMARY KEY,"
@@ -101,8 +116,7 @@ class Database:
                 ")"
             )
         }
-        for table_name in tables:
-            table_description = tables[table_name]
+        for table_name, table_description in tables.items():
             try:
                 logging.info(f"Creating table {table_name}: ")
                 self.cursor.execute(table_description)
@@ -113,8 +127,20 @@ class Database:
                     logging.error(err.msg)
             else:
                 logging.info("OK")
+    def add_mail(self, id_utilisateur: int, sujet: str, contenu: str, date_reception: datetime, statut: str) -> int:
+        '''
+        Adds a mail record to the database.
 
-    def add_mail(self, id_utilisateur, sujet, contenu, date_reception, statut):
+        Parameters:
+            id_utilisateur (int): The ID of the user.
+            sujet (str): The subject of the email.
+            contenu (str): The content of the email.
+            date_reception (datetime): The date the email was received.
+            statut (str): The status of the email.
+
+        Returns:
+            int: The ID of the inserted mail record.
+        '''
         add_mail_query = (
             "INSERT INTO Mail (ID_Utilisateur, Sujet, Contenu, Date_Reception, Statut) "
             "VALUES (%s, %s, %s, %s, %s)")
@@ -122,8 +148,20 @@ class Database:
         self.cursor.execute(add_mail_query, mail_data)
         self.conn.commit()
         return self.cursor.lastrowid
+    def add_utilisateur(self, nom: str, prenom: str, email: str, mot_de_passe: str, role: str) -> int:
+        '''
+        Adds a user record to the database.
 
-    def add_utilisateur(self, nom, prenom, email, mot_de_passe, role):
+        Parameters:
+            nom (str): The last name of the user.
+            prenom (str): The first name of the user.
+            email (str): The email address of the user.
+            mot_de_passe (str): The password of the user.
+            role (str): The role of the user.
+
+        Returns:
+            int: The ID of the inserted user record.
+        '''
         add_utilisateur_query = (
             "INSERT INTO Utilisateur (Nom, Prenom, Email, Mot_de_passe, Role) "
             "VALUES (%s, %s, %s, %s, %s)")
@@ -131,8 +169,19 @@ class Database:
         self.cursor.execute(add_utilisateur_query, utilisateur_data)
         self.conn.commit()
         return self.cursor.lastrowid
+    def add_analyse(self, id_mail: int, resultat_analyse: str, date_analyse: datetime, type_analyse: str) -> int:
+        '''
+        Adds an analysis record to the database.
 
-    def add_analyse(self, id_mail, resultat_analyse, date_analyse, type_analyse):
+        Parameters:
+            id_mail (int): The ID of the email.
+            resultat_analyse (str): The result of the analysis.
+            date_analyse (datetime): The date of the analysis.
+            type_analyse (str): The type of analysis.
+
+        Returns:
+            int: The ID of the inserted analysis record.
+        '''
         add_analyse_query = (
             "INSERT INTO Analyse (ID_Mail, Resultat_Analyse, Date_Analyse, Type_Analyse) "
             "VALUES (%s, %s, %s, %s)")
@@ -140,28 +189,69 @@ class Database:
         self.cursor.execute(add_analyse_query, analyse_data)
         self.conn.commit()
         return self.cursor.lastrowid
+    def get_mail(self, id_mail: int) -> Optional[Dict[str, Any]]:
+        '''
+        Retrieves a mail record from the database.
 
-    def get_mail(self, id_mail):
+        Parameters:
+            id_mail (int): The ID of the email.
+
+        Returns:
+            Optional[Dict[str, Any]]: The mail record, or None if not found.
+        '''
         get_mail_query = "SELECT * FROM Mail WHERE ID_Mail = %s"
         self.cursor.execute(get_mail_query, (id_mail,))
         return self.cursor.fetchone()
+    def get_utilisateur(self, id_utilisateur: int) -> Optional[Dict[str, Any]]:
+        '''
+        Retrieves a user record from the database.
 
-    def get_utilisateur(self, id_utilisateur):
+        Parameters:
+            id_utilisateur (int): The ID of the user.
+
+        Returns:
+            Optional[Dict[str, Any]]: The user record, or None if not found.
+        '''
         get_utilisateur_query = "SELECT * FROM Utilisateur WHERE ID_Utilisateur = %s"
         self.cursor.execute(get_utilisateur_query, (id_utilisateur,))
         return self.cursor.fetchone()
+    def get_analyse(self, id_analyse: int) -> Optional[Dict[str, Any]]:
+        '''
+        Retrieves an analysis record from the database.
 
-    def get_analyse(self, id_analyse):
+        Parameters:
+            id_analyse (int): The ID of the analysis.
+
+        Returns:
+            Optional[Dict[str, Any]]: The analysis record, or None if not found.
+        '''
         get_analyse_query = "SELECT * FROM Analyse WHERE ID_Analyse = %s"
         self.cursor.execute(get_analyse_query, (id_analyse,))
         return self.cursor.fetchone()
+    def update_mail_status(self, id_mail: int, new_status: str) -> None:
+        '''
+        Updates the status of a mail record in the database.
 
-    def update_mail_status(self, id_mail, new_status):
+        Parameters:
+            id_mail (int): The ID of the email.
+            new_status (str): The new status of the email.
+
+        Returns:
+            None
+        '''
         update_status_query = "UPDATE Mail SET Statut = %s WHERE ID_Mail = %s"
         self.cursor.execute(update_status_query, (new_status, id_mail))
         self.conn.commit()
+    def user_exists(self, id_utilisateur: int) -> bool:
+        '''
+        Checks if a user exists in the database.
 
-    def user_exists(self, id_utilisateur):
+        Parameters:
+            id_utilisateur (int): The ID of the user.
+
+        Returns:
+            bool: True if the user exists, False otherwise.
+        '''
         get_user_query = "SELECT * FROM Utilisateur WHERE ID_Utilisateur = %s"
         self.cursor.execute(get_user_query, (id_utilisateur,))
         return self.cursor.fetchone() is not None

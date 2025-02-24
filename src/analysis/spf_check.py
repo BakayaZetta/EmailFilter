@@ -8,6 +8,7 @@ import logging
 from email import policy
 from email.parser import BytesParser
 from enum import Enum
+from email.message import EmailMessage
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -27,29 +28,32 @@ class SPFStatus(Enum):
     SPF_ERROR = "Error during SPF verification."
 
 def extract_email(address: str) -> str:
-    """
+    '''
     Extracts the email address from a From or Sender field.
 
-    :param address: The address string to extract from.
-    :return: The extracted email address.
-    """
+    Parameters:
+        address (str): The address string to extract from.
 
-    # ex : From: "aw-confirm@ebay.com" <aw-confirm@ebay.com>
-    # match between < and >
-    adr = re.search(r'<(.*?)>', address) 
-    return adr.group(1) if adr else address 
+    Returns:
+        str: The extracted email address.
+    '''
+    adr = re.search(r'<(.*?)>', address)
+    return adr.group(1) if adr else address
 
-async def check_spf(email_obj) -> SPFStatus:
-    """
+async def check_spf(email_obj: EmailMessage) -> SPFStatus:
+    '''
     Checks the SPF status of an email.
-    :param email_obj: The email object.
-    :return: SPFStatus enum indicating the SPF status of the email.
-    """
+
+    Parameters:
+        email_obj (EmailMessage): The email object.
+
+    Returns:
+        SPFStatus: The SPF status of the email.
+    '''
     sender = email_obj.get('Sender', email_obj['From'])
     sender_email = extract_email(sender)
     domain = sender_email.split('@')[-1].strip()
     ip_address = None
-    # Finding the IP of the sender
     for header in email_obj.get_all('Received', []):
         match = re.search(r'\[([\d\.]+)\]', header)
         if match:
@@ -73,7 +77,7 @@ async def check_spf(email_obj) -> SPFStatus:
             except (dns.resolver.NoAnswer, dns.resolver.NXDOMAIN):
                 return SPFStatus.INVALID_DOMAIN
             except Exception as e:
-                await asyncio.sleep(1)  # Wait for 1 second before retrying
+                await asyncio.sleep(1)
         else:
             return SPFStatus.DNS_ERROR
     except Exception as e:

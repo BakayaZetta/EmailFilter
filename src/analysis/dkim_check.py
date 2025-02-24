@@ -22,39 +22,31 @@ class DKIMStatus(Enum):
     DKIM_ERROR = "Error during DKIM verification."
 
 def extract_dkim_domain_selector(dkim_header: str):
-    """
+    '''
     Extracts the domain and selector from the DKIM-Signature header.
 
-    :param dkim_header: The DKIM-Signature header value.
-    :return: A tuple containing the domain and selector.
-    """
-    # From wikipedia, the dkim message will look like this, 
-    # we need d= and s=
-    # DKIM-Signature: v=1; a=rsa-sha256; d=example.net; s=brisbane;
-    #  c=relaxed/simple; q=dns/txt; i=foo@eng.example.net;
-    #  t=1117574938; x=1118006938; l=200;
-    #  h=from:to:subject:date:keywords:keywords;
-    #  z=From:foo@eng.example.net|To:joe@example.com|
-    #    Subject:demo=20run|Date:July=205,=202005=203:44:08=20PM=20-0700;
-    #  bh=MTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTI=;
-    #  b=dzdVyOfAKCdLXdJOc9G2q8LoXSlEniSbav+yuU4zGeeruD00lszZ
-    #           VoG4ZHRNiYzR
+    Parameters:
+        dkim_header (str): The DKIM-Signature header value.
 
+    Returns:
+        tuple: A tuple containing the domain and selector.
+    '''
     d = re.search(r'\bd=([^;]+)', dkim_header)
     s = re.search(r'\bs=([^;]+)', dkim_header)
-
     if not d or not s:
         return None, None
-    
-    #(d,s)
     return d.group(1), s.group(1)
 
 async def check_dkim(email_obj) -> DKIMStatus:
-    """
+    '''
     Checks the DKIM status of an email.
-    :param email_obj: The email object.
-    :return: DKIMStatus enum indicating the DKIM status of the email.
-    """
+
+    Parameters:
+        email_obj (EmailMessage): The email object.
+
+    Returns:
+        DKIMStatus: DKIM status of the email.
+    '''
     dkim_header = email_obj.get('DKIM-Signature')
     if not dkim_header:
         return DKIMStatus.NO_DKIM
