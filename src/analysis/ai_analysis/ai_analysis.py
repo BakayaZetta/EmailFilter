@@ -7,6 +7,7 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipe
 import torch
 import json 
 import logging
+from email.message import EmailMessage
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -16,19 +17,14 @@ tokenizer = AutoTokenizer.from_pretrained("ealvaradob/bert-finetuned-phishing")
 model = AutoModelForSequenceClassification.from_pretrained("ealvaradob/bert-finetuned-phishing")
 classifier = pipeline('text-classification', model=model, tokenizer=tokenizer)
 
-def read_split_ai_analysis(email_obj):
+def read_split_ai_analysis(email_obj: EmailMessage) -> list[dict]:
     """
     Analyzes emails from a file and classifies them.
-*
     This function reads an email file, extracts the text, splits it into groups of tokens,
     and classifies each group using a classifier.
-
-    Parameters:
-    file_path (str): The path to the email file to be analyzed.
-
-    Returns:
-    list: A list of dictionaries containing classification results for each group of tokens.
-          Each dictionary has keys 'label' and 'score'.
+    :param email_obj: The email object to be analyzed.
+    :return: A list of dictionaries containing classification results for each group of tokens.
+             Each dictionary has keys 'label' and 'score'.
     """
 
     results = []
@@ -42,19 +38,16 @@ def read_split_ai_analysis(email_obj):
     return results
 
 
-def phishing_statistics_1(group):
+def phishing_statistics_1(group: list[list[dict]]) -> dict:
     """
     Calculates statistics for phishing and benign labels from classification results.
 
     This function processes the classification results to count the occurrences of 'phishing'
     and 'benign' labels and calculates the average score for each label.
 
-    Parameters:
-    group (list): A list of lists, where each sublist contains dictionaries with 'label' and 'score' keys.
-
-    Returns:
-    dict: A dictionary containing the count and average score for 'phishing' and 'benign' labels.
-          The dictionary has keys: 'phishing_count', 'phishing_avg_score', 'benign_count', 'benign_avg_score'.
+    :param group: A list of lists, where each sublist contains dictionaries with 'label' and 'score' keys.
+    :return: A dictionary containing the count and average score for 'phishing' and 'benign' labels.
+             The dictionary has keys: 'phishing_count', 'phishing_avg_score', 'benign_count', 'benign_avg_score'.
     """
     count_phishing = 0
     count_benign = 0
@@ -83,7 +76,7 @@ def phishing_statistics_1(group):
         'benign_avg_score': score_avg_benign
     }
 
-async def ai_analysis(email_obj):
+async def ai_analysis(email_obj: EmailMessage) -> dict:
     ai_result = read_split_ai_analysis(email_obj)
     json_result = phishing_statistics_1(ai_result)
     return json_result

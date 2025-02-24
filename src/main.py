@@ -8,11 +8,15 @@ from analysis.mail_analyzer import load_email, analyze_email
 import os
 import asyncio
 import random
+from email.message import EmailMessage
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-async def main():
+async def main() -> None:
+    """
+    Main function to analyze emails and save results to the database.
+    """
     db = Database()
     # Add a default user
     user_id = db.add_utilisateur(

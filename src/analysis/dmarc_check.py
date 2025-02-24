@@ -6,6 +6,7 @@ from .spf_check import check_spf, SPFStatus
 from .dkim_check import check_dkim, DKIMStatus
 import asyncio
 import logging
+from email.message import EmailMessage
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -23,7 +24,7 @@ def extract_email(address: str) -> str:
     match = re.search(r'<(.*?)>', address)
     return match.group(1) if match else address
 
-async def check_dmarc(email_obj) -> DMARCStatus:
+async def check_dmarc(email_obj: EmailMessage) -> DMARCStatus:
     """
     Checks the DMARC status of an email.
     :param email_obj: The email object.

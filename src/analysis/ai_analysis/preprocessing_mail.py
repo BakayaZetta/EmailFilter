@@ -6,22 +6,23 @@ import nltk
 import chardet
 import codecs
 import logging
+from email.message import EmailMessage
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname=s - %(message)s')
 
 nltk.download('punkt_tab')
 
 
-def detect_encoding(file_path):
-    """Détecte et valide l'encodage d'un fichier."""
+def detect_encoding(file_path: str) -> str:
+    """Detects and validates the encoding of a file."""
     with open(file_path, 'rb') as f:
         raw_data = f.read(4096)
     
     result = chardet.detect(raw_data)
     encoding = result.get('encoding', 'latin-1')
     
-    # Validation de l'encodage détecté
+    # Validate the detected encoding
     try:
         codecs.lookup(encoding)
     except (LookupError, TypeError):
@@ -30,9 +31,9 @@ def detect_encoding(file_path):
     return encoding
 
 
-def clean_email_text(text:str)->str:
+def clean_email_text(text: str) -> str:
     """
-    @brief Cleans an email text.
+    Cleans an email text.
     
     This function cleans the input email text by performing the following operations:
       - Replaces newline characters (both '\\n' and actual newlines) with a space.
@@ -41,25 +42,24 @@ def clean_email_text(text:str)->str:
       - Replaces multiple consecutive whitespace characters with a single space and trims extra spaces.
       - Removes isolated pipe characters ('|') that appear between spaces or at the beginning/end of the text.
     
-    @param text The raw email text to be cleaned.
-    @return The cleaned email text.
+    :param text: The raw email text to be cleaned.
+    :return: The cleaned email text.
     """
-    text = re.sub(r'(\\n|\n)', ' ', text) # newline
-    text = re.sub(r'<[^>]+>', '', text) # html tags
-    # Remove any sequences of dashes
-    text = re.sub(r'-{2,}', '', text) #remove --, --- etc.
-    text = re.sub(r'\s+', ' ', text).strip() #  extra space
-    text = re.sub(r'(?<=\s)\|(?=\s)|^\||\|$', '', text) # isolated pipes
+    text = re.sub(r'(\\n|\n)', ' ', text)  # newline
+    text = re.sub(r'<[^>]+>', '', text)  # html tags
+    text = re.sub(r'-{2,}', '', text)  # remove --, --- etc.
+    text = re.sub(r'\s+', ' ', text).strip()  # extra space
+    text = re.sub(r'(?<=\s)\|(?=\s)|^\||\|$', '', text)  # isolated pipes
     return text
 
 
-def extract_email_text(email_obj) -> str:
-    """Extrait le texte d'un email avec gestion renforcée des encodages à partir d'un objet email."""
+def extract_email_text(email_obj: EmailMessage) -> str:
+    """Extracts the text from an email with enhanced encoding handling from an email object."""
     text = ""
     fallback_encoding = 'latin-1'
 
-    def decode_payload(payload, charset):
-        """Décode le payload avec gestion des erreurs et validation de charset."""
+    def decode_payload(payload: bytes, charset: str) -> str:
+        """Decodes the payload with error handling and charset validation."""
         try:
             codecs.lookup(charset)
         except (LookupError, TypeError):
@@ -91,10 +91,13 @@ def extract_email_text(email_obj) -> str:
     return clean_email_text(text)
 
 
-def split_512_token(text: str) -> list:
+def split_512_token(text: str) -> list[list[str]]:
     """
     Split text into chunks that will NEVER exceed 512 tokens when processed by the model.
     Uses direct tokenization/encoding to ensure accuracy.
+    
+    :param text: The text to be split.
+    :return: A list of text chunks, each chunk is a list of strings.
     """
     tokenizer = AutoTokenizer.from_pretrained("ealvaradob/bert-finetuned-phishing")
     

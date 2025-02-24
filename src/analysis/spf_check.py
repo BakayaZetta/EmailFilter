@@ -8,6 +8,7 @@ import logging
 from email import policy
 from email.parser import BytesParser
 from enum import Enum
+from email.message import EmailMessage
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -39,7 +40,7 @@ def extract_email(address: str) -> str:
     adr = re.search(r'<(.*?)>', address) 
     return adr.group(1) if adr else address 
 
-async def check_spf(email_obj) -> SPFStatus:
+async def check_spf(email_obj: EmailMessage) -> SPFStatus:
     """
     Checks the SPF status of an email.
     :param email_obj: The email object.
