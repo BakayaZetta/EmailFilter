@@ -1,5 +1,6 @@
 import sys
 import os
+import asyncio
 
 # Adjust the import paths dynamically based on the script's execution context
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -65,7 +66,7 @@ def determine_conclusion(spf_status, dkim_status, dmarc_status):
     else:
         return 'ERROR'
 
-def analyze_email(email_obj, db):
+async def analyze_email(email_obj, db):
     """Analyzes an email for SPF, DKIM, and DMARC status and saves the results to the database"""
     try:
         # Save all email data
@@ -90,12 +91,30 @@ def analyze_email(email_obj, db):
         statut='Analyse_pending'
     )
     
-    check_and_save_spf(email_obj, db, id_mail)
-    spf_status = check_spf(email_obj)
-    check_and_save_dkim(email_obj, db, id_mail)
-    dkim_status = check_dkim(email_obj)
-    check_and_save_dmarc(email_obj, db, id_mail)
-    dmarc_status = check_dmarc(email_obj)
+    spf_status = await check_spf(email_obj)
+    print(f"SPF Status: {spf_status.value}")
+    db.add_analyse(
+        id_mail=id_mail,
+        resultat_analyse=f"SPF: {spf_status.value}",
+        date_analyse=datetime.now(),
+        type_analyse='SPF'
+    )
+    dkim_status = await check_dkim(email_obj)
+    print(f"DKIM Status: {dkim_status.value}")
+    db.add_analyse(
+        id_mail=id_mail,
+        resultat_analyse=f"DKIM: {dkim_status.value}",
+        date_analyse=datetime.now(),
+        type_analyse='DKIM'
+    )
+    dmarc_status = await check_dmarc(email_obj)
+    print(f"DMARC Status: {dmarc_status.value}")
+    db.add_analyse(
+        id_mail=id_mail,
+        resultat_analyse=f"DMARC: {dmarc_status.value}",
+        date_analyse=datetime.now(),
+        type_analyse='DMARC'
+    )
 
     conclusion = determine_conclusion(spf_status, dkim_status, dmarc_status)
     db.update_mail_status(id_mail, conclusion)
@@ -105,4 +124,4 @@ if __name__ == "__main__":
     email_files = ["phishing_email_example/1.eml", "phishing_email_example/2.eml", "phishing_email_example/3.eml"]
     for email_file in email_files:
         email_obj = load_email(email_file)
-        analyze_email(email_obj, db)
+        asyncio.run(analyze_email(email_obj, db))
