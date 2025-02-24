@@ -51,6 +51,20 @@ def check_and_save_dmarc(email_obj, db, id_mail):
         type_analyse='DMARC'
     )
 
+def determine_conclusion(spf_status, dkim_status, dmarc_status):
+    if spf_status in [SPFStatus.DNS_ERROR, SPFStatus.SPF_ERROR] or \
+       dkim_status in [DKIMStatus.DNS_ERROR, DKIMStatus.DKIM_ERROR] or \
+       dmarc_status in [DMARCStatus.DNS_ERROR, DMARCStatus.DMARC_ERROR]:
+        return 'ERROR'
+    elif spf_status == SPFStatus.INVALID or dkim_status == DKIMStatus.INVALID or dmarc_status == DMARCStatus.FAIL:
+        return 'QUARANTINE'
+    elif (spf_status in [SPFStatus.VALID, SPFStatus.SOFT_WARNING, SPFStatus.NEUTRAL, SPFStatus.NO_SPF_RECORD] and
+          dkim_status in [DKIMStatus.VALID, DKIMStatus.NO_DKIM] and
+          dmarc_status in [DMARCStatus.PASS, DMARCStatus.NO_DMARC]):
+        return 'PASS'
+    else:
+        return 'ERROR'
+
 def analyze_email(email_obj, db):
     """Analyzes an email for SPF, DKIM, and DMARC status and saves the results to the database"""
     try:
@@ -77,11 +91,14 @@ def analyze_email(email_obj, db):
     )
     
     check_and_save_spf(email_obj, db, id_mail)
+    spf_status = check_spf(email_obj)
     check_and_save_dkim(email_obj, db, id_mail)
+    dkim_status = check_dkim(email_obj)
     check_and_save_dmarc(email_obj, db, id_mail)
-    
-    # Update status to Analyzed after analysis
-    db.update_mail_status(id_mail, 'Analyzed')
+    dmarc_status = check_dmarc(email_obj)
+
+    conclusion = determine_conclusion(spf_status, dkim_status, dmarc_status)
+    db.update_mail_status(id_mail, conclusion)
 
 if __name__ == "__main__":
     db = Database()
