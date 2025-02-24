@@ -25,5 +25,4 @@ def analyze_email(eml_file_path: str):
     print(f"DMARC Status: {dmarc_status.value}")
 
 if __name__ == "__main__":
-    analyze_email("phishing_email_example/1.eml")
-    analyze_email("phishing_email_example/2.eml")
+    analyze_email("phishing_email_example/test.eml")

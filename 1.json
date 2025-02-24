@@ -1,0 +1,3737 @@
+[
+    {
+        "file": "137.eml",
+        "statistics": {
+            "phishing_count": 5,
+            "phishing_avg_score": 0.9999714612960815,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "113.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999927282333374,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "83.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999932050704956,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "257.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999915361404419,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "36.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999932050704956,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "388.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9999749064445496,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "395.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999926090240479,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "61.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999940395355225,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "147.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9999934434890747,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "400.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999897480010986,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "150.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999932050704956,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "19.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999947547912598,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "274.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999908208847046,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "146.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999544620513916,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "344.eml",
+        "statistics": {
+            "phishing_count": 3,
+            "phishing_avg_score": 0.9964730938275655,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "161.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999796152114868,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "195.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999613761901855,
+            "benign_count": 1,
+            "benign_avg_score": 0.998568058013916
+        }
+    },
+    {
+        "file": "31.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999946355819702,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "273.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999908208847046,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "37.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999932050704956,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "22.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999947547912598,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "103.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9002686142921448,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "158.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.999993085861206,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "249.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999732971191406,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "129.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999926090240479,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "379.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9999736547470093,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "271.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999892711639404,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "34.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999946355819702,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "311.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9985217154026031,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "312.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999916553497314,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "75.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999932050704956,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "174.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.999992311000824,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "238.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9999922513961792,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "336.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.999992847442627,
+            "benign_count": 1,
+            "benign_avg_score": 0.9997784495353699
+        }
+    },
+    {
+        "file": "123.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999927282333374,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "390.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999902248382568,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "365.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999891519546509,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "352.eml",
+        "statistics": {
+            "phishing_count": 3,
+            "phishing_avg_score": 0.9974571863810221,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "16.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999822378158569,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "320.eml",
+        "statistics": {
+            "phishing_count": 5,
+            "phishing_avg_score": 0.9998926997184754,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "239.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999710321426392,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "uqac.eml",
+        "statistics": {
+            "phishing_count": 3,
+            "phishing_avg_score": 0.9994781613349915,
+            "benign_count": 1,
+            "benign_avg_score": 0.9961360096931458
+        }
+    },
+    {
+        "file": "219.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9998045563697815,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "127.eml",
+        "statistics": {
+            "phishing_count": 3,
+            "phishing_avg_score": 0.9999675353368124,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "183.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999945163726807,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "57.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999692440032959,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "72.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9999934434890747,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "329.eml",
+        "statistics": {
+            "phishing_count": 5,
+            "phishing_avg_score": 0.9999411702156067,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "199.eml",
+        "statistics": {
+            "phishing_count": 3,
+            "phishing_avg_score": 0.9960952798525492,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "370.eml",
+        "statistics": {
+            "phishing_count": 0,
+            "phishing_avg_score": 0,
+            "benign_count": 4,
+            "benign_avg_score": 0.9904237240552902
+        }
+    },
+    {
+        "file": "406.eml",
+        "statistics": {
+            "phishing_count": 3,
+            "phishing_avg_score": 0.9999914169311523,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "130.eml",
+        "statistics": {
+            "phishing_count": 3,
+            "phishing_avg_score": 0.9999675353368124,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "227.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999927282333374,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "384.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9999834895133972,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "247.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9876129925251007,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "197.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999879598617554,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "275.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.999989926815033,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "391.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999881982803345,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "68.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999626874923706,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "81.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999932050704956,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "250.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999752044677734,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "315.eml",
+        "statistics": {
+            "phishing_count": 0,
+            "phishing_avg_score": 0,
+            "benign_count": 2,
+            "benign_avg_score": 0.987961083650589
+        }
+    },
+    {
+        "file": "360.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9948902428150177,
+            "benign_count": 1,
+            "benign_avg_score": 0.9988228678703308
+        }
+    },
+    {
+        "file": "373.eml",
+        "statistics": {
+            "phishing_count": 0,
+            "phishing_avg_score": 0,
+            "benign_count": 1,
+            "benign_avg_score": 0.9961956739425659
+        }
+    },
+    {
+        "file": "366.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999921321868896,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "21.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9998946189880371,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "108.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9978162050247192,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "67.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999933242797852,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "285.eml",
+        "statistics": {
+            "phishing_count": 3,
+            "phishing_avg_score": 0.9999361832936605,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "2.eml",
+        "statistics": {
+            "phishing_count": 7,
+            "phishing_avg_score": 0.9999390499932426,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "272.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9996321499347687,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "411.eml",
+        "statistics": {
+            "phishing_count": 3,
+            "phishing_avg_score": 0.9957197109858195,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "50.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999353885650635,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "290.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9999725818634033,
+            "benign_count": 1,
+            "benign_avg_score": 0.9793525338172913
+        }
+    },
+    {
+        "file": "24.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999781847000122,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "92.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999932050704956,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "235.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999673366546631,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "371.eml",
+        "statistics": {
+            "phishing_count": 3,
+            "phishing_avg_score": 0.9999916553497314,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "376.eml",
+        "statistics": {
+            "phishing_count": 5,
+            "phishing_avg_score": 0.9990411639213562,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "300.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999908208847046,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "342.eml",
+        "statistics": {
+            "phishing_count": 3,
+            "phishing_avg_score": 0.9964730938275655,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "101.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999927282333374,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "175.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9959301352500916,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "409.eml",
+        "statistics": {
+            "phishing_count": 0,
+            "phishing_avg_score": 0,
+            "benign_count": 1,
+            "benign_avg_score": 0.9961956739425659
+        }
+    },
+    {
+        "file": "56.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.999925971031189,
+            "benign_count": 1,
+            "benign_avg_score": 0.9999827146530151
+        }
+    },
+    {
+        "file": "52.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9939977824687958,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "337.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9976212382316589,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "338.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999860525131226,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "27.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999490976333618,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "191.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999680519104004,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "104.eml",
+        "statistics": {
+            "phishing_count": 3,
+            "phishing_avg_score": 0.9993366400400797,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "214.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999833106994629,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "98.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999876022338867,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "347.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999843835830688,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "49.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999908208847046,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "196.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999822378158569,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "40.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999830722808838,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "179.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999892711639404,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "277.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9996960163116455,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "73.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999932050704956,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "209.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9999103546142578,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "226.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9999808669090271,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "43.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999470710754395,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "170.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999932050704956,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "218.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999390840530396,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "215.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999716281890869,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "343.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.999988317489624,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "298.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999916553497314,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "80.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999932050704956,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "180.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.999981164932251,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "116.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999791383743286,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "5.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.999952495098114,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "25.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999946355819702,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "393.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999781847000122,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "286.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999927282333374,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "64.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999374151229858,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "17.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999476671218872,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "369.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999790191650391,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "84.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.999987006187439,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "407.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.999991774559021,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "28.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999876022338867,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "216.eml",
+        "statistics": {
+            "phishing_count": 3,
+            "phishing_avg_score": 0.9998831351598104,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "401.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999945163726807,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "207.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999812841415405,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "71.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999932050704956,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "39.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999871253967285,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "399.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999920129776001,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "128.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9999925494194031,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "211.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9998045563697815,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "262.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9990847110748291,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "172.eml",
+        "statistics": {
+            "phishing_count": 3,
+            "phishing_avg_score": 0.9994162519772848,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "292.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999877214431763,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "288.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999927282333374,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "88.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999936819076538,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "221.eml",
+        "statistics": {
+            "phishing_count": 3,
+            "phishing_avg_score": 0.9999828338623047,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "236.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999673366546631,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "359.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9948902428150177,
+            "benign_count": 1,
+            "benign_avg_score": 0.9988228678703308
+        }
+    },
+    {
+        "file": "368.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9999876618385315,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "160.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999927282333374,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "121.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999927282333374,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "187.eml",
+        "statistics": {
+            "phishing_count": 3,
+            "phishing_avg_score": 0.9999395211537679,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "44.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999896287918091,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "213.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.999982476234436,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "361.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9948902428150177,
+            "benign_count": 1,
+            "benign_avg_score": 0.9988228678703308
+        }
+    },
+    {
+        "file": "32.eml",
+        "statistics": {
+            "phishing_count": 4,
+            "phishing_avg_score": 0.9999624192714691,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "330.eml",
+        "statistics": {
+            "phishing_count": 5,
+            "phishing_avg_score": 0.9999411702156067,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "185.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999932050704956,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "141.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999874830245972,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "178.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999768733978271,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "139.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999932050704956,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "136.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999914169311523,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "14.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999935626983643,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "334.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999853372573853,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "341.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999927282333374,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "53.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9982055425643921,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "299.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999927282333374,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "331.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9998267292976379,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "132.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9990934431552887,
+            "benign_count": 1,
+            "benign_avg_score": 0.9989030361175537
+        }
+    },
+    {
+        "file": "237.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999927282333374,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "375.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999909400939941,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "326.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999890327453613,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "202.eml",
+        "statistics": {
+            "phishing_count": 7,
+            "phishing_avg_score": 0.9999573230743408,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "184.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999932050704956,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "404.eml",
+        "statistics": {
+            "phishing_count": 3,
+            "phishing_avg_score": 0.9999914169311523,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "0.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999781847000122,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "385.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9999834895133972,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "252.eml",
+        "statistics": {
+            "phishing_count": 5,
+            "phishing_avg_score": 0.9998314857482911,
+            "benign_count": 1,
+            "benign_avg_score": 0.9211798310279846
+        }
+    },
+    {
+        "file": "241.eml",
+        "statistics": {
+            "phishing_count": 0,
+            "phishing_avg_score": 0,
+            "benign_count": 1,
+            "benign_avg_score": 0.9930973649024963
+        }
+    },
+    {
+        "file": "143.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9999915361404419,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "225.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9999926686286926,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "253.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9997386336326599,
+            "benign_count": 2,
+            "benign_avg_score": 0.9882782101631165
+        }
+    },
+    {
+        "file": "169.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9858675003051758,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "201.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9999140501022339,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "378.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999767541885376,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "304.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9999944567680359,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "122.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999791383743286,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "240.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999526739120483,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "313.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9999932050704956,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "244.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9998666048049927,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "135.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9999920725822449,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "349.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9999915361404419,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "392.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9939762651920319,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "264.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9990847110748291,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "117.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999927282333374,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "228.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999781847000122,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "177.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999933242797852,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "380.eml",
+        "statistics": {
+            "phishing_count": 3,
+            "phishing_avg_score": 0.9999916553497314,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "413.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999473094940186,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "105.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.999386191368103,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "45.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999351501464844,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "296.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9999944567680359,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "321.eml",
+        "statistics": {
+            "phishing_count": 5,
+            "phishing_avg_score": 0.9998926997184754,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "48.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.999992847442627,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "287.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999927282333374,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "133.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9998064041137695,
+            "benign_count": 1,
+            "benign_avg_score": 0.9918901920318604
+        }
+    },
+    {
+        "file": "345.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999897480010986,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "246.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999465942382812,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "189.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9996254444122314,
+            "benign_count": 2,
+            "benign_avg_score": 0.9727633595466614
+        }
+    },
+    {
+        "file": "151.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999932050704956,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "354.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9990078806877136,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "327.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999526739120483,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "107.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999816417694092,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "111.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999927282333374,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "102.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999927282333374,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "210.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999555349349976,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "386.eml",
+        "statistics": {
+            "phishing_count": 5,
+            "phishing_avg_score": 0.9999555826187134,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "140.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999932050704956,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "200.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9999834299087524,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "152.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999932050704956,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "74.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999932050704956,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "374.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999867677688599,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "131.eml",
+        "statistics": {
+            "phishing_count": 4,
+            "phishing_avg_score": 0.9999186843633652,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "305.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9999944567680359,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "260.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9981302917003632,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "259.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9999935030937195,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "324.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9998503625392914,
+            "benign_count": 2,
+            "benign_avg_score": 0.9846499562263489
+        }
+    },
+    {
+        "file": "340.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9998267292976379,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "89.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999936819076538,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "78.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999932050704956,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "251.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9999935030937195,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "204.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999227523803711,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "10.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999690055847168,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "348.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999920129776001,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "9.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999923706054688,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "302.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999920129776001,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "323.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999926090240479,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "265.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999005794525146,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "280.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9970729053020477,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "62.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999833106994629,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "171.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.999992311000824,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "157.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999864101409912,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "35.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999561309814453,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "3.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999947547912598,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "11.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999933242797852,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "155.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999932050704956,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "255.eml",
+        "statistics": {
+            "phishing_count": 3,
+            "phishing_avg_score": 0.9999391635258993,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "93.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9990857243537903,
+            "benign_count": 1,
+            "benign_avg_score": 0.9857081770896912
+        }
+    },
+    {
+        "file": "335.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.99993896484375,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "306.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9999944567680359,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "186.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999932050704956,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "301.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999901056289673,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "339.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9963464140892029,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "77.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999932050704956,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "243.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999876022338867,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "389.eml",
+        "statistics": {
+            "phishing_count": 0,
+            "phishing_avg_score": 0,
+            "benign_count": 1,
+            "benign_avg_score": 0.9961956739425659
+        }
+    },
+    {
+        "file": "38.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999474287033081,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "317.eml",
+        "statistics": {
+            "phishing_count": 3,
+            "phishing_avg_score": 0.9874062736829122,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "229.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9966878294944763,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "283.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.981962263584137,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "278.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9726556539535522,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "291.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9999944567680359,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "405.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999934434890747,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "156.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.999993085861206,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "205.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999916553497314,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "297.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999163150787354,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "408.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999926090240479,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "144.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999932050704956,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "97.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.999862551689148,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "176.eml",
+        "statistics": {
+            "phishing_count": 0,
+            "phishing_avg_score": 0,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "114.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999363422393799,
+            "benign_count": 1,
+            "benign_avg_score": 0.9999926090240479
+        }
+    },
+    {
+        "file": "248.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9998805522918701,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "256.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9998058080673218,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "412.eml",
+        "statistics": {
+            "phishing_count": 3,
+            "phishing_avg_score": 0.9957197109858195,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "65.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999799728393555,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "46.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999302625656128,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "208.eml",
+        "statistics": {
+            "phishing_count": 3,
+            "phishing_avg_score": 0.9999911387761434,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "166.eml",
+        "statistics": {
+            "phishing_count": 0,
+            "phishing_avg_score": 0,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "270.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999892711639404,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "85.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999754428863525,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "282.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999927282333374,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "20.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9999873042106628,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "398.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999526739120483,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "60.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999946355819702,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "350.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999923706054688,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "351.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9998846054077148,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "1.eml",
+        "statistics": {
+            "phishing_count": 4,
+            "phishing_avg_score": 0.9997451603412628,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "307.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9999944567680359,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "333.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999834299087524,
+            "benign_count": 1,
+            "benign_avg_score": 0.9998786449432373
+        }
+    },
+    {
+        "file": "192.eml",
+        "statistics": {
+            "phishing_count": 3,
+            "phishing_avg_score": 0.9999930063883463,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "363.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9976212382316589,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "325.eml",
+        "statistics": {
+            "phishing_count": 5,
+            "phishing_avg_score": 0.9998926997184754,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "63.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.99997878074646,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "118.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999942779541016,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "372.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999933242797852,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "168.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999920129776001,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "318.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999932050704956,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "269.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9996321499347687,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "109.eml",
+        "statistics": {
+            "phishing_count": 3,
+            "phishing_avg_score": 0.9999330838521322,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "110.eml",
+        "statistics": {
+            "phishing_count": 3,
+            "phishing_avg_score": 0.9997512499491373,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "149.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999932050704956,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "367.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999921321868896,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "182.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999933242797852,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "100.eml",
+        "statistics": {
+            "phishing_count": 3,
+            "phishing_avg_score": 0.9985954960187277,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "382.eml",
+        "statistics": {
+            "phishing_count": 3,
+            "phishing_avg_score": 0.9999902645746866,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "279.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9962331652641296,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "58.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.999981164932251,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "319.eml",
+        "statistics": {
+            "phishing_count": 5,
+            "phishing_avg_score": 0.9998926997184754,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "164.eml",
+        "statistics": {
+            "phishing_count": 5,
+            "phishing_avg_score": 0.999962592124939,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "242.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999850988388062,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "173.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.999992311000824,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "212.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9998045563697815,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "47.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999940395355225,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "159.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9643792510032654,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "99.eml",
+        "statistics": {
+            "phishing_count": 3,
+            "phishing_avg_score": 0.9983355005582174,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "267.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999005794525146,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "356.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9997548460960388,
+            "benign_count": 1,
+            "benign_avg_score": 0.8710852265357971
+        }
+    },
+    {
+        "file": "394.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.999992847442627,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "7.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999947547912598,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "362.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999885559082031,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "15.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999468326568604,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "167.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.999971866607666,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "220.eml",
+        "statistics": {
+            "phishing_count": 3,
+            "phishing_avg_score": 0.9933370351791382,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "30.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999779462814331,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "190.eml",
+        "statistics": {
+            "phishing_count": 0,
+            "phishing_avg_score": 0,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "153.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999932050704956,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "357.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9997548460960388,
+            "benign_count": 1,
+            "benign_avg_score": 0.8710852265357971
+        }
+    },
+    {
+        "file": "95.eml",
+        "statistics": {
+            "phishing_count": 3,
+            "phishing_avg_score": 0.9999005794525146,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "206.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9998002648353577,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "217.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999920129776001,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "245.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9749335646629333,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "165.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9995200634002686,
+            "benign_count": 1,
+            "benign_avg_score": 0.9951359629631042
+        }
+    },
+    {
+        "file": "51.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999401569366455,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "383.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999897480010986,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "91.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999932050704956,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "66.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999903440475464,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "42.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999876022338867,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "281.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.999976396560669,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "381.eml",
+        "statistics": {
+            "phishing_count": 3,
+            "phishing_avg_score": 0.9957197109858195,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "222.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9996788501739502,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "12.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999436140060425,
+            "benign_count": 1,
+            "benign_avg_score": 0.9949213862419128
+        }
+    },
+    {
+        "file": "254.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9998058676719666,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "268.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999698400497437,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "145.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999932050704956,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "26.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999490976333618,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "396.eml",
+        "statistics": {
+            "phishing_count": 7,
+            "phishing_avg_score": 0.9998594863074166,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "353.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999911785125732,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "303.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999912977218628,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "332.eml",
+        "statistics": {
+            "phishing_count": 0,
+            "phishing_avg_score": 0,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "194.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9858852028846741,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "198.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9997721314430237,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "41.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9997661709785461,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "258.eml",
+        "statistics": {
+            "phishing_count": 0,
+            "phishing_avg_score": 0,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "284.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9999944567680359,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "293.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999032020568848,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "310.eml",
+        "statistics": {
+            "phishing_count": 3,
+            "phishing_avg_score": 0.9779179692268372,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "322.eml",
+        "statistics": {
+            "phishing_count": 0,
+            "phishing_avg_score": 0,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "355.eml",
+        "statistics": {
+            "phishing_count": 3,
+            "phishing_avg_score": 0.9999898274739584,
+            "benign_count": 2,
+            "benign_avg_score": 0.993606835603714
+        }
+    },
+    {
+        "file": "162.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999929666519165,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "403.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999887943267822,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "154.eml",
+        "statistics": {
+            "phishing_count": 3,
+            "phishing_avg_score": 0.9999552567799886,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "18.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.733058750629425,
+            "benign_count": 1,
+            "benign_avg_score": 0.9676222801208496
+        }
+    },
+    {
+        "file": "309.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.999992847442627,
+            "benign_count": 1,
+            "benign_avg_score": 0.9997784495353699
+        }
+    },
+    {
+        "file": "8.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999940395355225,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "138.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999932050704956,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "4.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.999355137348175,
+            "benign_count": 1,
+            "benign_avg_score": 0.9774343967437744
+        }
+    },
+    {
+        "file": "6.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999947547912598,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "346.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999942779541016,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "119.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999927282333374,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "163.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999771118164062,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "410.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999926090240479,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "120.eml",
+        "statistics": {
+            "phishing_count": 3,
+            "phishing_avg_score": 0.9882247646649679,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "148.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9998906850814819,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "82.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999932050704956,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "233.eml",
+        "statistics": {
+            "phishing_count": 3,
+            "phishing_avg_score": 0.9999640385309855,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "328.eml",
+        "statistics": {
+            "phishing_count": 5,
+            "phishing_avg_score": 0.9999411702156067,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "364.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.999992847442627,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "263.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9990847110748291,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "125.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.99889075756073,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "76.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999932050704956,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "79.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999932050704956,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "13.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999898672103882,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "33.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999946355819702,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "387.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9999731779098511,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "295.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9999747276306152,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "203.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9895725846290588,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "96.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999927282333374,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "193.eml",
+        "statistics": {
+            "phishing_count": 3,
+            "phishing_avg_score": 0.9999932845433553,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "188.eml",
+        "statistics": {
+            "phishing_count": 0,
+            "phishing_avg_score": 0,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "402.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9999727010726929,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "112.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999914169311523,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "59.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999136924743652,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "230.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9961095154285431,
+            "benign_count": 1,
+            "benign_avg_score": 0.9909340143203735
+        }
+    },
+    {
+        "file": "308.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999929666519165,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "23.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.999970555305481,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "261.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999887943267822,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "90.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999936819076538,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "294.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.999992847442627,
+            "benign_count": 1,
+            "benign_avg_score": 0.9997784495353699
+        }
+    },
+    {
+        "file": "397.eml",
+        "statistics": {
+            "phishing_count": 0,
+            "phishing_avg_score": 0,
+            "benign_count": 5,
+            "benign_avg_score": 0.9971853494644165
+        }
+    },
+    {
+        "file": "266.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999005794525146,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "234.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9962331652641296,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "232.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9962331652641296,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "55.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999910593032837,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "314.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999834299087524,
+            "benign_count": 1,
+            "benign_avg_score": 0.995648205280304
+        }
+    },
+    {
+        "file": "106.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999840259552002,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "86.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999932050704956,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "377.eml",
+        "statistics": {
+            "phishing_count": 3,
+            "phishing_avg_score": 0.9999823967615763,
+            "benign_count": 1,
+            "benign_avg_score": 0.9930182695388794
+        }
+    },
+    {
+        "file": "316.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9998267292976379,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "276.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9999604821205139,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "223.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999927282333374,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "231.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9982873797416687,
+            "benign_count": 1,
+            "benign_avg_score": 0.9983372688293457
+        }
+    },
+    {
+        "file": "134.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9996757507324219,
+            "benign_count": 2,
+            "benign_avg_score": 0.9730168581008911
+        }
+    },
+    {
+        "file": "358.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.999988317489624,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "54.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999896287918091,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "94.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999927282333374,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "181.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9858818054199219,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "224.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9999687671661377,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "29.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999830722808838,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "142.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9998110234737396,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "124.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999783039093018,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "87.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999806880950928,
+            "benign_count": 1,
+            "benign_avg_score": 0.9973932504653931
+        }
+    },
+    {
+        "file": "115.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9990124702453613,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "69.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999932050704956,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "70.eml",
+        "statistics": {
+            "phishing_count": 1,
+            "phishing_avg_score": 0.9999932050704956,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "126.eml",
+        "statistics": {
+            "phishing_count": 3,
+            "phishing_avg_score": 0.9999675353368124,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    },
+    {
+        "file": "289.eml",
+        "statistics": {
+            "phishing_count": 2,
+            "phishing_avg_score": 0.9937699735164642,
+            "benign_count": 0,
+            "benign_avg_score": 0
+        }
+    }
+]
