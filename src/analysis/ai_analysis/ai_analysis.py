@@ -1,21 +1,26 @@
 import os
 import email
-import preprocessing_mail
+from . import preprocessing_mail
 from bs4 import BeautifulSoup
 from email.policy import default
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
 import torch
 import json 
+from ...database import add_analysis 
 import logging
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
-def analyze_emails(file_path):
+tokenizer = AutoTokenizer.from_pretrained("ealvaradob/bert-finetuned-phishing")
+model = AutoModelForSequenceClassification.from_pretrained("ealvaradob/bert-finetuned-phishing")
+classifier = pipeline('text-classification', model=model, tokenizer=tokenizer)
+
+def read_split_ai_analysis(email_obj):
     """
     Analyzes emails from a file and classifies them.
-
+*
     This function reads an email file, extracts the text, splits it into groups of tokens,
     and classifies each group using a classifier.
 
@@ -28,7 +33,7 @@ def analyze_emails(file_path):
     """
 
     results = []
-    text =  preprocessing_mail.extract_email_text(file_path)
+    text =  preprocessing_mail.extract_email_text(email_obj)
     groups_to_analyze = preprocessing_mail.split_512_token(text)
 
     for sentence in groups_to_analyze:
@@ -79,33 +84,7 @@ def phishing_statistics_1(group):
         'benign_avg_score': score_avg_benign
     }
 
-
-tokenizer = AutoTokenizer.from_pretrained("ealvaradob/bert-finetuned-phishing")
-model = AutoModelForSequenceClassification.from_pretrained("ealvaradob/bert-finetuned-phishing")
-
-# other model to test not implemented yet
-# tokenizer = AutoTokenizer.from_pretrained("cybersectony/phishing-email-detection-distilbert_v2.4.1")
-# model = AutoModelForSequenceClassification.from_pretrained("cybersectony/phishing-email-detection-distilbert_v2.4.1")
-
-classifier = pipeline('text-classification', model=model, tokenizer=tokenizer)
-
-directory = "phishing_email_example"
-results = []
-
-for filename in os.listdir(directory):
-    file_path = os.path.join(directory, filename)
-    if os.path.isfile(file_path):
-        logging.info(f"Processing file: {filename}")
-
-        mail = analyze_emails(file_path)
-        statistics = phishing_statistics_1(mail)
-        results.append({'file': filename, 'statistics': statistics})
-        
-        logging.info(f"Completed analysis for file: {filename}")
-
-
-output_file = "phishing_analysis_results.json"
-with open(output_file, 'w') as f:
-    json.dump(results, f, indent=4)
-
-logging.info(f"Results saved to {output_file}")
+def ai_analysis(email_obj):
+    ai_result = read_split_ai_analysis(email_obj)
+    json_result = phishing_statistics_1(ai_result)
+    return json_result

@@ -1,3 +1,7 @@
+from database import Database 
+from analysis.mail_analyzer import load_email, analyze_email
+import os
+from analysis.ai_analysis.ai_analysis import ai_analysis
 import logging
 from database import Database
 from analysis.mail_analyzer import load_email, analyze_email
@@ -22,6 +26,9 @@ async def main():
     for email_file in email_files:
         logging.info(f"Analyzing {email_file}")
         email_obj = load_email(email_file)
+        analyze_email(email_obj, db)
+        
+
         tasks.append(analyze_email(email_obj, db))
     await asyncio.gather(*tasks)
 

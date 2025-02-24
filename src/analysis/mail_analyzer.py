@@ -14,6 +14,7 @@ from analysis.spf_check import check_spf, SPFStatus
 from analysis.dkim_check import check_dkim, DKIMStatus
 from database import Database
 from datetime import datetime
+from ai_analysis.ai_analysis import ai_analysis
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -124,6 +125,15 @@ async def analyze_email(email_obj, db):
     conclusion = determine_conclusion(spf_status, dkim_status, dmarc_status)
     db.update_mail_status(id_mail, conclusion)
 
+    # ai analysis 
+    ai_result = ai_analysis(email_obj)
+    db.add_analyse(
+        id_mail=id_mail,
+        resultat_analyse=f"AI_PHISHING: {ai_result}",
+        date_analyse=datetime.now(),
+        type_analyse='AI'
+    )
+    
 if __name__ == "__main__":
     db = Database()
     email_files = ["phishing_email_example/1.eml", "phishing_email_example/2.eml", "phishing_email_example/3.eml"]
