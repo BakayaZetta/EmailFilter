@@ -52,12 +52,16 @@ def check_and_save_dmarc(email_obj, db, id_mail):
     )
 
 def determine_conclusion(spf_status, dkim_status, dmarc_status):
-    if (spf_status in [SPFStatus.VALID, SPFStatus.SOFT_WARNING, SPFStatus.NEUTRAL, SPFStatus.NO_SPF_RECORD] and
-        dkim_status in [DKIMStatus.VALID, DKIMStatus.NO_DKIM] and
-        dmarc_status in [DMARCStatus.PASS, DMARCStatus.NO_DMARC]):
-        return 'PASS'
+    if spf_status in [SPFStatus.DNS_ERROR, SPFStatus.SPF_ERROR] or \
+       dkim_status in [DKIMStatus.DNS_ERROR, DKIMStatus.DKIM_ERROR] or \
+       dmarc_status in [DMARCStatus.DNS_ERROR, DMARCStatus.DMARC_ERROR]:
+        return 'ERROR'
     elif spf_status == SPFStatus.INVALID or dkim_status == DKIMStatus.INVALID or dmarc_status == DMARCStatus.FAIL:
         return 'QUARANTINE'
+    elif (spf_status in [SPFStatus.VALID, SPFStatus.SOFT_WARNING, SPFStatus.NEUTRAL, SPFStatus.NO_SPF_RECORD] and
+          dkim_status in [DKIMStatus.VALID, DKIMStatus.NO_DKIM] and
+          dmarc_status in [DMARCStatus.PASS, DMARCStatus.NO_DMARC]):
+        return 'PASS'
     else:
         return 'ERROR'
 
