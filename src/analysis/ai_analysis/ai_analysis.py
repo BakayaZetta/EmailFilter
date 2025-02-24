@@ -1,6 +1,6 @@
 import os
 import email
-from . import preprocessing_mail
+from analysis.ai_analysis import preprocessing_mail
 from bs4 import BeautifulSoup
 from email.policy import default
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
@@ -83,7 +83,7 @@ def phishing_statistics_1(group):
         'benign_avg_score': score_avg_benign
     }
 
-def ai_analysis(email_obj):
+async def ai_analysis(email_obj):
     ai_result = read_split_ai_analysis(email_obj)
     json_result = phishing_statistics_1(ai_result)
     return json_result

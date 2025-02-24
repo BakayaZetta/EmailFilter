@@ -7,6 +7,7 @@ from database import Database
 from analysis.mail_analyzer import load_email, analyze_email
 import os
 import asyncio
+import random
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -26,9 +27,6 @@ async def main():
     for email_file in email_files:
         logging.info(f"Analyzing {email_file}")
         email_obj = load_email(email_file)
-        analyze_email(email_obj, db)
-        
-
         tasks.append(analyze_email(email_obj, db))
     await asyncio.gather(*tasks)
 

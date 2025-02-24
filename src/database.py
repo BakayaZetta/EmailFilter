@@ -160,3 +160,8 @@ class Database:
         update_status_query = "UPDATE Mail SET Statut = %s WHERE ID_Mail = %s"
         self.cursor.execute(update_status_query, (new_status, id_mail))
         self.conn.commit()
+
+    def user_exists(self, id_utilisateur):
+        get_user_query = "SELECT * FROM Utilisateur WHERE ID_Utilisateur = %s"
+        self.cursor.execute(get_user_query, (id_utilisateur,))
+        return self.cursor.fetchone() is not None

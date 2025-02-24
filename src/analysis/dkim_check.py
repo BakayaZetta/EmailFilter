@@ -80,10 +80,12 @@ async def check_dkim(email_obj) -> DKIMStatus:
         except dkim.ValidationError:
             return DKIMStatus.INVALID
         except Exception as e:
+            logging.error(f"Error during DKIM verification: {e}")
             return DKIMStatus.DKIM_ERROR
     except dns.resolver.NoAnswer:
         return DKIMStatus.DNS_ERROR
     except dns.resolver.NXDOMAIN:
         return DKIMStatus.DNS_ERROR
     except Exception as e:
+        logging.error(f"Error during DKIM verification: {e}")
         return DKIMStatus.DKIM_ERROR
