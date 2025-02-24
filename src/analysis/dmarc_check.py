@@ -51,4 +51,5 @@ async def check_dmarc(email_obj) -> DMARCStatus:
     except (dns.resolver.NoAnswer, dns.resolver.NXDOMAIN):
         return DMARCStatus.NO_DMARC
     except Exception as e:
+        logging.error(f"Error during DMARC verification: {e}")
         return DMARCStatus.DMARC_ERROR

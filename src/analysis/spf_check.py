@@ -94,4 +94,5 @@ async def check_spf(email_obj) -> SPFStatus:
         else:
             return SPFStatus.NEUTRAL
     except Exception as e:
+        logging.error(f"Error during SPF verification: {e}")
         return SPFStatus.SPF_ERROR
