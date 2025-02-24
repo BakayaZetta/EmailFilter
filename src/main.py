@@ -1,5 +1,6 @@
 from database import Database
 from analysis.mail_analyzer import load_email, analyze_email
+import os
 
 if __name__ == "__main__":
     db = Database()
@@ -11,7 +12,7 @@ if __name__ == "__main__":
         mot_de_passe="password",
         role="user"
     )
-    email_files = ["phishing_email_example/1.eml", "phishing_email_example/2.eml", "phishing_email_example/3.eml"]
+    email_files = [f"phishing_email_example/{file}" for file in os.listdir("phishing_email_example") if file.endswith(".eml")]
     for email_file in email_files:
         email_obj = load_email(email_file)
         analyze_email(email_obj, db)

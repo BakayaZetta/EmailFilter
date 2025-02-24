@@ -53,7 +53,7 @@ class Database:
                 "  ID_Mail INT AUTO_INCREMENT PRIMARY KEY,"
                 "  ID_Utilisateur INT,"
                 "  Sujet VARCHAR(255),"
-                "  Contenu TEXT,"
+                "  Contenu LONGTEXT,"
                 "  Date_Reception DATETIME,"
                 "  Statut VARCHAR(255),"
                 "  FOREIGN KEY (ID_Utilisateur) REFERENCES Utilisateur(ID_Utilisateur)"
@@ -151,3 +151,8 @@ class Database:
         get_analyse_query = "SELECT * FROM Analyse WHERE ID_Analyse = %s"
         self.cursor.execute(get_analyse_query, (id_analyse,))
         return self.cursor.fetchone()
+
+    def update_mail_status(self, id_mail, new_status):
+        update_status_query = "UPDATE Mail SET Statut = %s WHERE ID_Mail = %s"
+        self.cursor.execute(update_status_query, (new_status, id_mail))
+        self.conn.commit()
