@@ -14,7 +14,7 @@ from analysis.spf_check import check_spf, SPFStatus
 from analysis.dkim_check import check_dkim, DKIMStatus
 from database import Database
 from datetime import datetime
-from ai_analysis.ai_analysis import ai_analysis
+from .ai_analysis.ai_analysis import ai_analysis
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')

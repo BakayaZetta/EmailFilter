@@ -6,7 +6,6 @@ from email.policy import default
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
 import torch
 import json 
-from ...database import add_analysis 
 import logging
 
 # Configure logging
