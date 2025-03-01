@@ -1,11 +1,7 @@
 import re
-from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
 import torch
 from analysis.ai_analysis.preprocessing_mail import extract_email_text
-
-tokenizer = AutoTokenizer.from_pretrained("ealvaradob/bert-finetuned-phishing")
-model = AutoModelForSequenceClassification.from_pretrained("ealvaradob/bert-finetuned-phishing")
-classifier = pipeline('text-classification', model=model, tokenizer=tokenizer)
+from analysis.ai_analysis.ai_analysis import classifier
 
 def get_urls_from_text(text: str) -> list:
     '''
@@ -52,15 +48,28 @@ def url_analysis(email_obj):
 
     Returns:
         str: The number of phishing URLs found in the email
+
+    Exemple :
+        url_analysis(email)-> {'http://a.a.ca/': 'benign', 
+                                'http://b.a.ca/': 'benign', 
+                                'https://c.a.ca/': 'benign'}
     """
     text = extract_email_text(email_obj)
     url_list = get_urls_from_text(text)
-    url_dict = predict_url(url_list)
-    total_url=0
-    phishing_url=0
-    for key, value in url_dict.items():
-        total_url+=1
-        if value == 'phishing':
-            phishing_url+=1
+    return predict_url(url_list)
 
-    return f"Total URL: {total_url}, Phishing URL: {phishing_url}"
+def url_statistics(dict_url): 
+    phishing_count = sum(1 for score in dict_url.values() if score == "phishing")
+    benign_count = sum(1 for score in dict_url.values() if score == "benign")
+
+    return {
+        "phishing_count": phishing_count,
+        "benign_count": benign_count
+    }
+
+def url_is_phishing(dict_url):
+    """
+    Plus stricte ici, un seul lien suffit a dire que c'est du phishing
+    """
+    stats = url_statistics(dict_url)
+    return stats["phishing_count"] > 0

@@ -12,7 +12,6 @@ from email.message import EmailMessage
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-
 tokenizer = AutoTokenizer.from_pretrained("ealvaradob/bert-finetuned-phishing")
 model = AutoModelForSequenceClassification.from_pretrained("ealvaradob/bert-finetuned-phishing")
 classifier = pipeline('text-classification', model=model, tokenizer=tokenizer)
@@ -36,7 +35,7 @@ def read_split_ai_analysis(email_obj: EmailMessage) -> list[dict]:
         results.append(prediction)
     return results
 
-def phishing_statistics_1(group: list[list[dict]]) -> dict:
+def phishing_statistics(group: list[list[dict]]) -> dict:
     '''
     Calculates statistics for phishing and benign labels from classification results.
 
@@ -79,7 +78,26 @@ async def ai_analysis(email_obj: EmailMessage) -> dict:
 
     Returns:
         dict: The AI analysis result.
+
+    Exemple : 
+        ai_analysis(mail)-> {'phishing_count': 3, 
+                            'phishing_avg_score': 0.9994781613349915,
+                            'benign_count': 1, 
+                            'benign_avg_score': 0.9961360096931458}
+
     '''
     ai_result = read_split_ai_analysis(email_obj)
-    json_result = phishing_statistics_1(ai_result)
-    return json_result
+    return phishing_statistics(ai_result)
+
+def text_is_phising(result: dict) -> bool:
+    '''
+    if 80% of the email is benign, it is not phishing.
+    Returns True if the email is phishing, False otherwise.
+    '''
+    total_count = result['phishing_count'] + result['benign_count']
+    if total_count == 0:
+        return False
+    benign_percentage = (result['benign_count'] / total_count) * 100
+    if benign_percentage >= 80:
+        return False
+    return result['phishing_count'] > result['benign_count']
