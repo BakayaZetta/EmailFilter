@@ -1,3 +1,13 @@
+"""
+This script analyzes emails for SPF, DKIM, and DMARC status and saves the results to the database.
+
+Functions:
+    main: Main function to analyze emails and save results to the database.
+
+Usage:
+    Run this script directly to start the email analysis.
+"""
+
 from database import Database 
 from analysis.mail_analyzer import load_email, analyze_email
 import os
@@ -24,14 +34,6 @@ async def main() -> None:
         None
     '''
     db = Database()
-    # Add a default user
-    user_id = db.add_utilisateur(
-        nom="Default",
-        prenom="User",
-        email="default.user@example.com",
-        mot_de_passe="password",
-        role="user"
-    )
     email_files = [f"phishing_email_example/{file}" for file in os.listdir("phishing_email_example") if file.endswith(".eml")]
     random_emails = random.sample(email_files, 4)
     random_emails.append("phishing_email_example/test.eml")
