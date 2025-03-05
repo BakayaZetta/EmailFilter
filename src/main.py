@@ -24,14 +24,6 @@ async def main() -> None:
         None
     '''
     db = Database()
-    # Add a default user
-    user_id = db.add_utilisateur(
-        nom="Default",
-        prenom="User",
-        email="default.user@example.com",
-        mot_de_passe="password",
-        role="user"
-    )
     email_files = [f"phishing_email_example/{file}" for file in os.listdir("phishing_email_example") if file.endswith(".eml")]
     random_emails = random.sample(email_files, 4)
     random_emails.append("phishing_email_example/test.eml")

@@ -255,3 +255,49 @@ class Database:
         get_user_query = "SELECT * FROM Utilisateur WHERE ID_Utilisateur = %s"
         self.cursor.execute(get_user_query, (id_utilisateur,))
         return self.cursor.fetchone() is not None
+    def user_exists_by_email(self, email: str) -> bool:
+        '''
+        Checks if a user exists in the database by email.
+
+        Parameters:
+            email (str): The email address of the user.
+
+        Returns:
+            bool: True if the user exists, False otherwise.
+        '''
+        get_user_query = "SELECT * FROM Utilisateur WHERE Email = %s"
+        self.cursor.execute(get_user_query, (email,))
+        return self.cursor.fetchone() is not None
+
+    def add_user_with_email(self, email: str) -> int:
+        '''
+        Adds a user record to the database with minimal information.
+
+        Parameters:
+            email (str): The email address of the user.
+
+        Returns:
+            int: The ID of the inserted user record.
+        '''
+        add_user_query = (
+            "INSERT INTO Utilisateur (Nom, Prenom, Email, Mot_de_passe, Role) "
+            "VALUES (%s, %s, %s, %s, %s)")
+        user_data = ('', '', email, '', 'user')
+        self.cursor.execute(add_user_query, user_data)
+        self.conn.commit()
+        return self.cursor.lastrowid
+
+    def get_user_id_by_email(self, email: str) -> Optional[int]:
+        '''
+        Retrieves the user ID from the database by email.
+
+        Parameters:
+            email (str): The email address of the user.
+
+        Returns:
+            Optional[int]: The user ID if found, None otherwise.
+        '''
+        get_user_id_query = "SELECT ID_Utilisateur FROM Utilisateur WHERE Email = %s"
+        self.cursor.execute(get_user_id_query, (email,))
+        result = self.cursor.fetchone()
+        return result[0] if result else None

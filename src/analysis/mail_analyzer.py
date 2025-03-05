@@ -3,6 +3,7 @@ import os
 import asyncio
 import logging
 from typing import Optional
+from email.utils import parseaddr
 
 # Adjust the import paths dynamically based on the script's execution context
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -166,10 +167,14 @@ async def analyze_email(email_obj: email.message.EmailMessage, db: Database) -> 
         logging.error(f"Error processing email headers for mail {id_mail}: {e}")
         return
 
-    # Ensure the user exists in the Utilisateur table
-    user_id = 1  # Assuming a default user ID for now
-    if not db.user_exists(user_id):
-        db.add_user(user_id, 'default_user')
+    # Extract recipient email
+    recipient_email = parseaddr(email_data['to'])[1]
+
+    # Check if the user exists in the Utilisateur table by email
+    if db.user_exists_by_email(recipient_email):
+        user_id = db.get_user_id_by_email(recipient_email)
+    else:
+        user_id = db.add_user_with_email(recipient_email)
 
     id_mail = db.add_mail(
         id_utilisateur=user_id,  # Use the ensured user ID
