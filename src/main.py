@@ -1,3 +1,13 @@
+"""
+This script analyzes emails for SPF, DKIM, and DMARC status and saves the results to the database.
+
+Functions:
+    main: Main function to analyze emails and save results to the database.
+
+Usage:
+    Run this script directly to start the email analysis.
+"""
+
 from database import Database 
 from analysis.mail_analyzer import load_email, analyze_email
 import os

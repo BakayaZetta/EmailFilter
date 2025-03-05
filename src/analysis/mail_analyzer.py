@@ -126,6 +126,19 @@ async def check_and_save_ai(email_obj: email.message.EmailMessage, db: Database,
     return ai_result
 
 def determine_conclusion(spf_status: SPFStatus, dkim_status: DKIMStatus, dmarc_status: Optional[DMARCStatus]) -> str:
+    '''
+    Détermine la conclusion basée sur les statuts SPF, DKIM et DMARC.
+
+    Paramètres:
+        spf_status (SPFStatus): Le statut SPF de l'email.
+        dkim_status (DKIMStatus): Le statut DKIM de l'email.
+        dmarc_status (Optional[DMARCStatus]): Le statut DMARC de l'email.
+
+    Retourne:
+        str: La conclusion qui peut être 'PASS', 'QUARANTINE' ou 'ERROR'.
+    '''
+    if dmarc_status == DMARCStatus.PASS:
+        return 'PASS'
     if spf_status in [SPFStatus.DNS_ERROR, SPFStatus.SPF_ERROR] or \
        dkim_status in [DKIMStatus.DNS_ERROR, DKIMStatus.DKIM_ERROR] or \
        dmarc_status in [DMARCStatus.DNS_ERROR, DMARCStatus.DMARC_ERROR]:
