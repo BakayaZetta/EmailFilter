@@ -1,15 +1,23 @@
 FROM python:3.11-slim
 
-WORKDIR /detectish
+# Install build dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libmariadb-dev \
+    pkg-config \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update && apt-get install -y make build-essential && \
-    rm -rf /var/lib/apt/lists/*
+# Install Python dependencies
+COPY requirements-base.txt /app/requirements-base.txt
+COPY requirements-huggingface.txt /app/requirements-huggingface.txt
+RUN pip install --no-cache-dir -r /app/requirements-huggingface.txt
+RUN pip install --no-cache-dir -r /app/requirements-base.txt
 
-COPY requirements-huggingface.txt requirements-base.txt ./
-RUN pip install --no-cache-dir -r requirements-huggingface.txt && \
-    pip install --no-cache-dir -r requirements-base.txt
+# Copy the rest of your application code
+COPY ./src /app/src
 
-COPY ./src ./src
-COPY ./phishing_email_example ./phishing_email_example
+# Set the working directory
+WORKDIR /app
 
-CMD ["python", "analysis/ai_analysis/ai_analysis.py"]
+# Command to run your application
+CMD ["python", "src/main.py"]
