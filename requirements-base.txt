@@ -1,8 +1,12 @@
-torch
 html2text
 nltk
 bs4
 chardet
 seaborn
-logging
 matplotlib
+mysql-connector-python
+dotenv
+asyncio
+pyspf
+dnspython
+dkimpy
