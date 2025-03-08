@@ -1,48 +1,45 @@
 services:
-  python-app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: python-app
-    volumes:
-      - ./src:/app
-      - ./phishing_email_example:/shared-data 
-    working_dir: /app
-    command: python app.py
+  detectish:
+    image: detectish:latest
     depends_on:
       - mysql
     networks:
-      - app-network
+      - detectish-network
+    volumes:
+      - ./phishing_email_example:/app/phishing_email_example
+    environment:
+      DB_NAME: detectish_db
+      DB_USER: detectish_user
+      DB_PASSWORD: detectish_password
+      DB_HOST: mysql
+      DB_PORT: 3306
 
   clamav:
     image: clamav/clamav:latest
     container_name: clamav
     ports:
-      - "3310:3310"
-    volumes:
-      - ./phishing_email_example:/shared-data  
+      - "3310:3310" 
     networks:
-      - app-network
+      - detectish-network
 
   mysql:
     image: mysql:8.0
     container_name: mysql
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-    ports:
-      - "3306:3306"
+      MYSQL_ROOT_PASSWORD: MYSQL_ROOT_PASSWORD
+      MYSQL_DATABASE: detectish_db
+      MYSQL_USER: detectish_user
+      MYSQL_PASSWORD: detectish_password
     volumes:
       - mysql-data:/var/lib/mysql
-      - ./phishing_email_example:/shared-data 
     networks:
-      - app-network
+      - detectish-network
+    ports:
+      - "3306:3306"
 
 volumes:
   mysql-data:
 
 networks:
-  app-network:
+  detectish-network:
     driver: bridge
