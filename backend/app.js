@@ -6,6 +6,7 @@ require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 
 const userRoutes = require('./routes/userRoutes');
 const mailRoutes = require('./routes/mailRoutes');
+const analysisRoutes = require('./routes/analysisRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -15,6 +16,7 @@ app.use(bodyParser.json());
 
 app.use('/api', userRoutes);
 app.use('/api', mailRoutes);
+app.use('/api', analysisRoutes);
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
