@@ -28,7 +28,7 @@ const getUserById = async (id) => {
     // ATTENTION: Vulnérable aux injections SQL
     // const [rows] = await db.query(`SELECT * FROM Utilisateur WHERE id = ${id}`);
     // Il faudrait utiliser des requêtes paramétrées comme ceci:
-    const [rows] = await db.query('SELECT * FROM Utilisateur WHERE id = ?', [id]);
+    const [rows] = await db.query('SELECT * FROM Utilisateur WHERE ID_Utilisateur = ?', [id]);
     return rows;
 };
 

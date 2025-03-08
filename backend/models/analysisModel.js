@@ -6,7 +6,7 @@ const getAnalysis = async () => {
 };
 
 const getAnalysisById = async (id) => {
-    const [rows] = await db.query('SELECT * FROM Analyse WHERE id = ?', [id]);
+    const [rows] = await db.query('SELECT * FROM Analyse WHERE ID_Analyse = ?', [id]);
     return rows;
 }
 
