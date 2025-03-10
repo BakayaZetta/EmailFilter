@@ -13,12 +13,12 @@ const links = [
   { name: 'Statistics', path: '/statistics' },
   { name: 'Settings', path: '/settings' },
   { name: 'Login', path: '/login' },
-  { name: 'Register', path: '/register' },
+  { name: 'Sign up', path: '/register' },
 ];
 </script>
 
 <template>
-  <nav class="bg-white border-b border-gray-200">
+  <nav class="bg-white border-b border-gray-100">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between h-20">
         <div class="flex flex-1 items-center justify-center md:items-stretch md:justify-start">
