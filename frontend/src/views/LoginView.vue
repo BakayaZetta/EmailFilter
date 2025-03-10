@@ -132,7 +132,7 @@ const handleSubmit = async () => {
                 <div class="relative">
                   <input id="email" v-model="loginForm.email" name="email" type="email" autocomplete="email" required
                     class="relative block w-full disabled:cursor-not-allowed disabled:opacity-75 focus:outline-none border-0 rounded-md placeholder-gray-400 text-sm px-2.5 py-1.5 shadow-sm bg-white text-gray-900 ring-1 ring-inset ring-gray-300  focus:ring-2 focus:ring-red-500"
-                    placeholder="Email address" :class="{ 'ring-red-300': loginForm.emailError }" />
+                    placeholder="Enter your email" :class="{ 'ring-red-300': loginForm.emailError }" />
                 </div>
                 <p v-if="loginForm.emailError" class="mt-1 text-sm text-red-600">{{ loginForm.emailError }}</p>
               </div>
@@ -150,7 +150,7 @@ const handleSubmit = async () => {
                   <input id="password" v-model="loginForm.password" :type="loginForm.showPassword ? 'text' : 'password'"
                     name="password" autocomplete="current-password" required
                     class="relative block w-full disabled:cursor-not-allowed disabled:opacity-75 focus:outline-none border-0 rounded-md placeholder-gray-400 text-sm px-2.5 py-1.5 shadow-sm bg-white text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-red-500 pe-9"
-                    placeholder="Password" :class="{ 'ring-red-300': loginForm.passwordError }" />
+                    placeholder="Enter your password" :class="{ 'ring-red-300': loginForm.passwordError }" />
                   <button type="button" @click="loginForm.showPassword = !loginForm.showPassword"
                     class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 focus:outline-none">
                     <i v-if="loginForm.showPassword" class="pi pi-eye hover:text-gray-700"></i>

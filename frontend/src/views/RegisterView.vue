@@ -176,7 +176,7 @@ const handleSubmit = async () => {
                   <input id="firstName" v-model="registerForm.firstName" name="firstName" type="text"
                     autocomplete="given-name" required
                     class="relative block w-full disabled:cursor-not-allowed disabled:opacity-75 focus:outline-none border-0 rounded-md placeholder-gray-400 text-sm px-2.5 py-1.5 shadow-sm bg-white text-gray-900 ring-1 ring-inset ring-gray-300  focus:ring-2 focus:ring-red-500"
-                    placeholder="First name" :class="{ 'ring-red-300': registerForm.firstNameError }" />
+                    placeholder="Enter your first name" :class="{ 'ring-red-300': registerForm.firstNameError }" />
                 </div>
                 <p v-if="registerForm.firstNameError" class="mt-1 text-sm text-red-600">{{ registerForm.firstNameError
                   }}</p>
@@ -195,7 +195,7 @@ const handleSubmit = async () => {
                   <input id="lastName" v-model="registerForm.lastName" name="lastName" type="text"
                     autocomplete="family-name" required
                     class="relative block w-full disabled:cursor-not-allowed disabled:opacity-75 focus:outline-none border-0 rounded-md placeholder-gray-400 text-sm px-2.5 py-1.5 shadow-sm bg-white text-gray-900 ring-1 ring-inset ring-gray-300  focus:ring-2 focus:ring-red-500"
-                    placeholder="Last name" :class="{ 'ring-red-300': registerForm.lastNameError }" />
+                    placeholder="Enter your last name" :class="{ 'ring-red-300': registerForm.lastNameError }" />
                 </div>
                 <p v-if="registerForm.lastNameError" class="mt-1 text-sm text-red-600">{{ registerForm.lastNameError }}
                 </p>
@@ -213,7 +213,7 @@ const handleSubmit = async () => {
                 <div class="relative">
                   <input id="email" v-model="registerForm.email" name="email" type="email" autocomplete="email" required
                     class="relative block w-full disabled:cursor-not-allowed disabled:opacity-75 focus:outline-none border-0 rounded-md placeholder-gray-400 text-sm px-2.5 py-1.5 shadow-sm bg-white text-gray-900 ring-1 ring-inset ring-gray-300  focus:ring-2 focus:ring-red-500"
-                    placeholder="Email address" :class="{ 'ring-red-300': registerForm.emailError }" />
+                    placeholder="Enter your email address" :class="{ 'ring-red-300': registerForm.emailError }" />
                 </div>
                 <p v-if="registerForm.emailError" class="mt-1 text-sm text-red-600">{{ registerForm.emailError }}</p>
               </div>
@@ -232,7 +232,7 @@ const handleSubmit = async () => {
                     :type="registerForm.showPassword ? 'text' : 'password'" name="password" autocomplete="new-password"
                     required
                     class="relative block w-full disabled:cursor-not-allowed disabled:opacity-75 focus:outline-none border-0 rounded-md placeholder-gray-400 text-sm px-2.5 py-1.5 shadow-sm bg-white text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-red-500 pe-9"
-                    placeholder="Password" :class="{ 'ring-red-300': registerForm.passwordError }" />
+                    placeholder="Enter your password" :class="{ 'ring-red-300': registerForm.passwordError }" />
                   <button type="button" @click="registerForm.showPassword = !registerForm.showPassword"
                     class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 focus:outline-none">
                     <i v-if="registerForm.showPassword" class="pi pi-eye hover:text-gray-700"></i>
@@ -257,7 +257,8 @@ const handleSubmit = async () => {
                     :type="registerForm.showPassword ? 'text' : 'password'" name="confirmPassword"
                     autocomplete="new-password" required
                     class="relative block w-full disabled:cursor-not-allowed disabled:opacity-75 focus:outline-none border-0 rounded-md placeholder-gray-400 text-sm px-2.5 py-1.5 shadow-sm bg-white text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-red-500 pe-9"
-                    placeholder="Confirm password" :class="{ 'ring-red-300': registerForm.confirmPasswordError }" />
+                    placeholder="Confirm your password"
+                    :class="{ 'ring-red-300': registerForm.confirmPasswordError }" />
                   <button type="button" @click="registerForm.showPassword = !registerForm.showPassword"
                     class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 focus:outline-none">
                     <i v-if="registerForm.showPassword" class="pi pi-eye hover:text-gray-700"></i>
