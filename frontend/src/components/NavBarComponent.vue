@@ -8,7 +8,7 @@ const isActive = (routePath) => {
 }
 
 const links = [
-  { name: 'Dashboard', path: '/' },
+  { name: 'Home', path: '/' },
   { name: 'Quarantine', path: '/quarantine' },
   { name: 'Statistics', path: '/statistics' },
   { name: 'Settings', path: '/settings' },
