@@ -1,6 +1,11 @@
 <script setup>
 import { reactive } from 'vue'
-import { RouterLink } from 'vue-router';
+import { RouterLink, useRouter } from 'vue-router';
+import api from '@/services/api'; // Importez le service API
+import { useAuthStore } from '@/stores/authStore'; // Importez le store d'authentification
+
+const router = useRouter();
+const authStore = useAuthStore(); // Utilisez le store d'authentification
 
 const registerForm = reactive({
   firstName: '',
@@ -98,35 +103,27 @@ const handleSubmit = async () => {
   try {
     registerForm.isLoading = true
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500))
-
-    // Here you would make an API call to create the account
-    // For example:
-    // const response = await fetch('/api/register', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({
-    //     firstName: registerForm.firstName,
-    //     lastName: registerForm.lastName,
-    //     email: registerForm.email,
-    //     password: registerForm.password
-    //   })
-    // })
-
-    // For demo purposes, let's simulate a successful registration
-    console.log('Registration successful', {
+    // Utilisation d'Axios à la place de fetch
+    const response = await api.post('/auth/register', {
       firstName: registerForm.firstName,
       lastName: registerForm.lastName,
       email: registerForm.email,
-    })
+      password: registerForm.password
+    });
 
-    // Redirect user or update UI
-    // window.location.href = '/login'
+    // Les données sont directement disponibles dans response.data avec Axios
+    const data = response.data;
 
-  } catch (err) {
-    registerForm.error = 'Failed to create account. Please try again later.'
-    console.error('Registration error:', err)
+    // Utiliser authStore au lieu de sessionStorage
+    authStore.login(data.user, data.token);
+
+    // Redirect to /
+    router.push('/');
+
+  } catch (error) {
+    // Gestion des erreurs améliorée avec Axios
+    registerForm.error = error.response?.data?.message || 'Failed to create account. Please try again later.'
+    console.error('Registration error:', error)
   } finally {
     registerForm.isLoading = false
   }

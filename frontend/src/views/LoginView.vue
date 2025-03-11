@@ -1,6 +1,11 @@
 <script setup>
 import { reactive } from 'vue'
-import { RouterLink } from 'vue-router';
+import { RouterLink, useRouter } from 'vue-router';
+import api from '@/services/api'; // Importez le service API
+import { useAuthStore } from '@/stores/authStore';
+
+const router = useRouter();
+const authStore = useAuthStore();
 
 const loginForm = reactive({
   email: '',
@@ -32,9 +37,6 @@ const validatePassword = () => {
   if (!loginForm.password) {
     loginForm.passwordError = 'Password is required'
     return false
-  } else if (loginForm.password.length < 6) {
-    loginForm.passwordError = 'Password must be at least 6 characters'
-    return false
   }
   loginForm.passwordError = ''
   return true
@@ -56,30 +58,25 @@ const handleSubmit = async () => {
   try {
     loginForm.isLoading = true
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500))
-
-    // Here you would normally make an API call to authenticate the user
-    // For example:
-    // const response = await fetch('/api/login', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ email: email.value, password: password.value, rememberMe: rememberMe.value })
-    // })
-
-    // For demo purposes, let's simulate a successful login
-    console.log('Login successful', {
+    // Utilisation d'Axios à la place de fetch
+    const response = await api.post('/auth/login', {
       email: loginForm.email,
-      password: loginForm.password,
-      rememberMe: loginForm.rememberMe
-    })
+      password: loginForm.password
+    });
 
-    // Redirect user or update UI
-    // window.location.href = '/dashboard'
+    // Les données sont directement disponibles dans response.data avec Axios
+    const data = response.data;
 
-  } catch (err) {
-    loginForm.error = 'Failed to sign in. Please check your credentials and try again.'
-    console.error('Login error:', err)
+    // Store token in sessionStorage (au lieu de localStorage)
+    authStore.login(data.user, data.token);
+
+    // Redirect to /
+    router.push('/');
+
+  } catch (error) {
+    // Gestion des erreurs améliorée avec Axios
+    loginForm.error = error.response?.data?.message || 'Failed to sign in. Please check your credentials and try again.'
+    console.error('Login error:', error)
   } finally {
     loginForm.isLoading = false
   }
