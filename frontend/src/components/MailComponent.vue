@@ -237,6 +237,14 @@ onMounted(() => {
           <span>Warning: This email may contain unsafe content</span>
         </div>
       </div>
+
+      <!-- Pied de page avec action fermer -->
+      <div class="mt-3 flex justify-end">
+        <button @click="close()"
+          class="text-xs bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-1 rounded flex items-center">
+          <i class="pi pi-times mr-1"></i> Close
+        </button>
+      </div>
     </div>
   </div>
 </template>
