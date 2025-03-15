@@ -10,3 +10,4 @@ asyncio
 pyspf
 dnspython
 dkimpy
+clamav-client

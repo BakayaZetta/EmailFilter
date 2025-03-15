@@ -15,6 +15,7 @@ from email.parser import BytesParser
 from analysis.dmarc_check import check_dmarc, DMARCStatus
 from analysis.spf_check import check_spf, SPFStatus
 from analysis.dkim_check import check_dkim, DKIMStatus
+from analysis.clam_av_check import analyze_attachments
 from database import Database
 from datetime import datetime
 from ai_analysis import ai_analysis
@@ -125,6 +126,40 @@ async def check_and_save_ai(email_obj: email.message.EmailMessage, db: Database,
     )
     return ai_result
 
+async def check_and_save_clamAV(email_obj: email.message.EmailMessage, db: Database, id_mail: int) -> dict:
+    '''
+    Analyzes the email attachments using ClamAV and saves the result to the database.
+
+    Parameters:
+        email_obj (email.message.EmailMessage): The email object.
+        db (Database): The database object.
+        id_mail (int): The ID of the email in the database.
+
+    Returns:
+        dict: The ClamAV analysis result.
+    '''
+    clamav_result = analyze_attachments(email_obj)
+    logging.info(f"ClamAV result for mail {id_mail}: {clamav_result}")
+
+    for filename, status in clamav_result.items():
+        db.add_piece_jointe(
+            id_mail=id_mail,
+            nom_fichier=filename,
+            type_fichier='unknown',  # You can update this if you have the file type information
+            taille_fichier=len(filename),  # You can update this if you have the file size information
+            statut_analyse=status
+        )
+
+    overall_status = 'benign' if all(status == 'benign' for status in clamav_result.values()) else 'dangerous'
+    db.add_analyse(
+        id_mail=id_mail,
+        resultat_analyse=f"CLAMAV: {overall_status}",
+        date_analyse=datetime.now(),
+        type_analyse='CLAMAV'
+    )
+
+    return clamav_result
+
 def determine_conclusion(spf_status: SPFStatus, dkim_status: DKIMStatus, dmarc_status: Optional[DMARCStatus]) -> str:
     '''
     Détermine la conclusion basée sur les statuts SPF, DKIM et DMARC.
@@ -201,8 +236,9 @@ async def analyze_email(email_obj: email.message.EmailMessage, db: Database) -> 
     dkim_task = check_and_save_dkim(email_obj, db, id_mail)
     dmarc_task = check_and_save_dmarc(email_obj, db, id_mail)
     ai_task = check_and_save_ai(email_obj, db, id_mail)
+    clamav_task = check_and_save_clamAV(email_obj, db, id_mail)
     
-    spf_status, dkim_status, dmarc_status, ai_result = await asyncio.gather(spf_task, dkim_task, dmarc_task, ai_task)
+    spf_status, dkim_status, dmarc_status, ai_result, clamav_result = await asyncio.gather(spf_task, dkim_task, dmarc_task, ai_task, clamav_task)
     
     conclusion = determine_conclusion(spf_status, dkim_status, dmarc_status)
     logging.info(f"Conclusion for mail {id_mail}: {conclusion}")
