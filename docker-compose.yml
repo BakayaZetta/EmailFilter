@@ -13,6 +13,8 @@ services:
       DB_PASSWORD: detectish_password
       DB_HOST: mysql
       DB_PORT: 3306
+      CLAMAV_HOST: clamav
+      CLAMAV_PORT: 3310
 
   clamav:
     image: clamav/clamav:latest
