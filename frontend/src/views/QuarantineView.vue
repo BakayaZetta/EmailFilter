@@ -214,6 +214,81 @@ const preventClicks = (event) => {
   }
 };
 
+// Nouvelles variables pour le tri
+const sortColumn = ref('Date_Reception'); // Colonne triée par défaut
+const sortDirection = ref('desc'); // Direction du tri ('asc' ou 'desc')
+
+// Fonction pour trier les mails
+const sortMails = computed(() => {
+  if (!mails.value?.length) return [];
+
+  // Copie du tableau pour ne pas modifier l'original
+  const sortedMails = [...mails.value];
+
+  // Tri selon la colonne et la direction actuelles
+  sortedMails.sort((a, b) => {
+    let valA, valB;
+
+    // Déterminer les valeurs à comparer selon la colonne
+    switch(sortColumn.value) {
+      case 'Statut':
+        valA = a.Statut || '';
+        valB = b.Statut || '';
+        break;
+      case 'ID_Utilisateur':
+        valA = a.ID_Utilisateur || 0;
+        valB = b.ID_Utilisateur || 0;
+        break;
+      case 'Emetteur':
+        valA = a.Emetteur || '';
+        valB = b.Emetteur || '';
+        break;
+      case 'Sujet':
+        valA = a.Sujet || '';
+        valB = b.Sujet || '';
+        break;
+      case 'Date_Reception':
+        valA = new Date(a.Date_Reception || 0).getTime();
+        valB = new Date(b.Date_Reception || 0).getTime();
+        break;
+      default:
+        valA = a[sortColumn.value] || '';
+        valB = b[sortColumn.value] || '';
+    }
+
+    // Comparaison selon la direction
+    if (sortDirection.value === 'asc') {
+      return valA > valB ? 1 : valA < valB ? -1 : 0;
+    } else {
+      return valA < valB ? 1 : valA > valB ? -1 : 0;
+    }
+  });
+
+  return sortedMails;
+});
+
+// Fonction pour changer la colonne de tri
+const toggleSort = (column) => {
+  if (sortColumn.value === column) {
+    // Si déjà trié sur cette colonne, inverser la direction
+    sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc';
+  } else {
+    // Sinon, changer la colonne et trier en ascendant
+    sortColumn.value = column;
+    sortDirection.value = 'asc';
+  }
+};
+
+// Modifier la fonction pour renvoyer toujours une icône
+const getSortIcon = (column) => {
+  if (sortColumn.value !== column) {
+    return 'pi-filter text-gray-300'; // Icône neutre pour les colonnes non triées
+  }
+  return sortDirection.value === 'asc'
+    ? 'pi-sort-amount-up-alt text-blue-500'
+    : 'pi-sort-amount-down text-blue-500';
+};
+
 // Vérifier l'authentification et charger les données
 onMounted(async () => {
   authStore.initialize();
@@ -305,16 +380,63 @@ onMounted(async () => {
                         class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
                     </th>
-                    <th scope="col" class="w-[5%] px-2 py-2 text-center font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th scope="col" class="w-[5%] px-2 py-2 text-center font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                    <th scope="col" class="w-[15%] px-2 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Sender</th>
-                    <th scope="col" class="w-[40%] px-2 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Subject</th>
-                    <th scope="col" class="w-[17%] px-2 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Received</th>
-                    <th scope="col" class="w-[15%] px-2 py-2 text-center font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    <th
+                      scope="col"
+                      @click="toggleSort('Statut')"
+                      class="w-[5%] px-2 py-2 text-center font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    >
+                      <div class="flex items-center justify-center">
+                        <span>Status</span>
+                        <i class="pi ml-1" :class="getSortIcon('Statut')"></i>
+                      </div>
+                    </th>
+                    <th
+                      scope="col"
+                      @click="toggleSort('ID_Utilisateur')"
+                      class="w-[5%] px-2 py-2 text-center font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    >
+                      <div class="flex items-center justify-center">
+                        <span>ID</span>
+                        <i class="pi ml-1" :class="getSortIcon('ID_Utilisateur')"></i>
+                      </div>
+                    </th>
+                    <th
+                      scope="col"
+                      @click="toggleSort('Emetteur')"
+                      class="w-[15%] px-2 py-2 text-left font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    >
+                      <div class="flex items-center">
+                        <span>Sender</span>
+                        <i class="pi ml-1" :class="getSortIcon('Emetteur')"></i>
+                      </div>
+                    </th>
+                    <th
+                      scope="col"
+                      @click="toggleSort('Sujet')"
+                      class="w-[40%] px-2 py-2 text-left font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    >
+                      <div class="flex items-center">
+                        <span>Subject</span>
+                        <i class="pi ml-1" :class="getSortIcon('Sujet')"></i>
+                      </div>
+                    </th>
+                    <th
+                      scope="col"
+                      @click="toggleSort('Date_Reception')"
+                      class="w-[17%] px-2 py-2 text-left font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    >
+                      <div class="flex items-center">
+                        <span>Received</span>
+                        <i class="pi ml-1" :class="getSortIcon('Date_Reception')"></i>
+                      </div>
+                    </th>
+                    <th scope="col" class="w-[15%] px-2 py-2 text-center font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
-                  <template v-for="mail in mails" :key="mail.ID_Mail">
+                  <template v-for="mail in sortMails" :key="mail.ID_Mail">
                     <!-- Ligne normale du mail -->
                     <tr class="hover:bg-gray-50">
                       <td class="px-2 py-2 text-center">
@@ -549,5 +671,25 @@ onMounted(async () => {
 /* Style pour le conteneur sécurisé */
 .secured-email-content {
   position: relative;
+}
+
+/* Nouveaux styles pour les en-têtes de colonnes triables */
+th.cursor-pointer {
+  position: relative;
+  transition: background-color 0.2s;
+}
+
+th .pi {
+  font-size: 0.75rem;
+  transition: all 0.2s;
+}
+
+th:hover .pi.text-gray-300 {
+  color: #6b7280; /* Rendre l'icône plus visible au survol de l'en-tête */
+}
+
+/* Mise en évidence de la colonne active */
+th:has(.text-blue-500) {
+  background-color: rgba(219, 234, 254, 0.3); /* Bleu très clair */
 }
 </style>
