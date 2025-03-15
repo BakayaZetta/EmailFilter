@@ -3,6 +3,7 @@ import { ref, onMounted, computed } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
 import api from '@/services/api';
 import { useRouter } from 'vue-router';
+import MailComponent from '@/components/MailComponent.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -73,11 +74,7 @@ const loadQuarantineMails = async () => {
       params: { status: 'QUARANTINE,ERROR' }
     });
 
-    // Initialiser les propriétés d'affichage pour chaque mail
-    mails.value = response.data.map(mail => ({
-      ...mail,
-      showRawHtml: false
-    }));
+    mails.value = response.data;
   } catch (err) {
     console.error('Failed to load quarantine mails:', err);
     error.value = 'Failed to load quarantine mails. Please try again later.';
@@ -185,33 +182,9 @@ const deleteMail = async (mailId) => {
   }
 };
 
-// Nouvelle fonction pour sécuriser le HTML des emails
-const sanitizeHtml = (html) => {
-  if (!html) return '<em>The content of this email is not available or is empty.</em>';
-
-  // Wrapper pour le contenu avec intercepteur de clics
-  return `
-    <div class="secured-email-content">
-      ${html}
-    </div>
-  `;
-};
-
-// Empêcher les clics sur le contenu des emails
-const preventClicks = (event) => {
-  // Vérifier si la cible ou l'un de ses parents est un lien
-  let target = event.target;
-  while (target) {
-    if (target.tagName && target.tagName.toLowerCase() === 'a') {
-      event.preventDefault();
-      event.stopPropagation();
-
-      // Afficher un message d'alerte
-      alert('Link clicking is disabled for security reasons. This email may be a phishing attempt.');
-      return;
-    }
-    target = target.parentElement;
-  }
+// Fermer un mail développé
+const closeExpandedMail = () => {
+  expandedMailId.value = null;
 };
 
 // Nouvelles variables pour le tri
@@ -468,7 +441,7 @@ onMounted(async () => {
                       </td>
                       <td class="px-2 py-2 text-center whitespace-nowrap">
                         <div class="flex justify-center space-x-2">
-                          <!-- Nouveau bouton Examiner -->
+                          <!-- Bouton Examiner -->
                           <button
                             @click="toggleExpand(mail.ID_Mail)"
                             :title="expandedMailId === mail.ID_Mail ? 'Hide content' : 'Examine content'"
@@ -497,90 +470,14 @@ onMounted(async () => {
                       </td>
                     </tr>
 
-                    <!-- Ligne de contenu développée -->
+                    <!-- Ligne de contenu développée utilisant MailComponent -->
                     <tr v-if="expandedMailId === mail.ID_Mail">
                       <td colspan="7" class="bg-gray-50 px-4 py-4">
-                        <div class="animate-fadeIn">
-                          <div class="bg-white rounded-md shadow p-4">
-                            <!-- En-tête détaillé du mail -->
-                            <div class="mb-3 border-b pb-3">
-                              <div class="grid grid-cols-2 gap-2 text-sm">
-                                <div>
-                                  <span class="font-semibold">From:</span> {{ mail.Emetteur }}
-                                </div>
-                                <div>
-                                  <span class="font-semibold">Date:</span> {{ formatDate(mail.Date_Reception) }}
-                                </div>
-                                <div>
-                                  <span class="font-semibold">Subject:</span> {{ mail.Sujet }}
-                                </div>
-                                <div>
-                                  <span class="font-semibold">Status:</span> {{ mail.Statut }}
-                                </div>
-                              </div>
-                            </div>
-
-                            <!-- Corps du mail -->
-                            <div class="mb-3">
-                              <div class="flex justify-between items-center mb-2">
-                                <h3 class="text-sm font-semibold">Email Content</h3>
-                                <div class="flex space-x-2">
-                                  <button
-                                    @click="mail.showRawHtml = !mail.showRawHtml"
-                                    class="text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded"
-                                    :class="{'bg-blue-100': mail.showRawHtml}"
-                                  >
-                                    <i class="pi" :class="mail.showRawHtml ? 'pi-eye' : 'pi-code' "></i>
-                                    <span class="ml-1">{{ mail.showRawHtml ? 'Show Rendered' : 'Show Raw HTML' }}</span>
-                                  </button>
-                                  <button
-                                    @click="expandedMailId = null"
-                                    class="text-xs bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-1 rounded"
-                                  >
-                                    <i class="pi pi-times mr-1"></i> Close
-                                  </button>
-                                </div>
-                              </div>
-
-                              <!-- Contenu interprété (par défaut) -->
-                              <div
-                                v-if="!mail.showRawHtml"
-                                class="email-content bg-white p-3 rounded border relative"
-                                @click="preventClicks"
-                              >
-                                <!-- Indicateur de sécurité -->
-                                <div class="bg-red-100 text-red-800 px-3 py-1 mb-3 text-sm rounded flex items-center">
-                                  <i class="pi pi-lock mr-1 text-sm"></i>
-                                  <span>Secure View: Links and forms are disabled</span>
-                                </div>
-
-                                <!-- Contenu HTML rendu de façon sécurisée -->
-                                <div v-html="sanitizeHtml(mail.Contenu)"></div>
-                              </div>
-
-                              <!-- Contenu brut (option) -->
-                              <div v-else class="whitespace-pre-wrap text-sm bg-gray-50 p-3 rounded border overflow-auto max-h-[400px] font-mono">
-                                {{ mail.Contenu || "The content of this email is not available or is empty." }}
-                              </div>
-
-                              <!-- Avertissement de sécurité -->
-                              <div class="text-xs text-amber-600 mt-1 flex items-center">
-                                <i class="pi pi-exclamation-triangle mr-1 text-xs"></i>
-                                <span>Warning: This email may contain unsafe content</span>
-                              </div>
-                            </div>
-
-                            <!-- Pied de page avec action fermer -->
-                            <div class="mt-3 flex justify-end">
-                              <button
-                                @click="expandedMailId = null"
-                                class="px-3 py-1 bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs rounded"
-                              >
-                                <i class="pi pi-times mr-1"></i> Close
-                              </button>
-                            </div>
-                          </div>
-                        </div>
+                        <MailComponent
+                          :mail="mail"
+                          :expanded="true"
+                          @close="closeExpandedMail"
+                        />
                       </td>
                     </tr>
                   </template>
@@ -605,75 +502,7 @@ onMounted(async () => {
   animation: fadeIn 0.2s ease-out forwards;
 }
 
-/* Styles pour le contenu des emails */
-.email-content {
-  max-height: 500px;
-  overflow: auto;
-  position: relative; /* Pour le positionnement des éléments enfants */
-}
-
-/* Styles de base pour le HTML des emails */
-.email-content :deep(table) {
-  border-collapse: collapse;
-  margin: 0.5rem 0;
-}
-
-.email-content :deep(td),
-.email-content :deep(th) {
-  border: 1px solid #ddd;
-  padding: 0.5rem;
-}
-
-.email-content :deep(img) {
-  max-width: 100%;
-  height: auto;
-}
-
-.email-content :deep(a) {
-  color: #3b82f6;
-  text-decoration: underline;
-}
-
-/* Styles pour les liens dans le contenu rendu sécurisé */
-.email-content :deep(a) {
-  color: #3b82f6;
-  text-decoration: line-through; /* Barrer les liens pour indiquer qu'ils ne sont pas cliquables */
-  cursor: not-allowed;
-  pointer-events: all;
-  position: relative;
-}
-
-/* Ajouter un effet visuel sur survol des liens pour indiquer qu'ils ne sont pas cliquables */
-.email-content :deep(a):hover::after {
-  content: "⛔ Link disabled";
-  position: absolute;
-  bottom: 100%;
-  left: 0;
-  background-color: rgba(0, 0, 0, 0.7);
-  color: white;
-  padding: 2px 5px;
-  border-radius: 3px;
-  font-size: 10px;
-  white-space: nowrap;
-}
-
-/* Désactiver les formulaires et les éléments interactifs */
-.email-content :deep(form),
-.email-content :deep(button),
-.email-content :deep(input),
-.email-content :deep(select),
-.email-content :deep(textarea) {
-  pointer-events: none;
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-/* Style pour le conteneur sécurisé */
-.secured-email-content {
-  position: relative;
-}
-
-/* Nouveaux styles pour les en-têtes de colonnes triables */
+/* Styles pour les en-têtes de colonnes triables */
 th.cursor-pointer {
   position: relative;
   transition: background-color 0.2s;
