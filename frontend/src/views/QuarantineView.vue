@@ -106,9 +106,9 @@ onMounted(async () => {
 <template>
   <section class="py-4">
     <div class="container mx-auto px-2">
-      <div class="max-w-7xl mx-auto">
-        <div class="flex justify-between items-center mb-3">
-          <h1 class="text-3xl font-bold">Quarantine - Administrator View</h1>
+      <div class="max-w-full mx-auto"> <!-- Changed from max-w-7xl to max-w-full -->
+        <div class="flex justify-between items-center mb-2">
+          <h1 class="text-3xl font-bold">Quarantine</h1>
           <button
             @click="loadQuarantineMails"
             class="text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded flex items-center"
@@ -117,16 +117,16 @@ onMounted(async () => {
           </button>
         </div>
 
+        <p class="text-sm text-gray-600 mb-3">All emails detected as potentially malicious or containing errors.</p>
+
         <!-- Légende des statuts -->
-        <div class="flex items-center space-x-4 mb-3 text-xs">
+        <div class="flex flex-wrap items-center space-x-4 mb-2 text-xs">
           <div class="text-gray-500">Status:</div>
           <div v-for="status in statusMap" :key="status.name" class="flex items-center">
             <div :class="['w-3 h-3 rounded-full mr-1', status.color]"></div>
             <span>{{ status.name }}</span>
           </div>
         </div>
-
-        <p class="text-sm text-gray-600 mb-3">All emails detected as potentially malicious or containing errors.</p>
 
         <div v-if="loading" class="flex justify-center py-6">
           <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-red-500"></div>
@@ -144,16 +144,16 @@ onMounted(async () => {
         <!-- Wrapper with shadow and rounded corners -->
         <div v-else class="bg-white shadow rounded-lg overflow-hidden">
           <!-- Container for both horizontal and vertical scrolling -->
-          <div class="overflow-auto max-h-[70vh]">
-            <table class="w-full divide-y divide-gray-200 text-sm">
+          <div class="overflow-auto max-h-[75vh]">
+            <table class="w-full divide-y divide-gray-200 text-sm table-fixed">
               <thead class="bg-gray-50 sticky top-0 z-10">
                 <tr class="text-xs">
-                  <th scope="col" class="px-2 py-2 text-center font-medium text-gray-500 uppercase tracking-wider w-12">Status</th>
-                  <th scope="col" class="px-2 py-2 text-left font-medium text-gray-500 uppercase tracking-wider w-16">User</th>
-                  <th scope="col" class="px-2 py-2 text-left font-medium text-gray-500 uppercase tracking-wider w-40">Sender</th>
-                  <th scope="col" class="px-2 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Subject</th>
-                  <th scope="col" class="px-2 py-2 text-left font-medium text-gray-500 uppercase tracking-wider w-48">Received</th>
-                  <th scope="col" class="px-2 py-2 text-left font-medium text-gray-500 uppercase tracking-wider w-28">Actions</th>
+                  <th scope="col" class="w-[7%] px-2 py-2 text-center font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th scope="col" class="w-[3%] px-2 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                  <th scope="col" class="w-[15%] px-2 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Sender</th>
+                  <th scope="col" class="w-[40%] px-2 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Subject</th>
+                  <th scope="col" class="w-[20%] px-2 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Received</th>
+                  <th scope="col" class="w-[15%] px-2 py-2 text-center font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody class="bg-white divide-y divide-gray-200">
@@ -166,9 +166,9 @@ onMounted(async () => {
                     ></div>
                   </td>
                   <td class="px-2 py-2 text-xs">
-                    ID: {{ mail.ID_Utilisateur }}
+                    {{ mail.ID_Utilisateur }}
                   </td>
-                  <td class="px-2 py-2 truncate max-w-[160px]" :title="mail.Emetteur">
+                  <td class="px-2 py-2 truncate" :title="mail.Emetteur">
                     {{ mail.Emetteur }}
                   </td>
                   <td class="px-2 py-2 truncate" :title="mail.Sujet">
@@ -177,17 +177,25 @@ onMounted(async () => {
                   <td class="px-2 py-2 text-xs">
                     {{ formatDate(mail.Date_Reception) }}
                   </td>
-                  <td class="px-2 py-2">
-                    <div class="flex space-x-1">
+                  <td class="px-2 py-2 text-center whitespace-nowrap">
+                    <div class="flex justify-center space-x-2">
                       <button
                         @click="markAsSafe(mail.ID_Mail)"
-                        class="text-xs text-green-600 hover:text-green-900 bg-green-50 hover:bg-green-100 px-1.5 py-0.5 rounded">
-                        Safe
+                        title="Mark as Safe"
+                        class="p-1 text-white bg-green-500 hover:bg-green-600 rounded-full"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
                       </button>
                       <button
                         @click="deleteMail(mail.ID_Mail)"
-                        class="text-xs text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-1.5 py-0.5 rounded">
-                        Delete
+                        title="Delete"
+                        class="p-1 text-white bg-red-500 hover:bg-red-600 rounded-full"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
                       </button>
                     </div>
                   </td>
