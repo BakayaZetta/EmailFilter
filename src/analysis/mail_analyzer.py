@@ -194,6 +194,7 @@ async def analyze_email(email_obj: email.message.EmailMessage, db: Database) -> 
         sujet=email_data['subject'],
         contenu=email_data['raw'],
         date_reception=datetime.now(),
+        emetteur=email_data['from'],
         statut='Analyse_pending'
     )
     
