@@ -21,51 +21,51 @@ def get_urls_from_text(text: str) -> list:
 
 def is_trusted_domain(url: str) -> bool:
     '''
-    Vérifie si l'URL est sécurisée et provient d'un domaine de confiance.
+    1. https valide
+    2. appartient au trusted domain
     
-    La fonction réalise les étapes suivantes :
-      1. Analyse de l'URL avec urlparse pour extraire le schéma et le domaine.
-      2. Vérification que l'URL utilise HTTPS.
-      3. Vérification que le domaine (ou un sous-domaine) figure dans la liste de domaines de confiance.
-      4. Envoi d'une requête HEAD pour s'assurer que l'URL est accessible sans erreur SSL.
-    
-    Paramètres:
-        url (str): L'URL à vérifier.
-    
-    Retourne:
-        bool: True si l'URL est sécurisée et provient d'un domaine de confiance, False sinon.
+    Retourne True uniquement si les DEUX conditions sont remplies.
     '''
     trusted_domains = [
         "paypal.com", "google.com", "apple.com", "microsoft.com", "amazon.com",
         "facebook.com", "twitter.com", "linkedin.com", "github.com", "netflix.com",
         "dropbox.com", "adobe.com", "ibm.com"
     ]
+
     try:
-        parsed_url = urlparse(url)
-    except Exception:
+        parsed = urlparse(url)
+    except ValueError:
         return False
 
-    # Vérifier que l'URL utilise HTTPS
-    if parsed_url.scheme.lower() != "https":
+    # 1. Vérification sécurité technique
+    if parsed.scheme.lower() != "https":
         return False
 
-    netloc = parsed_url.netloc.lower()
-
-    # Vérifier que le domaine correspond exactement ou est un sous-domaine d'un domaine de confiance
-    domain_valid = any(netloc == domain or netloc.endswith("." + domain) for domain in trusted_domains)
-    if not domain_valid:
-        return False
-
-    # le lien est accessible et sécurisé
     try:
-        response = requests.head(url, timeout=5)
-        if response.status_code >= 400:
-            return False
+        response = requests.head(
+            url,
+            timeout=5,
+            allow_redirects=True,
+            verify=True,  # Verification SSL obligatoire
+            headers={'User-Agent': 'SecurityCheckBot/1.0'}
+        )
     except requests.exceptions.SSLError:
-        return False
+        return False  # Certificat invalide/expiré
     except requests.exceptions.RequestException:
+        return False  # Erreur réseau ou autre
+
+    # 2. Vérification appartenance aux domaines de confiance
+    final_domain = urlparse(response.url).hostname
+    if not final_domain:
         return False
-    return True
+
+    final_domain = final_domain.lower().lstrip('www.')
+
+    return any(
+        final_domain == domain or 
+        final_domain.endswith(f".{domain}") 
+        for domain in trusted_domains
+)
 
 
 def predict_url(urls_list: list) -> dict:
