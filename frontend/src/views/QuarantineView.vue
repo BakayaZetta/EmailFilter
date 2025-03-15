@@ -9,12 +9,22 @@ const authStore = useAuthStore();
 const mails = ref([]);
 const loading = ref(true);
 const error = ref(null);
+const expandedMailId = ref(null); // Pour suivre quel mail est développé
 
 // Pour la sélection multiple
 const selectedMails = ref([]);
 const allSelected = computed(() => {
   return mails.value.length > 0 && selectedMails.value.length === mails.value.length;
 });
+
+// Fonction pour basculer l'affichage du contenu d'un mail
+const toggleExpand = (mailId) => {
+  if (expandedMailId.value === mailId) {
+    expandedMailId.value = null; // Fermer si déjà ouvert
+  } else {
+    expandedMailId.value = mailId; // Ouvrir ce mail
+  }
+};
 
 // Formater la date pour l'affichage au format h:min:s d/m/y
 const formatDate = (dateString) => {
@@ -51,6 +61,7 @@ const loadQuarantineMails = async () => {
   loading.value = true;
   error.value = null;
   selectedMails.value = []; // Réinitialiser la sélection
+  expandedMailId.value = null; // Réinitialiser l'expansion
 
   try {
     if (!authStore.isLoggedIn) {
@@ -270,57 +281,116 @@ onMounted(async () => {
                   </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
-                  <tr v-for="mail in mails" :key="mail.ID_Mail" class="hover:bg-gray-50">
-                    <td class="px-2 py-2 text-center">
-                      <input
-                        type="checkbox"
-                        :checked="isSelected(mail.ID_Mail)"
-                        @change="toggleSelect(mail.ID_Mail)"
-                        class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-                    </td>
-                    <td class="px-2 py-2 text-center">
-                      <!-- Status indicator dot -->
-                      <div
-                        :class="['w-3 h-3 rounded-full mx-auto', getStatusClass(mail.Statut)]"
-                        :title="mail.Statut"
-                      ></div>
-                    </td>
-                    <td class="px-2 py-2 text-center text-xs">
-                      {{ mail.ID_Utilisateur }}
-                    </td>
-                    <td class="px-2 py-2 truncate" :title="mail.Emetteur">
-                      {{ mail.Emetteur }}
-                    </td>
-                    <td class="px-2 py-2 truncate" :title="mail.Sujet">
-                      {{ mail.Sujet }}
-                    </td>
-                    <td class="px-2 py-2 text-xs">
-                      {{ formatDate(mail.Date_Reception) }}
-                    </td>
-                    <td class="px-2 py-2 text-center whitespace-nowrap">
-                      <div class="flex justify-center space-x-2">
-                        <button
-                          @click="markAsSafe(mail.ID_Mail)"
-                          title="Mark as Safe"
-                          class="p-1 text-white bg-green-500 hover:bg-green-600 rounded-full"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                          </svg>
-                        </button>
-                        <button
-                          @click="deleteMail(mail.ID_Mail)"
-                          title="Delete"
-                          class="p-1 text-white bg-red-500 hover:bg-red-600 rounded-full"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
+                  <template v-for="mail in mails" :key="mail.ID_Mail">
+                    <!-- Ligne normale du mail -->
+                    <tr class="hover:bg-gray-50">
+                      <td class="px-2 py-2 text-center">
+                        <input
+                          type="checkbox"
+                          :checked="isSelected(mail.ID_Mail)"
+                          @change="toggleSelect(mail.ID_Mail)"
+                          class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                      </td>
+                      <td class="px-2 py-2 text-center">
+                        <!-- Status indicator dot -->
+                        <div
+                          :class="['w-3 h-3 rounded-full mx-auto', getStatusClass(mail.Statut)]"
+                          :title="mail.Statut"
+                        ></div>
+                      </td>
+                      <td class="px-2 py-2 text-center text-xs">
+                        {{ mail.ID_Utilisateur }}
+                      </td>
+                      <td class="px-2 py-2 truncate" :title="mail.Emetteur">
+                        {{ mail.Emetteur }}
+                      </td>
+                      <td class="px-2 py-2 truncate" :title="mail.Sujet">
+                        {{ mail.Sujet }}
+                      </td>
+                      <td class="px-2 py-2 text-xs">
+                        {{ formatDate(mail.Date_Reception) }}
+                      </td>
+                      <td class="px-2 py-2 text-center whitespace-nowrap">
+                        <div class="flex justify-center space-x-2">
+                          <!-- Nouveau bouton Examiner -->
+                          <button
+                            @click="toggleExpand(mail.ID_Mail)"
+                            :title="expandedMailId === mail.ID_Mail ? 'Hide content' : 'Examine content'"
+                            :class="[
+                              'p-1 text-white rounded-full',
+                              expandedMailId === mail.ID_Mail ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'
+                            ]"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                          </button>
+                          <button
+                            @click="markAsSafe(mail.ID_Mail)"
+                            title="Mark as Safe"
+                            class="p-1 text-white bg-green-500 hover:bg-green-600 rounded-full"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                          </button>
+                          <button
+                            @click="deleteMail(mail.ID_Mail)"
+                            title="Delete"
+                            class="p-1 text-white bg-red-500 hover:bg-red-600 rounded-full"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+
+                    <!-- Ligne de contenu développée -->
+                    <tr v-if="expandedMailId === mail.ID_Mail">
+                      <td colspan="7" class="bg-gray-50 px-4 py-4">
+                        <div class="animate-fadeIn">
+                          <div class="bg-white rounded-md shadow p-4">
+                            <!-- En-tête détaillé du mail -->
+                            <div class="mb-3 border-b pb-3">
+                              <div class="grid grid-cols-2 gap-2 text-sm">
+                                <div>
+                                  <span class="font-semibold">From:</span> {{ mail.Emetteur }}
+                                </div>
+                                <div>
+                                  <span class="font-semibold">Date:</span> {{ formatDate(mail.Date_Reception) }}
+                                </div>
+                                <div>
+                                  <span class="font-semibold">Subject:</span> {{ mail.Sujet }}
+                                </div>
+                                <div>
+                                  <span class="font-semibold">Status:</span> {{ mail.Statut }}
+                                </div>
+                              </div>
+                            </div>
+
+                            <!-- Corps du mail -->
+                            <div class="whitespace-pre-wrap text-sm bg-gray-50 p-3 rounded border">
+                              {{ mail.Contenu || "The content of this email is not available or is empty." }}
+                            </div>
+
+                            <!-- Pied de page avec action fermer -->
+                            <div class="mt-3 flex justify-end">
+                              <button
+                                @click="expandedMailId = null"
+                                class="px-3 py-1 bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs rounded"
+                              >
+                                Close
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  </template>
                 </tbody>
               </table>
             </div>
@@ -330,3 +400,15 @@ onMounted(async () => {
     </div>
   </section>
 </template>
+
+<style scoped>
+/* Animation pour l'apparition du contenu développé */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out forwards;
+}
+</style>
