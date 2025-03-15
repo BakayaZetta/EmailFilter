@@ -323,3 +323,23 @@ class Database:
         self.cursor.execute(add_piece_jointe_query, piece_jointe_data)
         self.conn.commit()
         return self.cursor.lastrowid
+
+    def add_lien(self, id_mail: int, url: str, statut_analyse: str) -> int:
+        '''
+        Adds a URL analysis record to the database.
+
+        Parameters:
+            id_mail (int): The ID of the email.
+            url (str): The URL that was analyzed.
+            statut_analyse (str): The analysis status of the URL.
+
+        Returns:
+            int: The ID of the inserted URL record.
+        '''
+        add_lien_query = (
+            "INSERT INTO Lien (ID_Mail, URL, Statut_Analyse) "
+            "VALUES (%s, %s, %s)")
+        lien_data = (id_mail, url, statut_analyse)
+        self.cursor.execute(add_lien_query, lien_data)
+        self.conn.commit()
+        return self.cursor.lastrowid

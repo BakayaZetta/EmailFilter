@@ -19,6 +19,7 @@ from analysis.clam_av_check import analyze_attachments
 from database import Database
 from datetime import datetime
 from ai_analysis import ai_analysis
+from analysis.ai_analysis.url_analysis import url_analysis
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -160,6 +161,38 @@ async def check_and_save_clamAV(email_obj: email.message.EmailMessage, db: Datab
 
     return clamav_result
 
+async def check_and_save_URL(email_obj: email.message.EmailMessage, db: Database, id_mail: int) -> dict:
+    '''
+    Analyzes the email URLs and saves the result to the database.
+
+    Parameters:
+        email_obj (email.message.EmailMessage): The email object.
+        db (Database): The database object.
+        id_mail (int): The ID of the email in the database.
+
+    Returns:
+        dict: The URL analysis result.
+    '''
+    url_result = url_analysis(email_obj)
+    logging.info(f"URL analysis result for mail {id_mail}: {url_result}")
+
+    for url, status in url_result.items():
+        db.add_lien(
+            id_mail=id_mail,
+            url=url,
+            statut_analyse=status
+        )
+
+    overall_status = 'benign' if all(status == 'benign' for status in url_result.values()) else 'dangerous'
+    db.add_analyse(
+        id_mail=id_mail,
+        resultat_analyse=f"URL: {overall_status}",
+        date_analyse=datetime.now(),
+        type_analyse='URL'
+    )
+
+    return url_result
+
 def determine_conclusion(spf_status: SPFStatus, dkim_status: DKIMStatus, dmarc_status: Optional[DMARCStatus]) -> str:
     '''
     Détermine la conclusion basée sur les statuts SPF, DKIM et DMARC.
@@ -237,8 +270,9 @@ async def analyze_email(email_obj: email.message.EmailMessage, db: Database) -> 
     dmarc_task = check_and_save_dmarc(email_obj, db, id_mail)
     ai_task = check_and_save_ai(email_obj, db, id_mail)
     clamav_task = check_and_save_clamAV(email_obj, db, id_mail)
+    url_task = check_and_save_URL(email_obj, db, id_mail)
     
-    spf_status, dkim_status, dmarc_status, ai_result, clamav_result = await asyncio.gather(spf_task, dkim_task, dmarc_task, ai_task, clamav_task)
+    spf_status, dkim_status, dmarc_status, ai_result, clamav_result, url_result = await asyncio.gather(spf_task, dkim_task, dmarc_task, ai_task, clamav_task, url_task)
     
     conclusion = determine_conclusion(spf_status, dkim_status, dmarc_status)
     logging.info(f"Conclusion for mail {id_mail}: {conclusion}")
