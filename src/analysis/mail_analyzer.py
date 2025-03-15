@@ -211,22 +211,40 @@ def determine_conclusion(spf_status: SPFStatus, dkim_status: DKIMStatus, dmarc_s
     from analysis.ai_analysis.url_analysis import url_is_phishing
     from analysis.ai_analysis.ai_analysis import text_is_phising
 
-    if dmarc_status == DMARCStatus.PASS and not url_is_phishing(url_result) and not text_is_phising(ai_result) and all(status == 'benign' for status in clamav_result.values()):
-        return 'PASS'
-    if spf_status in [SPFStatus.DNS_ERROR, SPFStatus.SPF_ERROR] or \
-       dkim_status in [DKIMStatus.DNS_ERROR, DKIMStatus.DKIM_ERROR] or \
-       dmarc_status in [DMARCStatus.DNS_ERROR, DMARCStatus.DMARC_ERROR]:
-        return 'ERROR'
-    elif spf_status == SPFStatus.INVALID or dkim_status == DKIMStatus.INVALID or dmarc_status == DMARCStatus.FAIL or \
-         url_is_phishing(url_result) or text_is_phising(ai_result) or \
-         any(status == 'dangerous' for status in clamav_result.values()):
+    # Étape 1: Vérification DMARC
+    if dmarc_status == DMARCStatus.PASS:
+        pass
+    elif dmarc_status == DMARCStatus.FAIL:
         return 'QUARANTINE'
-    elif (spf_status in [SPFStatus.VALID, SPFStatus.SOFT_WARNING, SPFStatus.NEUTRAL, SPFStatus.NO_SPF_RECORD] and
-          dkim_status in [DKIMStatus.VALID, DKIMStatus.NO_DKIM] and
-          dmarc_status in [DMARCStatus.PASS, DMARCStatus.NO_DMARC]):
-        return 'PASS'
-    else:
+    elif dmarc_status in [DMARCStatus.DNS_ERROR, DMARCStatus.DMARC_ERROR]:
         return 'ERROR'
+    else:
+
+        # Étape 2: Vérification SPF
+        if spf_status == SPFStatus.INVALID:
+            return 'QUARANTINE'
+        elif spf_status in [SPFStatus.DNS_ERROR, SPFStatus.SPF_ERROR]:
+            return 'ERROR'
+
+        # Étape 3: Vérification DKIM
+        if dkim_status == DKIMStatus.INVALID:
+            return 'QUARANTINE'
+        elif dkim_status in [DKIMStatus.DNS_ERROR, DKIMStatus.DKIM_ERROR]:
+            return 'ERROR'
+
+    # Étape 4: Analyse URL
+    if url_is_phishing(url_result):
+        return 'QUARANTINE'
+
+    # Étape 5: Analyse des pièces jointes
+    if any(status == 'dangerous' for status in clamav_result.values()):
+        return 'QUARANTINE'
+
+    # Étape 6: Analyse AI
+    if text_is_phising(ai_result):
+        return 'QUARANTINE'
+
+    return 'PASS'
 
 async def analyze_email(email_obj: email.message.EmailMessage, db: Database) -> None:
     '''
