@@ -208,14 +208,17 @@ def determine_conclusion(spf_status: SPFStatus, dkim_status: DKIMStatus, dmarc_s
     Retourne:
         str: La conclusion qui peut être 'PASS', 'QUARANTINE' ou 'ERROR'.
     '''
-    if dmarc_status == DMARCStatus.PASS and all(status == 'benign' for status in url_result.values()) and ai_result.get('phishing') == 'benign' and all(status == 'benign' for status in clamav_result.values()):
+    from analysis.ai_analysis.url_analysis import url_is_phishing
+    from analysis.ai_analysis.ai_analysis import text_is_phising
+
+    if dmarc_status == DMARCStatus.PASS and not url_is_phishing(url_result) and not text_is_phising(ai_result) and all(status == 'benign' for status in clamav_result.values()):
         return 'PASS'
     if spf_status in [SPFStatus.DNS_ERROR, SPFStatus.SPF_ERROR] or \
        dkim_status in [DKIMStatus.DNS_ERROR, DKIMStatus.DKIM_ERROR] or \
        dmarc_status in [DMARCStatus.DNS_ERROR, DMARCStatus.DMARC_ERROR]:
         return 'ERROR'
     elif spf_status == SPFStatus.INVALID or dkim_status == DKIMStatus.INVALID or dmarc_status == DMARCStatus.FAIL or \
-         any(status == 'dangerous' for status in url_result.values()) or ai_result.get('phishing') == 'dangerous' or \
+         url_is_phishing(url_result) or text_is_phising(ai_result) or \
          any(status == 'dangerous' for status in clamav_result.values()):
         return 'QUARANTINE'
     elif (spf_status in [SPFStatus.VALID, SPFStatus.SOFT_WARNING, SPFStatus.NEUTRAL, SPFStatus.NO_SPF_RECORD] and
