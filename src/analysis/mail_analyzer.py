@@ -193,25 +193,30 @@ async def check_and_save_URL(email_obj: email.message.EmailMessage, db: Database
 
     return url_result
 
-def determine_conclusion(spf_status: SPFStatus, dkim_status: DKIMStatus, dmarc_status: Optional[DMARCStatus]) -> str:
+def determine_conclusion(spf_status: SPFStatus, dkim_status: DKIMStatus, dmarc_status: Optional[DMARCStatus], url_result: dict, ai_result: dict, clamav_result: dict) -> str:
     '''
-    Détermine la conclusion basée sur les statuts SPF, DKIM et DMARC.
+    Détermine la conclusion basée sur les statuts SPF, DKIM, DMARC, URL, AI et ClamAV.
 
     Paramètres:
         spf_status (SPFStatus): Le statut SPF de l'email.
         dkim_status (DKIMStatus): Le statut DKIM de l'email.
         dmarc_status (Optional[DMARCStatus]): Le statut DMARC de l'email.
+        url_result (dict): Le résultat de l'analyse des URL.
+        ai_result (dict): Le résultat de l'analyse AI.
+        clamav_result (dict): Le résultat de l'analyse ClamAV.
 
     Retourne:
         str: La conclusion qui peut être 'PASS', 'QUARANTINE' ou 'ERROR'.
     '''
-    if dmarc_status == DMARCStatus.PASS:
+    if dmarc_status == DMARCStatus.PASS and all(status == 'benign' for status in url_result.values()) and ai_result.get('phishing') == 'benign' and all(status == 'benign' for status in clamav_result.values()):
         return 'PASS'
     if spf_status in [SPFStatus.DNS_ERROR, SPFStatus.SPF_ERROR] or \
        dkim_status in [DKIMStatus.DNS_ERROR, DKIMStatus.DKIM_ERROR] or \
        dmarc_status in [DMARCStatus.DNS_ERROR, DMARCStatus.DMARC_ERROR]:
         return 'ERROR'
-    elif spf_status == SPFStatus.INVALID or dkim_status == DKIMStatus.INVALID or dmarc_status == DMARCStatus.FAIL:
+    elif spf_status == SPFStatus.INVALID or dkim_status == DKIMStatus.INVALID or dmarc_status == DMARCStatus.FAIL or \
+         any(status == 'dangerous' for status in url_result.values()) or ai_result.get('phishing') == 'dangerous' or \
+         any(status == 'dangerous' for status in clamav_result.values()):
         return 'QUARANTINE'
     elif (spf_status in [SPFStatus.VALID, SPFStatus.SOFT_WARNING, SPFStatus.NEUTRAL, SPFStatus.NO_SPF_RECORD] and
           dkim_status in [DKIMStatus.VALID, DKIMStatus.NO_DKIM] and
@@ -222,7 +227,7 @@ def determine_conclusion(spf_status: SPFStatus, dkim_status: DKIMStatus, dmarc_s
 
 async def analyze_email(email_obj: email.message.EmailMessage, db: Database) -> None:
     '''
-    Analyzes an email for SPF, DKIM, and DMARC status and saves the results to the database.
+    Analyzes an email for SPF, DKIM, DMARC, URL, AI, and ClamAV status and saves the results to the database.
 
     Parameters:
         email_obj (email.message.EmailMessage): The email object.
@@ -274,7 +279,7 @@ async def analyze_email(email_obj: email.message.EmailMessage, db: Database) -> 
     
     spf_status, dkim_status, dmarc_status, ai_result, clamav_result, url_result = await asyncio.gather(spf_task, dkim_task, dmarc_task, ai_task, clamav_task, url_task)
     
-    conclusion = determine_conclusion(spf_status, dkim_status, dmarc_status)
+    conclusion = determine_conclusion(spf_status, dkim_status, dmarc_status, url_result, ai_result, clamav_result)
     logging.info(f"Conclusion for mail {id_mail}: {conclusion}")
     db.update_mail_status(id_mail, conclusion)
 
