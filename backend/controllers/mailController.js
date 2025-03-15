@@ -44,3 +44,26 @@ exports.updateMailStatus = async (req, res) => {
     }
 };
 
+// Nouvelle fonction pour récupérer les mails par statut
+exports.getMailsByStatus = async (req, res) => {
+    try {
+        const statusList = req.query.status ? req.query.status.split(',') : ['QUARANTINE', 'ERROR'];
+        const mails = await mailModel.getMailsByStatus(statusList);
+        res.status(200).json(mails);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// Nouvelle fonction pour récupérer les mails d'un utilisateur par statut
+exports.getMailsByUserIdAndStatus = async (req, res) => {
+    try {
+        const userId = req.params.userId;
+        const statusList = req.query.status ? req.query.status.split(',') : ['QUARANTINE', 'ERROR'];
+        const mails = await mailModel.getMailsByUserIdAndStatus(userId, statusList);
+        res.status(200).json(mails);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+

@@ -3,6 +3,7 @@ import HomeView from '@/views/HomeView.vue'
 import NotFoundView from '@/views/NotFoundView.vue'
 import LoginView from '@/views/LoginView.vue'
 import RegisterView from '@/views/RegisterView.vue'
+import QuarantineView from '@/views/QuarantineView.vue'
 
 
 const router = createRouter({
@@ -22,6 +23,10 @@ const router = createRouter({
       path: '/register',
       name: 'register',
       component: RegisterView,
+    },{
+      path: '/quarantine',
+      name: 'quarantine',
+      component: QuarantineView,
     },
     {
       path: '/:pathMatch(.*)*',
