@@ -74,7 +74,7 @@ class Database:
                 "  Sujet VARCHAR(255),"
                 "  Contenu LONGTEXT,"
                 "  Date_Reception DATETIME,"
-                "  Emetteur VARCHAR(255) "
+                "  Emetteur VARCHAR(255),"
                 "  Statut VARCHAR(255),"
                 "  FOREIGN KEY (ID_Utilisateur) REFERENCES Utilisateur(ID_Utilisateur)"
                 ")"
@@ -144,7 +144,7 @@ class Database:
         '''
         add_mail_query = (
             "INSERT INTO Mail (ID_Utilisateur, Sujet, Contenu, Date_Reception, Emetteur, Statut) "
-            "VALUES (%s, %s, %s, %s, %s, %s, %s)")
+            "VALUES (%s, %s, %s, %s, %s, %s)")
         mail_data = (id_utilisateur, sujet, contenu, date_reception, emetteur, statut)
         self.cursor.execute(add_mail_query, mail_data)
         self.conn.commit()
