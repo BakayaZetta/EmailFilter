@@ -10,20 +10,35 @@ const mails = ref([]);
 const loading = ref(true);
 const error = ref(null);
 
-// Formater la date pour l'affichage
+// Formater la date pour l'affichage au format h:min:s d/m/y
 const formatDate = (dateString) => {
   if (!dateString) return 'N/A';
-  return new Date(dateString).toLocaleString();
+  const date = new Date(dateString);
+
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+
+  return `${hours}:${minutes}:${seconds} ${day}/${month}/${year}`;
 };
 
-// Obtenir le nom court du statut (pour les classes CSS)
+// Obtenir les classes pour l'indicateur de statut
 const getStatusClass = (status) => {
   switch(status?.toUpperCase()) {
-    case 'QUARANTINE': return 'bg-yellow-100 text-yellow-800';
-    case 'ERROR': return 'bg-red-100 text-red-800';
-    default: return 'bg-gray-100 text-gray-800';
+    case 'QUARANTINE': return 'bg-yellow-500';
+    case 'ERROR': return 'bg-red-500';
+    default: return 'bg-gray-500';
   }
 };
+
+// Map de statuts pour la légende
+const statusMap = [
+  { name: 'Quarantine', color: 'bg-yellow-500' },
+  { name: 'Error', color: 'bg-red-500' }
+];
 
 // Charger les mails en quarantaine et avec erreur
 const loadQuarantineMails = async () => {
@@ -80,11 +95,6 @@ onMounted(async () => {
   authStore.initialize();
 
   if (authStore.isLoggedIn) {
-    // Option: Ajouter une vérification du rôle d'administrateur ici si nécessaire
-    // if (authStore.user?.role !== 'ADMIN') {
-    //   router.push('/');
-    //   return;
-    // }
     await loadQuarantineMails();
   } else {
     // Rediriger vers login si non connecté
@@ -106,6 +116,16 @@ onMounted(async () => {
             <span class="mr-1">⟳</span> Refresh
           </button>
         </div>
+
+        <!-- Légende des statuts -->
+        <div class="flex items-center space-x-4 mb-3 text-xs">
+          <div class="text-gray-500">Status:</div>
+          <div v-for="status in statusMap" :key="status.name" class="flex items-center">
+            <div :class="['w-3 h-3 rounded-full mr-1', status.color]"></div>
+            <span>{{ status.name }}</span>
+          </div>
+        </div>
+
         <p class="text-sm text-gray-600 mb-3">All emails detected as potentially malicious or containing errors.</p>
 
         <div v-if="loading" class="flex justify-center py-6">
@@ -128,33 +148,45 @@ onMounted(async () => {
             <table class="w-full divide-y divide-gray-200 text-sm">
               <thead class="bg-gray-50 sticky top-0 z-10">
                 <tr class="text-xs">
-                  <th scope="col" class="px-2 py-2 text-left font-medium text-gray-500 uppercase tracking-wider w-20">Status</th>
-                  <th scope="col" class="px-2 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">User</th>
-                  <th scope="col" class="px-2 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Sender</th>
+                  <th scope="col" class="px-2 py-2 text-center font-medium text-gray-500 uppercase tracking-wider w-12">Status</th>
+                  <th scope="col" class="px-2 py-2 text-left font-medium text-gray-500 uppercase tracking-wider w-16">User</th>
+                  <th scope="col" class="px-2 py-2 text-left font-medium text-gray-500 uppercase tracking-wider w-40">Sender</th>
                   <th scope="col" class="px-2 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Subject</th>
-                  <th scope="col" class="px-2 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Received</th>
-                  <th scope="col" class="px-2 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  <th scope="col" class="px-2 py-2 text-left font-medium text-gray-500 uppercase tracking-wider w-48">Received</th>
+                  <th scope="col" class="px-2 py-2 text-left font-medium text-gray-500 uppercase tracking-wider w-28">Actions</th>
                 </tr>
               </thead>
               <tbody class="bg-white divide-y divide-gray-200">
-                <tr v-for="mail in mails" :key="mail.ID_Mail">
-                  <td class="px-4 py-2 whitespace-nowrap">
-                    <span :class="['inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium', getStatusClass(mail.Statut)]">
-                      {{ mail.Statut }}
-                    </span>
+                <tr v-for="mail in mails" :key="mail.ID_Mail" class="hover:bg-gray-50">
+                  <td class="px-2 py-2 text-center">
+                    <!-- Status indicator dot -->
+                    <div
+                      :class="['w-3 h-3 rounded-full mx-auto', getStatusClass(mail.Statut)]"
+                      :title="mail.Statut"
+                    ></div>
                   </td>
-                  <td class="px-4 py-2 whitespace-nowrap">
-                    User ID: {{ mail.ID_Utilisateur }}
+                  <td class="px-2 py-2 text-xs">
+                    ID: {{ mail.ID_Utilisateur }}
                   </td>
-                  <td class="px-4 py-2 whitespace-nowrap">{{ mail.Emetteur }}</td>
-                  <td class="px-4 py-2 whitespace-nowrap">{{ mail.Sujet }}</td>
-                  <td class="px-4 py-2 whitespace-nowrap">{{ formatDate(mail.Date_Reception) }}</td>
-                  <td class="px-4 py-2 whitespace-nowrap">
-                    <div class="flex space-x-2">
-                      <button @click="markAsSafe(mail.ID_Mail)" class="text-green-600 hover:text-green-900">
-                        Mark as Safe
+                  <td class="px-2 py-2 truncate max-w-[160px]" :title="mail.Emetteur">
+                    {{ mail.Emetteur }}
+                  </td>
+                  <td class="px-2 py-2 truncate" :title="mail.Sujet">
+                    {{ mail.Sujet }}
+                  </td>
+                  <td class="px-2 py-2 text-xs">
+                    {{ formatDate(mail.Date_Reception) }}
+                  </td>
+                  <td class="px-2 py-2">
+                    <div class="flex space-x-1">
+                      <button
+                        @click="markAsSafe(mail.ID_Mail)"
+                        class="text-xs text-green-600 hover:text-green-900 bg-green-50 hover:bg-green-100 px-1.5 py-0.5 rounded">
+                        Safe
                       </button>
-                      <button @click="deleteMail(mail.ID_Mail)" class="text-red-600 hover:text-red-900">
+                      <button
+                        @click="deleteMail(mail.ID_Mail)"
+                        class="text-xs text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-1.5 py-0.5 rounded">
                         Delete
                       </button>
                     </div>
