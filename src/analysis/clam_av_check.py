@@ -38,6 +38,9 @@ def analyze_attachments(email_obj):
     for attachment in attachments:
         filename = attachment['filename']
         content = attachment['content']
+        if content is None:
+            result_dict[filename] = 'error'
+            continue
         scan_result = client.scan(content)
         if 'FOUND' in scan_result:
             result_dict[filename] = 'dangerous'
