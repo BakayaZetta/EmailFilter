@@ -19,6 +19,7 @@ import os
 import asyncio
 import random
 from email.message import EmailMessage
+import sys
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -34,10 +35,12 @@ async def main() -> None:
         None
     '''
     db = Database()
-    email_files = [f"phishing_email_example/{file}" for file in os.listdir("phishing_email_example") if file.endswith(".eml")]
-    random_emails = [email for email in email_files if email.startswith("phishing_email_example/test")]
+    if len(sys.argv) > 1:
+        email_files = sys.argv[1:]
+    else:
+        email_files = [f"phishing_email_example/{file}" for file in os.listdir("phishing_email_example") if file.endswith(".eml")]
     tasks = []
-    for email_file in random_emails:
+    for email_file in email_files:
         logging.info(f"Analyzing {email_file}")
         email_obj = load_email(email_file)
         email_raw = load_raw_email(email_file)
