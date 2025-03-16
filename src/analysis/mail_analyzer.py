@@ -24,6 +24,10 @@ from analysis.ai_analysis.url_analysis import url_analysis
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+def load_raw_email(eml_file_path: str) -> bytes:
+    with open(eml_file_path, 'rb') as f:
+        return f.read()
+
 def load_email(eml_file_path: str) -> email.message.EmailMessage:
     '''
     Loads an email from a .eml file and returns the email object.
@@ -60,7 +64,7 @@ async def check_and_save_spf(email_obj: email.message.EmailMessage, db: Database
     )
     return spf_status
 
-async def check_and_save_dkim(email_obj: email.message.EmailMessage, db: Database, id_mail: int) -> DKIMStatus:
+async def check_and_save_dkim(email_raw, db: Database, id_mail: int) -> DKIMStatus:
     '''
     Checks the DKIM status of an email and saves the result to the database.
 
@@ -72,7 +76,7 @@ async def check_and_save_dkim(email_obj: email.message.EmailMessage, db: Databas
     Returns:
         DKIMStatus: The DKIM status of the email.
     '''
-    dkim_status = await check_dkim(email_obj)
+    dkim_status = await check_dkim(email_raw)
     logging.info(f"DKIM Status for mail {id_mail}: {dkim_status.value}")
     db.add_analyse(
         id_mail=id_mail,
@@ -246,7 +250,7 @@ def determine_conclusion(spf_status: SPFStatus, dkim_status: DKIMStatus, dmarc_s
 
     return 'PASS'
 
-async def analyze_email(email_obj: email.message.EmailMessage, db: Database) -> None:
+async def analyze_email(email_obj: email.message.EmailMessage, email_raw, db: Database) -> None:
     '''
     Analyzes an email for SPF, DKIM, DMARC, URL, AI, and ClamAV status and saves the results to the database.
 
@@ -292,7 +296,7 @@ async def analyze_email(email_obj: email.message.EmailMessage, db: Database) -> 
     )
     
     spf_task = check_and_save_spf(email_obj, db, id_mail)
-    dkim_task = check_and_save_dkim(email_obj, db, id_mail)
+    dkim_task = check_and_save_dkim(email_raw, db, id_mail)
     dmarc_task = check_and_save_dmarc(email_obj, db, id_mail)
     ai_task = check_and_save_ai(email_obj, db, id_mail)
     clamav_task = check_and_save_clamAV(email_obj, db, id_mail)
