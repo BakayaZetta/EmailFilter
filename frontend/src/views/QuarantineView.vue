@@ -310,8 +310,9 @@ onMounted(async () => {
           </div>
         </div>
 
-        <div v-if="loading" class="flex justify-center py-6">
-          <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-red-500"></div>
+        <div v-if="loading" class="flex justify-center py-10">
+          <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-500"></div>
+          <span class="ml-3 text-red-500">Loading emails...</span>
         </div>
 
         <div v-else-if="error" class="bg-red-50 border-l-4 border-red-500 p-2 mb-3 text-sm">

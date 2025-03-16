@@ -76,8 +76,8 @@ onMounted(() => {
   <div class="animate-fadeIn">
     <div class="bg-white rounded-md shadow p-4">
       <div v-if="loading" class="flex justify-center py-10">
-        <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-        <span class="ml-3 text-blue-500">Loading details...</span>
+        <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-500"></div>
+        <span class="ml-3 text-red-500">Loading details...</span>
       </div>
 
       <div v-else-if="!mailDetails" class="bg-red-50 p-4 rounded text-red-700">
