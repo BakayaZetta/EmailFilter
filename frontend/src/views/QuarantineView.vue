@@ -10,7 +10,7 @@ const authStore = useAuthStore();
 const mails = ref([]);
 const loading = ref(true);
 const error = ref(null);
-const expandedMailId = ref(null); // Pour suivre quel mail est développé
+const expandedMailId = ref(null);
 
 // Pour la sélection multiple
 const selectedMails = ref([]);
@@ -57,7 +57,7 @@ const statusMap = [
   { name: 'Error', color: 'bg-red-500' }
 ];
 
-// Charger les mails en quarantaine et avec erreur
+// Charger les mails en quarantaine et avec erreur - MISE À JOUR POUR NOUVELLE API
 const loadQuarantineMails = async () => {
   loading.value = true;
   error.value = null;
@@ -69,12 +69,22 @@ const loadQuarantineMails = async () => {
       throw new Error('User must be logged in');
     }
 
-    // Récupérer TOUS les mails en quarantaine et avec erreur (vue administrateur)
-    const response = await api.get(`/mails/status/filter`, {
+    // Utiliser la nouvelle route API
+    const response = await api.get('/mails/status', {
       params: { status: 'QUARANTINE,ERROR' }
     });
 
-    mails.value = response.data;
+    // Normaliser les données pour compatibilité
+    mails.value = response.data.map(mail => ({
+      ID_Mail: mail.id || mail.ID_Mail,
+      ID_Utilisateur: mail.user?.id || mail.ID_Utilisateur,
+      Emetteur: mail.sender || mail.Emetteur,
+      Sujet: mail.subject || mail.Sujet,
+      Date_Reception: mail.receivedDate || mail.Date_Reception,
+      Statut: mail.status || mail.Statut,
+      // Conserver l'objet original également
+      originalData: mail
+    }));
   } catch (err) {
     console.error('Failed to load quarantine mails:', err);
     error.value = 'Failed to load quarantine mails. Please try again later.';
@@ -107,7 +117,7 @@ const isSelected = (mailId) => {
   return selectedMails.value.includes(mailId);
 };
 
-// Actions en masse
+// Actions en masse - MISE À JOUR POUR NOUVELLE API
 const bulkMarkAsSafe = async () => {
   if (selectedMails.value.length === 0) {
     alert('Please select at least one email to mark as safe.');
@@ -117,7 +127,8 @@ const bulkMarkAsSafe = async () => {
   try {
     loading.value = true;
     const promises = selectedMails.value.map(mailId =>
-      api.put(`/mails/${mailId}`, { status: 'SAFE' })
+      // Utiliser le bon endpoint pour mettre à jour le statut
+      api.put(`/mails/${mailId}/status`, { status: 'SAFE' })
     );
 
     await Promise.all(promises);
@@ -131,6 +142,7 @@ const bulkMarkAsSafe = async () => {
   }
 };
 
+// MISE À JOUR POUR NOUVELLE API
 const bulkDelete = async () => {
   if (selectedMails.value.length === 0) {
     alert('Please select at least one email to delete.');
@@ -141,7 +153,7 @@ const bulkDelete = async () => {
     try {
       loading.value = true;
       const promises = selectedMails.value.map(mailId =>
-        api.put(`/mails/${mailId}`, { status: 'DELETED' })
+        api.put(`/mails/${mailId}/status`, { status: 'DELETED' })
       );
 
       await Promise.all(promises);
@@ -156,11 +168,10 @@ const bulkDelete = async () => {
   }
 };
 
-// Actions individuelles
+// Actions individuelles - MISE À JOUR POUR NOUVELLE API
 const markAsSafe = async (mailId) => {
   try {
-    await api.put(`/mails/${mailId}`, { status: 'SAFE' });
-    // Recharger la liste après modification
+    await api.put(`/mails/${mailId}/status`, { status: 'SAFE' });
     await loadQuarantineMails();
   } catch (err) {
     console.error('Failed to update mail status:', err);
@@ -168,12 +179,11 @@ const markAsSafe = async (mailId) => {
   }
 };
 
-// Supprimer un mail
+// Supprimer un mail - MISE À JOUR POUR NOUVELLE API
 const deleteMail = async (mailId) => {
   if (confirm('Are you sure you want to delete this mail?')) {
     try {
-      await api.put(`/mails/${mailId}`, { status: 'DELETED' });
-      // Recharger la liste après modification
+      await api.put(`/mails/${mailId}/status`, { status: 'DELETED' });
       await loadQuarantineMails();
     } catch (err) {
       console.error('Failed to delete mail:', err);
