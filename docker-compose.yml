@@ -1,8 +1,10 @@
 services:
   detectish:
-    image: detectish:latest
+    image: matthl2002/detectish:latest
+    container_name: detectish
     depends_on:
       - mysql
+      - clamav
     networks:
       - detectish-network
     volumes:
