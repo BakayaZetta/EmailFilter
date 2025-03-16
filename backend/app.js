@@ -15,7 +15,7 @@ app.use(cors());
 app.use(bodyParser.json());
 
 app.use('/api', userRoutes);
-app.use('/api', mailRoutes);
+app.use('/api/mails', mailRoutes); // Changed from '/api' to '/api/mails'
 app.use('/api', analysisRoutes);
 
 app.listen(PORT, () => {

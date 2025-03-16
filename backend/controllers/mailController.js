@@ -1,69 +1,142 @@
 const mailModel = require('../models/mailModel');
 
+// Fonctions d'aide pour une gestion standardisée des réponses
+const handleSuccess = (res, data, status = 200) => {
+    res.status(status).json(data);
+};
+
+const handleError = (res, error, status = 500) => {
+    console.error('Controller error:', error);
+    res.status(status).json({ message: error.message });
+};
+
+const handleNotFound = (res, message = 'Resource not found') => {
+    res.status(404).json({ message });
+};
+
+/**
+ * Récupère tous les mails
+ * @async
+ * @param {Object} req - Requête Express
+ * @param {Object} res - Réponse Express
+ */
 exports.getMails = async (req, res) => {
     try {
         const mails = await mailModel.getMails();
-        res.status(200).json(mails);
+        handleSuccess(res, mails);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        handleError(res, error);
     }
 };
 
+/**
+ * Récupère un mail par son ID
+ * @async
+ * @param {Object} req - Requête Express
+ * @param {Object} res - Réponse Express
+ */
 exports.getMailById = async (req, res) => {
     try {
         const mail = await mailModel.getMailById(req.params.id);
-        if (mail.length === 0) {
-            res.status(404).json({ message: 'Mail not found' });
-        } else {
-            res.status(200).json(mail);
+        if (!mail) {
+            return handleNotFound(res, 'Mail not found');
         }
+        handleSuccess(res, mail);
     } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-}
-
-exports.getMailsByUserId = async (req, res) => {
-    try {
-        const mails = await mailModel.getMailsByUserId(req.params.userId);
-        if (mails.length === 0) {
-            res.status(404).json({ message: 'Mail not found' });
-        } else {
-            res.status(200).json(mails);
-        }
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-}
-
-exports.updateMailStatus = async (req, res) => {
-    try {
-        await mailModel.updateMailStatus(req.params.id, req.body.status);
-        res.status(204).end();
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+        handleError(res, error);
     }
 };
 
-// Nouvelle fonction pour récupérer les mails par statut
+/**
+ * Récupère les mails d'un utilisateur
+ * @async
+ * @param {Object} req - Requête Express
+ * @param {Object} res - Réponse Express
+ */
+exports.getMailsByUserId = async (req, res) => {
+    try {
+        const mails = await mailModel.getMailsByUserId(req.params.userId);
+        if (!mails || mails.length === 0) {
+            return handleNotFound(res, 'No mails found for this user');
+        }
+        handleSuccess(res, mails);
+    } catch (error) {
+        handleError(res, error);
+    }
+};
+
+/**
+ * Met à jour le statut d'un mail
+ * @async
+ * @param {Object} req - Requête Express
+ * @param {Object} res - Réponse Express
+ */
+exports.updateMailStatus = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+        
+        if (!status) {
+            return handleError(res, new Error('Status is required'), 400);
+        }
+        
+        await mailModel.updateMailStatus(id, status);
+        res.status(204).end();
+    } catch (error) {
+        handleError(res, error);
+    }
+};
+
+/**
+ * Récupère les mails par statut
+ * @async
+ * @param {Object} req - Requête Express
+ * @param {Object} res - Réponse Express
+ */
 exports.getMailsByStatus = async (req, res) => {
     try {
         const statusList = req.query.status ? req.query.status.split(',') : ['QUARANTINE', 'ERROR'];
         const mails = await mailModel.getMailsByStatus(statusList);
-        res.status(200).json(mails);
+        handleSuccess(res, mails);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        handleError(res, error);
     }
 };
 
-// Nouvelle fonction pour récupérer les mails d'un utilisateur par statut
+/**
+ * Récupère les mails d'un utilisateur par statut
+ * @async
+ * @param {Object} req - Requête Express
+ * @param {Object} res - Réponse Express
+ */
 exports.getMailsByUserIdAndStatus = async (req, res) => {
     try {
-        const userId = req.params.userId;
+        const { userId } = req.params;
         const statusList = req.query.status ? req.query.status.split(',') : ['QUARANTINE', 'ERROR'];
         const mails = await mailModel.getMailsByUserIdAndStatus(userId, statusList);
-        res.status(200).json(mails);
+        handleSuccess(res, mails);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        handleError(res, error);
+    }
+};
+
+/**
+ * Récupère un mail avec toutes ses informations associées
+ * @async
+ * @param {Object} req - Requête Express
+ * @param {Object} res - Réponse Express
+ */
+exports.getMailCompleteById = async (req, res) => {
+    try {
+        const mail = await mailModel.getMailCompleteById(req.params.id);
+        
+        if (!mail) {
+            return handleNotFound(res, 'Mail not found');
+        }
+        
+        handleSuccess(res, mail);
+    } catch (error) {
+        handleError(res, error);
     }
 };
 

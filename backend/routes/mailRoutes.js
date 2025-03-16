@@ -2,13 +2,18 @@ const express = require('express');
 const router = express.Router();
 const mailController = require('../controllers/mailController');
 
-router.get('/mails', mailController.getMails);
-router.get('/mails/:id', mailController.getMailById);
-router.get('/mails/user/:userId', mailController.getMailsByUserId);
-router.put('/mails/:id', mailController.updateMailStatus);
+// Regroupement des routes par fonctionnalité
+// Routes de base pour les mails
+router.get('/', mailController.getMails);
+router.get('/status', mailController.getMailsByStatus);
+router.get('/:id', mailController.getMailById);
+router.get('/:id/complete', mailController.getMailCompleteById);
 
-// Nouvelles routes
-router.get('/mails/status/filter', mailController.getMailsByStatus);
-router.get('/mails/user/:userId/status', mailController.getMailsByUserIdAndStatus);
+// Routes spécifiques à l'utilisateur
+router.get('/user/:userId', mailController.getMailsByUserId);
+router.get('/user/:userId/status', mailController.getMailsByUserIdAndStatus);
+
+// Routes de mise à jour
+router.put('/:id/status', mailController.updateMailStatus);
 
 module.exports = router;
