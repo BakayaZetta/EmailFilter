@@ -302,3 +302,45 @@ class Database:
         self.cursor.execute(get_user_id_query, (email,))
         result = self.cursor.fetchone()
         return result[0] if result else None
+
+    def add_piece_jointe(self, id_mail: int, nom_fichier: str, type_fichier: str, taille_fichier: int, statut_analyse: str) -> int:
+        '''
+        Adds an attachment analysis record to the database.
+
+        Parameters:
+            id_mail (int): The ID of the email.
+            nom_fichier (str): The name of the attachment file.
+            type_fichier (str): The type of the attachment file.
+            taille_fichier (int): The size of the attachment file.
+            statut_analyse (str): The analysis status of the attachment.
+
+        Returns:
+            int: The ID of the inserted attachment record.
+        '''
+        add_piece_jointe_query = (
+            "INSERT INTO Piece_Jointe (ID_Mail, Nom_Fichier, Type_Fichier, Taille_Fichier, Statut_Analyse) "
+            "VALUES (%s, %s, %s, %s, %s)")
+        piece_jointe_data = (id_mail, nom_fichier, type_fichier, taille_fichier, statut_analyse)
+        self.cursor.execute(add_piece_jointe_query, piece_jointe_data)
+        self.conn.commit()
+        return self.cursor.lastrowid
+
+    def add_lien(self, id_mail: int, url: str, statut_analyse: str) -> int:
+        '''
+        Adds a URL analysis record to the database.
+
+        Parameters:
+            id_mail (int): The ID of the email.
+            url (str): The URL that was analyzed.
+            statut_analyse (str): The analysis status of the URL.
+
+        Returns:
+            int: The ID of the inserted URL record.
+        '''
+        add_lien_query = (
+            "INSERT INTO Lien (ID_Mail, URL, Statut_Analyse) "
+            "VALUES (%s, %s, %s)")
+        lien_data = (id_mail, url, statut_analyse)
+        self.cursor.execute(add_lien_query, lien_data)
+        self.conn.commit()
+        return self.cursor.lastrowid

@@ -15,12 +15,18 @@ from email.parser import BytesParser
 from analysis.dmarc_check import check_dmarc, DMARCStatus
 from analysis.spf_check import check_spf, SPFStatus
 from analysis.dkim_check import check_dkim, DKIMStatus
+from analysis.clam_av_check import analyze_attachments
 from database import Database
 from datetime import datetime
 from ai_analysis import ai_analysis
+from analysis.ai_analysis.url_analysis import url_analysis
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+def load_raw_email(eml_file_path: str) -> bytes:
+    with open(eml_file_path, 'rb') as f:
+        return f.read()
 
 def load_email(eml_file_path: str) -> email.message.EmailMessage:
     '''
@@ -58,7 +64,7 @@ async def check_and_save_spf(email_obj: email.message.EmailMessage, db: Database
     )
     return spf_status
 
-async def check_and_save_dkim(email_obj: email.message.EmailMessage, db: Database, id_mail: int) -> DKIMStatus:
+async def check_and_save_dkim(email_raw, db: Database, id_mail: int) -> DKIMStatus:
     '''
     Checks the DKIM status of an email and saves the result to the database.
 
@@ -70,7 +76,7 @@ async def check_and_save_dkim(email_obj: email.message.EmailMessage, db: Databas
     Returns:
         DKIMStatus: The DKIM status of the email.
     '''
-    dkim_status = await check_dkim(email_obj)
+    dkim_status = await check_dkim(email_raw)
     logging.info(f"DKIM Status for mail {id_mail}: {dkim_status.value}")
     db.add_analyse(
         id_mail=id_mail,
@@ -125,36 +131,128 @@ async def check_and_save_ai(email_obj: email.message.EmailMessage, db: Database,
     )
     return ai_result
 
-def determine_conclusion(spf_status: SPFStatus, dkim_status: DKIMStatus, dmarc_status: Optional[DMARCStatus]) -> str:
+async def check_and_save_clamAV(email_obj: email.message.EmailMessage, db: Database, id_mail: int) -> dict:
     '''
-    Détermine la conclusion basée sur les statuts SPF, DKIM et DMARC.
+    Analyzes the email attachments using ClamAV and saves the result to the database.
+
+    Parameters:
+        email_obj (email.message.EmailMessage): The email object.
+        db (Database): The database object.
+        id_mail (int): The ID of the email in the database.
+
+    Returns:
+        dict: The ClamAV analysis result.
+    '''
+    clamav_result = analyze_attachments(email_obj)
+    logging.info(f"ClamAV result for mail {id_mail}: {clamav_result}")
+
+    for filename, status in clamav_result.items():
+        db.add_piece_jointe(
+            id_mail=id_mail,
+            nom_fichier=filename,
+            type_fichier='unknown',  # You can update this if you have the file type information
+            taille_fichier=len(filename),  # You can update this if you have the file size information
+            statut_analyse=status
+        )
+
+    overall_status = 'benign' if all(status == 'benign' for status in clamav_result.values()) else 'dangerous'
+    db.add_analyse(
+        id_mail=id_mail,
+        resultat_analyse=f"CLAMAV: {overall_status}",
+        date_analyse=datetime.now(),
+        type_analyse='CLAMAV'
+    )
+
+    return clamav_result
+
+async def check_and_save_URL(email_obj: email.message.EmailMessage, db: Database, id_mail: int) -> dict:
+    '''
+    Analyzes the email URLs and saves the result to the database.
+
+    Parameters:
+        email_obj (email.message.EmailMessage): The email object.
+        db (Database): The database object.
+        id_mail (int): The ID of the email in the database.
+
+    Returns:
+        dict: The URL analysis result.
+    '''
+    url_result = url_analysis(email_obj)
+    logging.info(f"URL analysis result for mail {id_mail}: {url_result}")
+
+    for url, status in url_result.items():
+        db.add_lien(
+            id_mail=id_mail,
+            url=url,
+            statut_analyse=status
+        )
+
+    overall_status = 'benign' if all(status == 'benign' for status in url_result.values()) else 'dangerous'
+    db.add_analyse(
+        id_mail=id_mail,
+        resultat_analyse=f"URL: {overall_status}",
+        date_analyse=datetime.now(),
+        type_analyse='URL'
+    )
+
+    return url_result
+
+def determine_conclusion(spf_status: SPFStatus, dkim_status: DKIMStatus, dmarc_status: Optional[DMARCStatus], url_result: dict, ai_result: dict, clamav_result: dict) -> str:
+    '''
+    Détermine la conclusion basée sur les statuts SPF, DKIM, DMARC, URL, AI et ClamAV.
 
     Paramètres:
         spf_status (SPFStatus): Le statut SPF de l'email.
         dkim_status (DKIMStatus): Le statut DKIM de l'email.
         dmarc_status (Optional[DMARCStatus]): Le statut DMARC de l'email.
+        url_result (dict): Le résultat de l'analyse des URL.
+        ai_result (dict): Le résultat de l'analyse AI.
+        clamav_result (dict): Le résultat de l'analyse ClamAV.
 
     Retourne:
         str: La conclusion qui peut être 'PASS', 'QUARANTINE' ou 'ERROR'.
     '''
-    if dmarc_status == DMARCStatus.PASS:
-        return 'PASS'
-    if spf_status in [SPFStatus.DNS_ERROR, SPFStatus.SPF_ERROR] or \
-       dkim_status in [DKIMStatus.DNS_ERROR, DKIMStatus.DKIM_ERROR] or \
-       dmarc_status in [DMARCStatus.DNS_ERROR, DMARCStatus.DMARC_ERROR]:
-        return 'ERROR'
-    elif spf_status == SPFStatus.INVALID or dkim_status == DKIMStatus.INVALID or dmarc_status == DMARCStatus.FAIL:
-        return 'QUARANTINE'
-    elif (spf_status in [SPFStatus.VALID, SPFStatus.SOFT_WARNING, SPFStatus.NEUTRAL, SPFStatus.NO_SPF_RECORD] and
-          dkim_status in [DKIMStatus.VALID, DKIMStatus.NO_DKIM] and
-          dmarc_status in [DMARCStatus.PASS, DMARCStatus.NO_DMARC]):
-        return 'PASS'
-    else:
-        return 'ERROR'
+    from analysis.ai_analysis.url_analysis import url_is_phishing
+    from analysis.ai_analysis.ai_analysis import text_is_phising
 
-async def analyze_email(email_obj: email.message.EmailMessage, db: Database) -> None:
+    # Étape 1: Vérification DMARC
+    if dmarc_status == DMARCStatus.PASS:
+        pass
+    elif dmarc_status == DMARCStatus.FAIL:
+        return 'QUARANTINE'
+    elif dmarc_status in [DMARCStatus.DNS_ERROR, DMARCStatus.DMARC_ERROR]:
+        return 'ERROR'
+    else:
+
+        # Étape 2: Vérification SPF
+        if spf_status == SPFStatus.INVALID:
+            return 'QUARANTINE'
+        elif spf_status in [SPFStatus.DNS_ERROR, SPFStatus.SPF_ERROR]:
+            return 'ERROR'
+
+        # Étape 3: Vérification DKIM
+        if dkim_status == DKIMStatus.INVALID:
+            return 'QUARANTINE'
+        elif dkim_status in [DKIMStatus.DNS_ERROR, DKIMStatus.DKIM_ERROR]:
+            return 'ERROR'
+
+    # Étape 4: Analyse URL
+    if url_is_phishing(url_result):
+        return 'QUARANTINE'
+
+    # Étape 5: Analyse des pièces jointes
+    if any(status == 'dangerous' for status in clamav_result.values()):
+        return 'QUARANTINE'
+
+    # Étape 6: Analyse AI
+    if text_is_phising(ai_result):
+        return 'QUARANTINE'
+
+    return 'PASS'
+
+async def analyze_email(email_obj: email.message.EmailMessage, email_raw, db: Database) -> None:
     '''
-    Analyzes an email for SPF, DKIM, and DMARC status and saves the results to the database.
+    Analyzes an email for SPF, DKIM, DMARC, URL, AI, and ClamAV status and saves the results to the database.
 
     Parameters:
         email_obj (email.message.EmailMessage): The email object.
@@ -199,13 +297,15 @@ async def analyze_email(email_obj: email.message.EmailMessage, db: Database) -> 
     )
     
     spf_task = check_and_save_spf(email_obj, db, id_mail)
-    dkim_task = check_and_save_dkim(email_obj, db, id_mail)
+    dkim_task = check_and_save_dkim(email_raw, db, id_mail)
     dmarc_task = check_and_save_dmarc(email_obj, db, id_mail)
     ai_task = check_and_save_ai(email_obj, db, id_mail)
+    clamav_task = check_and_save_clamAV(email_obj, db, id_mail)
+    url_task = check_and_save_URL(email_obj, db, id_mail)
     
-    spf_status, dkim_status, dmarc_status, ai_result = await asyncio.gather(spf_task, dkim_task, dmarc_task, ai_task)
+    spf_status, dkim_status, dmarc_status, ai_result, clamav_result, url_result = await asyncio.gather(spf_task, dkim_task, dmarc_task, ai_task, clamav_task, url_task)
     
-    conclusion = determine_conclusion(spf_status, dkim_status, dmarc_status)
+    conclusion = determine_conclusion(spf_status, dkim_status, dmarc_status, url_result, ai_result, clamav_result)
     logging.info(f"Conclusion for mail {id_mail}: {conclusion}")
     db.update_mail_status(id_mail, conclusion)
 

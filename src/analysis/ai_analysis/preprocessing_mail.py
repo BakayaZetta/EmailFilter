@@ -112,6 +112,27 @@ def extract_email_text(email_obj: EmailMessage) -> str:
     return clean_email_text(text)
 
 
+def extract_email_attachments(email_obj: EmailMessage) -> list:
+    '''
+    Extracts attachments from an email object.
+    Parameters:
+        email_obj (EmailMessage): The email object.
+    Returns:
+        list: A list of attachments.
+    '''
+    attachments = []
+    for part in email_obj.walk():
+        if part.get_content_maintype() == 'multipart':
+            continue
+        if part.get('Content-Disposition') is None:
+            continue
+        attachments.append({
+            'filename': part.get_filename(),
+            'content': part.get_payload(decode=True)
+        })
+    return attachments
+
+
 def split_512_token(text: str) -> list[list[str]]:
     '''
     Split text into chunks that will NEVER exceed 512 tokens when processed by the model.
