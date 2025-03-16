@@ -35,9 +35,7 @@ async def main() -> None:
     '''
     db = Database()
     email_files = [f"phishing_email_example/{file}" for file in os.listdir("phishing_email_example") if file.endswith(".eml")]
-    random_emails = random.sample(email_files, 4)
-    random_emails.append("phishing_email_example/test.eml")
-    random_emails.append("phishing_email_example/piece_jointe.eml")
+    random_emails = [email for email in email_files if email.startswith("phishing_email_example/test")]
     tasks = []
     for email_file in random_emails:
         logging.info(f"Analyzing {email_file}")

@@ -1,0 +1,61 @@
+return-path: <mail@beckeresteban.eu>
+delivered-to: natanel.rui@thedaring.org
+received: from mail-24422.protonmail.ch (mail-24422.protonmail.ch [109.224.244.22]) (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits) key-exchange X25519 server-signature ECDSA (P-256) server-digest SHA256) (No client certificate requested) by www.disposablemail.com (Postfix) with ESMTPS id 2071D1161D4E for <natanel.rui@thedaring.org>; Sat, 15 Mar 2025 18:07:32 +0000 (UTC)
+authentication-results: www.disposablemail.com; dkim=pass (2048-bit key; secure) header.d=beckeresteban.eu header.i=@beckeresteban.eu header.a=rsa-sha256 header.s=protonmail3 header.b=toTrasmn; dkim-atps=neutral
+dkim-signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=beckeresteban.eu; s=protonmail3; t=1742062048; x=1742321248; bh=9X+hkxTg4B11A5zuIpNUa5mAamcihFa7uwbZ0r13e+Y=; h=Date:To:From:Subject:Message-ID:Feedback-ID:From:To:Cc:Date: Subject:Reply-To:Feedback-ID:Message-ID:BIMI-Selector: List-Unsubscribe:List-Unsubscribe-Post; b=toTrasmnsIueltFO6Q8UYzveIpPQ9tiTDDAxY3JSgTmJ8nba+781eKoCBdUQxkL72 MkImZ7Kv+oqpW+VbxQ2yBB7oeOkjzjzOO1YOce5X5mM/LHNhGIVfBd8Jq4BfH9d1bi IG0aA6qLCPvL2v/kD3mlGA95q3VzxNQrB137pvPzBu3KwE/rft+SXhqamPGxx0EXRy PAqs2af+cpdNxy4w/cthfs1x+i6yPRu2Zdkw2/UDTuG0En2Jr96U1aXD3hz5layfwF eEJeFPQOKDk87Ew70lmR5fbIISqonH2CXQd0kzjChTC/EUfJLuBs18VVvs9ZTFapkv Av1xNHgqbLFsg==
+date: Sat, 15 Mar 2025 18:07:25 +0000
+to: "natanel.rui@thedaring.org" <natanel.rui@thedaring.org>
+from: Esteban Becker <mail@beckeresteban.eu>
+subject: Fichier error
+message-id: <ScZWgqs9PddJkDmCQf6pP7o9qHL3Zprj5lILwKldvG91p36mP8wLag3tAmLTZkx9trO6DhXUw1VlmTtiWVraXMWTrLZQE9nxg8JWML6tzCA=@beckeresteban.eu>
+feedback-id: 100117390:user:proton
+x-pm-message-id: 32de40aa8fb0dc7403c6156e10460bfed839f5c4
+mime-version: 1.0
+content-type: multipart/mixed; boundary="b1=_QazVJlxHg7ppJtZuO1BkpBDfiQu7IkNxOlCUcw79bAc"
+
+--b1=_QazVJlxHg7ppJtZuO1BkpBDfiQu7IkNxOlCUcw79bAc
+Content-Type: multipart/alternative;
+ boundary="b2=_QazVJlxHg7ppJtZuO1BkpBDfiQu7IkNxOlCUcw79bAc"
+
+--b2=_QazVJlxHg7ppJtZuO1BkpBDfiQu7IkNxOlCUcw79bAc
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: base64
+
+Qm9uam91ciwKClBvdXIgcsOpcG9uZHJlIMOgIHZvdHJlIGRlcm5pw6hyZSBxdWVzdGlvbiwgamUg
+cGVuc2UgcXUnaWwgZmF1dCBwYXNzZXIgw6AgdW5lIHZhbHZlIMOpbGVjdHJvbmlxdWUgcGx1dMO0
+dCBxdWUgcG5ldW1hdGlxdWUKCkJvbm5lIGpvdXJuw6ll
+
+--b2=_QazVJlxHg7ppJtZuO1BkpBDfiQu7IkNxOlCUcw79bAc
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: base64
+
+PGRpdiBzdHlsZT0iZm9udC1mYW1pbHk6IEFyaWFsLCBzYW5zLXNlcmlmOyBmb250LXNpemU6IDE0
+cHg7Ij5Cb25qb3VyLDwvZGl2PjxkaXYgc3R5bGU9ImZvbnQtZmFtaWx5OiBBcmlhbCwgc2Fucy1z
+ZXJpZjsgZm9udC1zaXplOiAxNHB4OyI+PGJyPjwvZGl2PjxkaXYgc3R5bGU9ImZvbnQtZmFtaWx5
+OiBBcmlhbCwgc2Fucy1zZXJpZjsgZm9udC1zaXplOiAxNHB4OyI+UG91ciByw6lwb25kcmUgw6Ag
+dm90cmUgZGVybmnDqHJlIHF1ZXN0aW9uLCBqZSBwZW5zZSBxdSdpbCBmYXV0IHBhc3NlciDDoCB1
+bmUgdmFsdmUgw6lsZWN0cm9uaXF1ZSBwbHV0w7R0IHF1ZSBwbmV1bWF0aXF1ZTwvZGl2PjxkaXYg
+c3R5bGU9ImZvbnQtZmFtaWx5OiBBcmlhbCwgc2Fucy1zZXJpZjsgZm9udC1zaXplOiAxNHB4OyI+
+PGJyPjwvZGl2PjxkaXYgc3R5bGU9ImZvbnQtZmFtaWx5OiBBcmlhbCwgc2Fucy1zZXJpZjsgZm9u
+dC1zaXplOiAxNHB4OyI+Qm9ubmUgam91cm7DqWU8L2Rpdj4NCjxkaXYgY2xhc3M9InByb3Rvbm1h
+aWxfc2lnbmF0dXJlX2Jsb2NrIHByb3Rvbm1haWxfc2lnbmF0dXJlX2Jsb2NrLWVtcHR5IiBzdHls
+ZT0iZm9udC1mYW1pbHk6IEFyaWFsLCBzYW5zLXNlcmlmOyBmb250LXNpemU6IDE0cHg7Ij4NCiAg
+ICA8ZGl2IGNsYXNzPSJwcm90b25tYWlsX3NpZ25hdHVyZV9ibG9jay11c2VyIHByb3Rvbm1haWxf
+c2lnbmF0dXJlX2Jsb2NrLWVtcHR5Ij4NCiAgICAgICAgDQogICAgICAgICAgICA8L2Rpdj4NCiAg
+ICANCiAgICAgICAgICAgIDxkaXYgY2xhc3M9InByb3Rvbm1haWxfc2lnbmF0dXJlX2Jsb2NrLXBy
+b3RvbiBwcm90b25tYWlsX3NpZ25hdHVyZV9ibG9jay1lbXB0eSI+DQogICAgICAgIA0KICAgICAg
+ICAgICAgPC9kaXY+DQo8L2Rpdj4NCg==
+
+
+--b2=_QazVJlxHg7ppJtZuO1BkpBDfiQu7IkNxOlCUcw79bAc--
+
+--b1=_QazVJlxHg7ppJtZuO1BkpBDfiQu7IkNxOlCUcw79bAc
+Content-Type: text/plain; name=EICAR.txt
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename=EICAR.txt
+
+WDVPIVAlQEFQWzRcUFpYNTQoUF4pN0NDKTd9JEVJQ0FSLVNUQU5EQVJELUFOVElWSVJVUy1URVNU
+LUZJTEUhJEgrSCo=
+
+--b1=_QazVJlxHg7ppJtZuO1BkpBDfiQu7IkNxOlCUcw79bAc--
+
