@@ -127,17 +127,16 @@ def url_statistics(dict_url):
 
 def url_is_phishing(dict_url):
     '''
-    Determines if an email contains phishing URLs.
+    Détermine si un email contient des URLs de phishing.
+    Cette fonction utilise une approche stricte où un seul lien de phishing 
+    suffit pour classifier l'ensemble comme étant du phishing.
 
-    Parameters:
-        dict_url (dict): A dictionary with URLs as keys and their labels as values.
-
-    Returns:
-        bool: True if at least one URL is labeled as phishing, False otherwise.
+    Paramètres:
+        dict_url (dict): Un dictionnaire avec les URLs comme clés et leurs étiquettes comme valeurs.
+        
+    Retourne:
+        bool: True si au moins une URL de phishing est détectée, False sinon.
     '''
-    # Check if any URL is labeled as "phishing"
-    for label in dict_url.values():
-        if label == "phishing":
-            return True
-    return False
+    stats = url_statistics(dict_url)
+    return stats["phishing_count"] > 0
 
