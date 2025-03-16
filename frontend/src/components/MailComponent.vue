@@ -1,6 +1,7 @@
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import api from '@/services/api';
+import SecurityAnalysisComponent from '@/components/SecurityAnalysisComponent.vue';
 
 // Props pour recevoir le mail à afficher
 const props = defineProps({
@@ -56,193 +57,6 @@ const preventClicks = (event) => {
   }
 };
 
-// Catégoriser les analyses par type
-const categorizedAnalyses = computed(() => {
-  if (!mailDetails.value?.analyses) return { SPF: [], DKIM: [], DMARC: [], AI: [] };
-
-  const result = {
-    SPF: mailDetails.value.analyses.filter(a => a.type === 'SPF'),
-    DKIM: mailDetails.value.analyses.filter(a => a.type === 'DKIM'),
-    DMARC: mailDetails.value.analyses.filter(a => a.type === 'DMARC'),
-    AI: mailDetails.value.analyses.filter(a => a.type === 'AI')
-  };
-  return result;
-});
-
-// Parseur pour les résultats d'analyse AI (qui sont stockés en JSON)
-const parseAIResult = (resultText) => {
-  try {
-    // Add debug logging
-    console.debug('Parsing AI result:', resultText);
-
-    if (!resultText) return null;
-
-    // Remove any prefix like "AI_PHISHING: " if present
-    const prefixMatch = resultText.match(/^([A-Z_]+):\s*/);
-    if (prefixMatch) {
-      resultText = resultText.substring(prefixMatch[0].length);
-      console.debug('Removed prefix, new text:', resultText);
-    }
-
-    // If the string looks like a Python dict (begins with { and ends with })
-    if (resultText.trim().startsWith('{') && resultText.trim().endsWith('}')) {
-      try {
-        // 1. Replace Python-style single quotes with double quotes for JSON
-        let processedText = resultText.replace(/'/g, '"');
-
-        // 2. Fix malformed JSON where property names aren't properly quoted
-        processedText = processedText.replace(/([{,]\s*)(\w+)(\s*:)/g, '$1"$2"$3');
-
-        console.debug('Processed JSON text:', processedText);
-
-        // 3. Try to parse the processed JSON
-        const result = JSON.parse(processedText);
-
-        // 4. Ensure the result has all expected properties
-        return {
-          phishing_count: result.phishing_count || 0,
-          benign_count: result.benign_count || 0,
-          phishing_avg_score: result.phishing_avg_score || 0,
-          benign_avg_score: result.benign_avg_score || 0
-        };
-      } catch (e) {
-        console.error('JSON parsing error:', e);
-        throw e; // Re-throw for the outer catch block
-      }
-    } else {
-      // If it doesn't look like JSON/dict at all
-      console.warn('AI result doesn\'t look like JSON/dict format:', resultText);
-      return {
-        phishing_count: 0,
-        benign_count: 0,
-        phishing_avg_score: 0,
-        benign_avg_score: 0,
-        error: 'Format non reconnu'
-      };
-    }
-  } catch (e) {
-    console.error('Failed to parse AI result:', e);
-    console.debug('Raw result text:', resultText);
-
-    // Return a default structure to prevent UI errors
-    return {
-      phishing_count: 0,
-      benign_count: 0,
-      phishing_avg_score: 0,
-      benign_avg_score: 0,
-      error: 'Erreur de parsing'
-    };
-  }
-};
-
-// Obtenir une icône et une couleur basées sur le résultat de l'analyse
-const getAnalysisIndicator = (analysis) => {
-  const result = analysis.result.toLowerCase();
-
-  if (result.includes('valid') || result.includes('pass')) {
-    return { icon: 'pi-check-circle', color: 'text-green-500' };
-  } else if (result.includes('invalid') || result.includes('fail')) {
-    return { icon: 'pi-times-circle', color: 'text-red-500' };
-  } else if (result.includes('warning') || result.includes('soft')) {
-    return { icon: 'pi-exclamation-triangle', color: 'text-yellow-500' };
-  } else {
-    return { icon: 'pi-info-circle', color: 'text-gray-500' };
-  }
-};
-
-// Déterminer si un email est globalement suspect en fonction des analyses
-const isEmailSuspicious = computed(() => {
-  if (!mailDetails.value) return true;
-
-  // Vérifier les analyses SPF et DKIM
-  const hasSPFFailure = categorizedAnalyses.value.SPF.some(a =>
-    a.result.toLowerCase().includes('invalid') ||
-    a.result.toLowerCase().includes('fail')
-  );
-
-  const hasDKIMFailure = categorizedAnalyses.value.DKIM.some(a => {
-    const result = a.result.toLowerCase();
-    return result.includes('invalid') ||
-           result.includes('no dkim signature found') ||
-           result.includes('dns error') ||
-           result.includes('error during');
-  });
-
-  // Vérifier l'analyse AI
-  const aiAnalyses = categorizedAnalyses.value.AI;
-  let aiSuspicious = false;
-
-  if (aiAnalyses.length > 0) {
-    for (const analysis of aiAnalyses) {
-      const aiResult = parseAIResult(analysis.result);
-      if (aiResult && aiResult.phishing_count > aiResult.benign_count) {
-        aiSuspicious = true;
-        break;
-      }
-    }
-  }
-
-  // Vérifier si des liens suspects ont été détectés
-  const hasSuspiciousLinks = mailDetails.value.links?.some(link =>
-    link.status?.toLowerCase().includes('suspicious') ||
-    link.status?.toLowerCase().includes('malicious')
-  );
-
-  // Vérifier si des pièces jointes suspectes ont été détectées
-  const hasSuspiciousAttachments = mailDetails.value.attachments?.some(attachment =>
-    attachment.status?.toLowerCase().includes('suspicious') ||
-    attachment.status?.toLowerCase().includes('malicious')
-  );
-
-  return hasSPFFailure || hasDKIMFailure || aiSuspicious || hasSuspiciousLinks || hasSuspiciousAttachments;
-});
-
-// Formatage de la taille de pièce jointe en KB/MB
-const formatFileSize = (sizeInBytes) => {
-  if (!sizeInBytes) return 'Inconnu';
-
-  if (sizeInBytes < 1024) {
-    return `${sizeInBytes} B`;
-  } else if (sizeInBytes < 1024 * 1024) {
-    return `${(sizeInBytes / 1024).toFixed(1)} KB`;
-  } else {
-    return `${(sizeInBytes / (1024 * 1024)).toFixed(1)} MB`;
-  }
-};
-
-// Obtenir l'icône pour un type de fichier
-const getFileIcon = (fileType) => {
-  if (!fileType) return 'pi-file';
-
-  const type = fileType.toLowerCase();
-  if (type.includes('pdf')) return 'pi-file-pdf';
-  if (type.includes('word') || type.includes('doc')) return 'pi-file-word';
-  if (type.includes('excel') || type.includes('xls')) return 'pi-file-excel';
-  if (type.includes('image') || type.includes('png') || type.includes('jpg')) return 'pi-image';
-  if (type.includes('zip') || type.includes('archive') || type.includes('rar')) return 'pi-box';
-  if (type.includes('exe') || type.includes('application')) return 'pi-cog';
-
-  return 'pi-file';
-};
-
-// Obtenir la classe de couleur pour le statut d'analyse
-const getStatusColor = (status) => {
-  if (!status) return 'text-gray-500';
-
-  const lowerStatus = status.toLowerCase();
-  if (lowerStatus.includes('malicious') || lowerStatus.includes('dangerous')) {
-    return 'text-red-600';
-  }
-  if (lowerStatus.includes('suspicious')) {
-    return 'text-yellow-600';
-  }
-  if (lowerStatus.includes('safe') || lowerStatus.includes('clean')) {
-    return 'text-green-600';
-  }
-
-  return 'text-gray-500';
-};
-
 // Charger les détails du mail si le composant est développé
 watch(() => props.expanded, (isExpanded) => {
   if (isExpanded && !mailDetails.value) {
@@ -263,176 +77,21 @@ onMounted(() => {
     <div class="bg-white rounded-md shadow p-4">
       <div v-if="loading" class="flex justify-center py-10">
         <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-        <span class="ml-3 text-blue-500">Chargement des détails...</span>
+        <span class="ml-3 text-blue-500">Loading details...</span>
       </div>
 
       <div v-else-if="!mailDetails" class="bg-red-50 p-4 rounded text-red-700">
-        Impossible de charger les détails du mail.
+        Unable to load email details.
       </div>
 
       <div v-else>
-        <!-- Section des résultats d'analyse avec barre de statut globale -->
+        <!-- Composant d'analyse de sécurité -->
         <div class="mb-4">
-          <div
-            :class="[
-              'mb-3 p-2 rounded-lg text-white font-medium flex items-center',
-              isEmailSuspicious ? 'bg-red-500' : 'bg-green-500'
-            ]"
-          >
-            <i :class="`pi ${isEmailSuspicious ? 'pi-shield' : 'pi-check-circle'} mr-2`"></i>
-            <span>{{ isEmailSuspicious ? 'Ce mail présente des signes suspects' : 'Ce mail semble sécurisé' }}</span>
-          </div>
-
-          <!-- Section des analyses -->
-          <div class="mb-5">
-            <h3 class="text-lg font-semibold mb-2">Analyses de sécurité</h3>
-            <div v-if="!mailDetails.analyses || mailDetails.analyses.length === 0" class="text-sm text-gray-500 italic">
-              Aucune analyse disponible pour ce message
-            </div>
-            <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <!-- Résultats SPF -->
-              <div v-if="categorizedAnalyses.SPF.length > 0" class="bg-gray-50 p-2 rounded border">
-                <div class="flex items-center mb-1">
-                  <i class="pi pi-shield mr-1"></i>
-                  <span class="font-medium">SPF (Sender Policy Framework)</span>
-                </div>
-                <div v-for="analysis in categorizedAnalyses.SPF" :key="analysis.id" class="text-sm">
-                  <div class="flex items-center mt-1">
-                    <i :class="`pi ${getAnalysisIndicator(analysis).icon} ${getAnalysisIndicator(analysis).color} mr-1`"></i>
-                    <span>{{ analysis.result.replace('SPF: ', '') }}</span>
-                  </div>
-                  <div class="text-xs text-gray-500 mt-1">
-                    Analysé le {{ new Date(analysis.date).toLocaleString() }}
-                  </div>
-                </div>
-              </div>
-
-              <!-- Résultats DKIM -->
-              <div v-if="categorizedAnalyses.DKIM.length > 0" class="bg-gray-50 p-2 rounded border">
-                <div class="flex items-center mb-1">
-                  <i class="pi pi-lock mr-1"></i>
-                  <span class="font-medium">DKIM (DomainKeys Identified Mail)</span>
-                </div>
-                <div v-for="analysis in categorizedAnalyses.DKIM" :key="analysis.id" class="text-sm">
-                  <div class="flex items-center mt-1">
-                    <i :class="`pi ${getAnalysisIndicator(analysis).icon} ${getAnalysisIndicator(analysis).color} mr-1`"></i>
-                    <span>{{ analysis.result.replace('DKIM: ', '') }}</span>
-                  </div>
-                  <div class="text-xs text-gray-500 mt-1">
-                    Analysé le {{ new Date(analysis.date).toLocaleString() }}
-                  </div>
-                </div>
-              </div>
-
-              <!-- Résultats DMARC -->
-              <div v-if="categorizedAnalyses.DMARC.length > 0" class="bg-gray-50 p-2 rounded border">
-                <div class="flex items-center mb-1">
-                  <i class="pi pi-verified mr-1"></i>
-                  <span class="font-medium">DMARC (Domain-based Message Authentication)</span>
-                </div>
-                <div v-for="analysis in categorizedAnalyses.DMARC" :key="analysis.id" class="text-sm">
-                  <div class="flex items-center mt-1">
-                    <i :class="`pi ${getAnalysisIndicator(analysis).icon} ${getAnalysisIndicator(analysis).color} mr-1`"></i>
-                    <span>{{ analysis.result.replace('DMARC: ', '') }}</span>
-                  </div>
-                  <div class="text-xs text-gray-500 mt-1">
-                    Analysé le {{ new Date(analysis.date).toLocaleString() }}
-                  </div>
-                </div>
-              </div>
-
-              <!-- Résultats AI -->
-              <div v-if="categorizedAnalyses.AI.length > 0" class="bg-gray-50 p-2 rounded border">
-                <div class="flex items-center mb-1">
-                  <i class="pi pi-chart-bar mr-1"></i>
-                  <span class="font-medium">Analyse par Intelligence Artificielle</span>
-                </div>
-                <div v-for="analysis in categorizedAnalyses.AI" :key="analysis.id" class="text-sm">
-                  <template v-if="parseAIResult(analysis.result) &&
-                                 parseAIResult(analysis.result).phishing_count !== undefined &&
-                                 parseAIResult(analysis.result).benign_count !== undefined">
-                    <div class="mt-1">
-                      <div class="grid grid-cols-2 gap-2">
-                        <div class="p-1 rounded bg-red-50">
-                          <div class="font-medium text-red-700">Phishing</div>
-                          <div class="text-xs">Instances: {{ parseAIResult(analysis.result).phishing_count }}</div>
-                          <div class="text-xs">Score moyen: {{ (parseAIResult(analysis.result).phishing_avg_score * 100 || 0).toFixed(2) }}%</div>
-                        </div>
-                        <div class="p-1 rounded bg-green-50">
-                          <div class="font-medium text-green-700">Légitime</div>
-                          <div class="text-xs">Instances: {{ parseAIResult(analysis.result).benign_count }}</div>
-                          <div class="text-xs">Score moyen: {{ (parseAIResult(analysis.result).benign_avg_score * 100 || 0).toFixed(2) }}%</div>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="mt-1 text-sm">
-                      <span :class="parseAIResult(analysis.result).phishing_count > parseAIResult(analysis.result).benign_count ? 'text-red-600 font-medium' : 'text-green-600 font-medium'">
-                        Verdict: {{ parseAIResult(analysis.result).phishing_count > parseAIResult(analysis.result).benign_count ? 'Potentiellement malveillant' : 'Probablement légitime' }}
-                      </span>
-                    </div>
-                  </template>
-                  <div v-else class="text-xs text-gray-500 mt-1">
-                    Données d'analyse non disponibles ou dans un format incorrect
-                    <div v-if="parseAIResult(analysis.result)?.error" class="text-red-500">
-                      ({{ parseAIResult(analysis.result).error }})
-                    </div>
-                  </div>
-                  <div class="text-xs text-gray-500 mt-1">
-                    Analysé le {{ new Date(analysis.date).toLocaleString() }}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Section des pièces jointes -->
-          <div v-if="mailDetails.attachments && mailDetails.attachments.length > 0" class="mb-5">
-            <h3 class="text-lg font-semibold mb-2">Pièces jointes ({{ mailDetails.attachments.length }})</h3>
-            <div class="bg-gray-50 p-3 rounded">
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-                <div v-for="attachment in mailDetails.attachments" :key="attachment.id"
-                     class="flex items-center border p-2 rounded bg-white">
-                  <div class="mr-3">
-                    <i :class="`pi ${getFileIcon(attachment.type)} text-xl`"></i>
-                  </div>
-                  <div class="flex-grow">
-                    <div class="text-sm font-medium truncate" :title="attachment.name">
-                      {{ attachment.name }}
-                    </div>
-                    <div class="text-xs text-gray-500">
-                      {{ formatFileSize(attachment.size) }} - {{ attachment.type || 'Type inconnu' }}
-                    </div>
-                  </div>
-                  <div :class="`ml-2 text-xs font-medium ${getStatusColor(attachment.status)}`">
-                    {{ attachment.status || 'Non analysé' }}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Section des liens -->
-          <div v-if="mailDetails.links && mailDetails.links.length > 0" class="mb-5">
-            <h3 class="text-lg font-semibold mb-2">Liens détectés ({{ mailDetails.links.length }})</h3>
-            <div class="bg-gray-50 p-3 rounded">
-              <div class="space-y-1">
-                <div v-for="link in mailDetails.links" :key="link.id"
-                     class="flex items-center border p-2 rounded bg-white">
-                  <div class="mr-2">
-                    <i class="pi pi-link text-blue-500"></i>
-                  </div>
-                  <div class="flex-grow">
-                    <div class="text-sm truncate" :title="link.url">
-                      {{ link.url }}
-                    </div>
-                  </div>
-                  <div :class="`ml-2 text-xs font-medium ${getStatusColor(link.status)}`">
-                    {{ link.status || 'Non analysé' }}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <SecurityAnalysisComponent
+            :analyses="mailDetails.analyses"
+            :links="mailDetails.links"
+            :attachments="mailDetails.attachments"
+          />
         </div>
 
         <!-- En-tête détaillé du mail -->
@@ -530,7 +189,6 @@ onMounted(() => {
   max-height: 500px;
   overflow: auto;
   position: relative;
-  /* Pour le positionnement des éléments enfants */
 }
 
 /* Styles de base pour le HTML des emails */
@@ -558,8 +216,7 @@ onMounted(() => {
 /* Styles pour les liens dans le contenu rendu sécurisé */
 .email-content :deep(a) {
   color: #3b82f6;
-  text-decoration: line-through;
-  /* Barrer les liens pour indiquer qu'ils ne sont pas cliquables */
+  text-decoration: line-through; /* Barrer les liens pour indiquer qu'ils ne sont pas cliquables */
   cursor: not-allowed;
   pointer-events: all;
   position: relative;
