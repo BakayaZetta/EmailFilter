@@ -74,7 +74,7 @@ const parseAIResult = (resultText) => {
 const getAnalysisIndicator = (analysis) => {
   const result = analysis.result.toLowerCase();
 
-  if (result.includes('valid') || result.includes('pass')) {
+  if (result.includes(' valid') || result.includes('pass')) {
     return { icon: 'pi-check-circle', color: 'text-green-500' };
   } else if (result.includes('invalid') || result.includes('fail')) {
     return { icon: 'pi-times-circle', color: 'text-red-500' };
