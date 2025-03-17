@@ -38,7 +38,8 @@ async def main() -> None:
     if len(sys.argv) > 1:
         email_files = sys.argv[1:]
     else:
-        email_files = [email for email in email_files if email.startswith("phishing_email_example/test")]
+        email_list = [f"phishing_email_example/{file}" for file in os.listdir("phishing_email_example") if file.endswith(".eml")]
+        email_files = [email for email in email_list if email.startswith("phishing_email_example/test")]
     tasks = []
     for email_file in email_files:
         logging.info(f"Analyzing {email_file}")
