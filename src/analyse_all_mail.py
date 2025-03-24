@@ -1,5 +1,6 @@
 from analysis.mail_analyzer import load_email
 from analysis.ai_analysis.ai_analysis import ai_analysis 
+from analysis.ai_analysis.preprocessing_mail import *
 import asyncio
 import os
 import json
@@ -29,5 +30,6 @@ import json
 #     json.dump(safe_mail_dict,fp)
 
 f = "test.eml"
+print(extract_email_text(load_email(f)))
 res = asyncio.run(ai_analysis(load_email(f)))
 print(res)
