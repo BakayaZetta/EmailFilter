@@ -22,37 +22,39 @@ def load_data_from_json(file_path: str) -> Dict[str, Any]:
         data = json.load(file)
     return data
 
-# Function to calculate average scores and total counts
-def calculate_statistics(data: Dict[str, Any]) -> tuple[float, float, int, int, float, float]:
-    '''
-    Calculates average scores and total counts for phishing and benign instances.
+def calculate_statistics(data: Dict[str, Any]):
+    """
+    Classifies instances as phishing or benign based on a 90% benign threshold.
 
     Parameters:
         data (Dict[str, Any]): Data loaded from the JSON file.
 
     Returns:
-        tuple: A tuple containing average phishing score, average benign score, total phishing count, total benign count, phishing percentage, and benign percentage.
-    '''
-    total_phishing_score = 0
+        tuple: (total_phishing_count, total_benign_count, phishing_percentage, benign_percentage)
+    """
     total_phishing_count = 0
-    total_benign_score = 0
     total_benign_count = 0
 
-    for entry in data:
-        stats = entry["statistics"]
-        total_phishing_score += stats["phishing_count"] * stats["phishing_avg_score"]
-        total_phishing_count += stats["phishing_count"]
-        total_benign_score += stats["benign_count"] * stats["benign_avg_score"]
-        total_benign_count += stats["benign_count"]
+    for v in data.values():
+        phishing_count = v["phishing_count"]
+        benign_count = v["benign_count"]
+        total_count = phishing_count + benign_count
 
-    avg_phishing_score = total_phishing_score / total_phishing_count if total_phishing_count != 0 else 0
-    avg_benign_score = total_benign_score / total_benign_count if total_benign_count != 0 else 0
+        if total_count == 0:
+            continue  # Skip empty cases
 
-    total_count = total_phishing_count + total_benign_count
-    phishing_percentage = (total_phishing_count / total_count) * 100 if total_count != 0 else 0
-    benign_percentage = (total_benign_count / total_count) * 100 if total_count != 0 else 0
+        benign_percentage = (benign_count / total_count) * 100
+        if benign_percentage > 50:
+            total_benign_count += 1
+        else:
+            total_phishing_count += 1
 
-    return avg_phishing_score, avg_benign_score, total_phishing_count, total_benign_count, phishing_percentage, benign_percentage
+    total_instances = total_phishing_count + total_benign_count
+    phishing_percentage = (total_phishing_count / total_instances) * 100 if total_instances else 0
+    benign_percentage = (total_benign_count / total_instances) * 100 if total_instances else 0
+
+    return total_phishing_count, total_benign_count, phishing_percentage, benign_percentage
+
 
 # Function to plot the counts and percentages of phishing and benign instances
 def plot_counts_and_percentages(total_phishing_count: int, total_benign_count: int, phishing_percentage: float, benign_percentage: float) -> None:
@@ -99,17 +101,17 @@ def analyze_data(file_path: str) -> None:
         None
     '''
     data = load_data_from_json(file_path)
-    avg_phishing_score, avg_benign_score, total_phishing_count, total_benign_count, phishing_percentage, benign_percentage = calculate_statistics(data)
+    total_phishing_count, total_benign_count, phishing_percentage, benign_percentage = calculate_statistics(data)
 
-    logging.info(f"Average Phishing Score: {avg_phishing_score}")
-    logging.info(f"Average Benign Score: {avg_benign_score}")
     logging.info(f"Total Phishing Count: {total_phishing_count}")
     logging.info(f"Total Benign Count: {total_benign_count}")
     logging.info(f"Phishing Percentage: {phishing_percentage:.2f}%")
     logging.info(f"Benign Percentage: {benign_percentage:.2f}%")
 
-    plot_counts_and_percentages(total_phishing_count, total_benign_count, phishing_percentage, benign_percentage)
+    # plot_counts_and_percentages(total_phishing_count, total_benign_count, phishing_percentage, benign_percentage)
 
 # Run the analysis
-file_path = '1.json'  
-analyze_data(file_path)
+phishing= 'result_phishing.json'  
+benign= 'result_safe.json'  
+analyze_data(phishing)
+analyze_data(benign)
