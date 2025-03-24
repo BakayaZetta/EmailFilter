@@ -94,3 +94,6 @@ __pypackages__/
 
 # Cython debug symbols
 cython_debug/
+
+result_phishing.json
+result_safe.json
