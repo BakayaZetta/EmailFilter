@@ -159,6 +159,22 @@ const getMailCompleteById = async (id) => {
     };
 };
 
+/**
+ * Récupère les mails depuis une date spécifique
+ * @param {Date} startDate - Date de début
+ * @returns {Promise<Array>} Liste des mails
+ */
+const getMailsSince = async (startDate) => {
+  const sqlDate = startDate.toISOString().split('T')[0];
+  
+  return executeQuery(
+    `SELECT * FROM Mail 
+     WHERE Date_Reception >= ? 
+     ORDER BY Date_Reception DESC`,
+    [sqlDate]
+  );
+};
+
 module.exports = {
     getMails,
     getMailById,
@@ -166,5 +182,6 @@ module.exports = {
     updateMailStatus,
     getMailsByStatus,
     getMailsByUserIdAndStatus,
-    getMailCompleteById
+    getMailCompleteById,
+    getMailsSince
 };
