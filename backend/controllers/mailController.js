@@ -97,7 +97,18 @@ exports.getMailsByStatus = async (req, res) => {
     try {
         const statusList = req.query.status ? req.query.status.split(',') : ['QUARANTINE', 'ERROR'];
         const mails = await mailModel.getMailsByStatus(statusList);
-        handleSuccess(res, mails);
+        
+        // Enrichir les données si nécessaire avec des informations complémentaires
+        const enrichedMails = await Promise.all(mails.map(async (mail) => {
+            // Si vous avez besoin d'enrichir chaque mail avec des informations sur l'utilisateur
+            // Vous pourriez faire une requête supplémentaire ou optimiser avec une jointure dans le model
+            return {
+                ...mail,
+                // Ajouter ici des données supplémentaires si nécessaire
+            };
+        }));
+        
+        handleSuccess(res, enrichedMails);
     } catch (error) {
         handleError(res, error);
     }

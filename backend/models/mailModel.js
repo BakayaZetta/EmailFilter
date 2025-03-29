@@ -56,8 +56,14 @@ const getMailsByStatus = async (statusList) => {
         return [];
     }
     const placeholders = statusList.map(() => '?').join(', ');
+    
+    // Ajouter une jointure pour récupérer l'email de l'utilisateur
     return executeQuery(
-        `SELECT * FROM Mail WHERE Statut IN (${placeholders}) ORDER BY Date_Reception DESC`, 
+        `SELECT m.*, u.Email as Destinataire
+         FROM Mail m
+         LEFT JOIN Utilisateur u ON m.ID_Utilisateur = u.ID_Utilisateur
+         WHERE m.Statut IN (${placeholders}) 
+         ORDER BY m.Date_Reception DESC`, 
         statusList
     );
 };
@@ -153,6 +159,22 @@ const getMailCompleteById = async (id) => {
     };
 };
 
+/**
+ * Récupère les mails depuis une date spécifique
+ * @param {Date} startDate - Date de début
+ * @returns {Promise<Array>} Liste des mails
+ */
+const getMailsSince = async (startDate) => {
+  const sqlDate = startDate.toISOString().split('T')[0];
+  
+  return executeQuery(
+    `SELECT * FROM Mail 
+     WHERE Date_Reception >= ? 
+     ORDER BY Date_Reception DESC`,
+    [sqlDate]
+  );
+};
+
 module.exports = {
     getMails,
     getMailById,
@@ -160,5 +182,6 @@ module.exports = {
     updateMailStatus,
     getMailsByStatus,
     getMailsByUserIdAndStatus,
-    getMailCompleteById
+    getMailCompleteById,
+    getMailsSince
 };

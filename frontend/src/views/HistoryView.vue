@@ -29,52 +29,41 @@ const {
   resetSearch
 } = useMailTable();
 
-// Fonctions spécifiques à la vue Quarantine
-const loadQuarantineMails = async () => {
-  // Charger les mails avec statut QUARANTINE ou ERROR
-  await loadMails('QUARANTINE,ERROR');
+// Fonctions spécifiques à la vue History
+const loadHistoryMails = async () => {
+  // Charger les mails avec statut SAFE, DELETED ou PASS
+  await loadMails('SAFE,DELETED,PASS');
 };
 
-// Actions spécifiques à la vue Quarantine
-const bulkMarkAsSafe = async () => {
+// Actions spécifiques à la vue History
+const bulkRestoreToQuarantine = async () => {
   if (selectedMails.value.length === 0) {
-    alert('Please select at least one email to mark as safe.');
-    return;
-  }
-  await bulkUpdateStatus('SAFE');
-};
-
-const bulkDelete = async () => {
-  if (selectedMails.value.length === 0) {
-    alert('Please select at least one email to delete.');
+    alert('Please select at least one email to move to quarantine.');
     return;
   }
 
-  if (confirm(`Are you sure you want to delete ${selectedMails.value.length} email(s)?`)) {
-    await bulkUpdateStatus('DELETED');
-  }
+  // Attendre que l'action se termine avant de recharger
+  await bulkUpdateStatus('QUARANTINE');
+
+  // Recharger la liste pour refléter les changements
+  await loadHistoryMails();
 };
 
-const markAsSafe = async (mailId) => {
-  await updateMailStatus(mailId, 'SAFE');
-};
+const restoreToQuarantine = async (mailId) => {
+  // Attendre que l'action se termine avant de recharger
+  await updateMailStatus(mailId, 'QUARANTINE');
 
-const deleteMail = async (mailId) => {
-  if (confirm('Are you sure you want to delete this mail?')) {
-    await updateMailStatus(mailId, 'DELETED');
-  }
+  // Recharger la liste pour refléter les changements
+  await loadHistoryMails();
 };
 
 // Méthodes pour la recherche
 const handleSearch = (query) => {
   updateSearchQuery(query);
-  // Ne pas recharger les mails, car cela réinitialise searchQuery
-  // Le filtrage est déjà géré par le computed filteredMails dans useMailTable
 };
 
 const handleResetSearch = () => {
   resetSearch();
-  // Pas besoin de recharger les mails ici non plus
 };
 
 // Vérifier l'authentification et charger les données au montage
@@ -82,7 +71,7 @@ onMounted(async () => {
   authStore.initialize();
 
   if (authStore.isLoggedIn) {
-    await loadQuarantineMails();
+    await loadHistoryMails();
   } else {
     // Rediriger vers login si non connecté
     router.push('/login');
@@ -102,66 +91,53 @@ onMounted(async () => {
           :selected-mails="selectedMails"
           :sort-column="sortColumn"
           :sort-direction="sortDirection"
-          :status-types="['QUARANTINE', 'ERROR']"
+          :status-types="['SAFE', 'DELETED', 'PASS']"
           :search-query="searchQuery"
           @toggle-select-all="toggleSelectAll"
           @toggle-select="toggleSelect"
           @toggle-expand="toggleExpand"
           @toggle-sort="toggleSort"
-          @refresh="loadQuarantineMails"
+          @refresh="loadHistoryMails"
           @search="handleSearch"
           @reset-search="handleResetSearch"
         >
           <!-- Header slot avec titre personnalisé -->
           <template #header>
-            <h1 class="text-3xl font-bold">Quarantine</h1>
+            <h1 class="text-3xl font-bold">Email History</h1>
           </template>
 
           <!-- Description slot -->
           <template #description>
             <p class="text-sm text-gray-600 mb-3">
-              All emails detected as potentially malicious or containing errors.
+              History of processed emails (safe, deleted, or automatically passed).
             </p>
           </template>
 
           <!-- Message quand la liste est vide -->
           <template #empty-message>
-            The system has not detected any suspicious emails
+            No processed emails in the history
           </template>
 
-          <!-- Actions en masse -->
+          <!-- Actions en masse - uniquement déplacement vers quarantaine -->
           <template #bulk-actions="{ selectedCount }">
             <button
-              @click="bulkMarkAsSafe"
-              class="px-3 py-1 bg-green-500 text-white text-sm rounded hover:bg-green-600 mr-2 disabled:opacity-50"
+              @click="bulkRestoreToQuarantine"
+              class="px-3 py-1 bg-yellow-500 text-white text-sm rounded hover:bg-yellow-600 mr-2 disabled:opacity-50"
               :disabled="selectedCount === 0"
             >
-              <i class="pi pi-check mr-1 text-xs"></i> Mark as Safe
-            </button>
-            <button
-              @click="bulkDelete"
-              class="px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600 disabled:opacity-50"
-              :disabled="selectedCount === 0"
-            >
-              <i class="pi pi-trash mr-1 text-xs"></i> Delete
+              <i class="pi pi-undo mr-1 text-xs"></i> Move to Quarantine
             </button>
           </template>
 
-          <!-- Actions par ligne -->
+          <!-- Actions par ligne - uniquement déplacement vers quarantaine -->
           <template #row-actions="{ mail }">
             <button
-              @click="markAsSafe(mail.ID_Mail)"
-              title="Mark as Safe"
-              class="px-2 py-1 text-white bg-green-500 hover:bg-green-600 rounded-full"
+              @click="restoreToQuarantine(mail.ID_Mail)"
+              :title="mail.Statut === 'DELETED' ? 'Restore from deletion to Quarantine' : 'Move to Quarantine'"
+              class="px-2 py-1 text-white rounded-full"
+              :class="mail.Statut === 'DELETED' ? 'bg-red-500 hover:bg-red-600' : 'bg-yellow-500 hover:bg-yellow-600'"
             >
-              <i class="pi pi-check text-xs"></i>
-            </button>
-            <button
-              @click="deleteMail(mail.ID_Mail)"
-              title="Delete"
-              class="px-2 py-1 text-white bg-red-500 hover:bg-red-600 rounded-full"
-            >
-              <i class="pi pi-trash text-xs"></i>
+              <i class="pi pi-undo text-xs"></i>
             </button>
           </template>
         </MailTableComponent>
