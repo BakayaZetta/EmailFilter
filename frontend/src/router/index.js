@@ -4,6 +4,7 @@ import LoginView from '@/views/LoginView.vue'
 import RegisterView from '@/views/RegisterView.vue'
 import QuarantineView from '@/views/QuarantineView.vue'
 import HistoryView from '@/views/HistoryView.vue'
+import StatisticsView from '@/views/StatisticsView.vue'
 import NotFoundView from '@/views/NotFoundView.vue'
 
 
@@ -36,11 +37,16 @@ const router = createRouter({
       component: HistoryView,
     },
     {
+      path: '/statistics',
+      name: 'statistics',
+      component: StatisticsView,
+    },
+    {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
       component: NotFoundView,
     },
-  // {
+    // {
     //   path: '/',
     //   name: 'home',
     //   component: HomeView,

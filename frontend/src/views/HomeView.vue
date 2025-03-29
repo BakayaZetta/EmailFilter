@@ -1,13 +1,34 @@
 <script setup>
 import HeroComponent from '@/components/HeroComponent.vue';
-import { onMounted } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'vue-router';
+import statisticsService from '@/services/statisticsService';
 
 const authStore = useAuthStore();
 const router = useRouter();
 
+// État pour les statistiques
+const stats = ref(null);
+const loading = ref(false);
+
+// Charger les statistiques de base
+const loadBasicStats = async () => {
+  if (!authStore.isLoggedIn) return;
+
+  loading.value = true;
+  try {
+    stats.value = await statisticsService.getStatistics('month');
+  } catch (err) {
+    console.error('Failed to load basic statistics:', err);
+  } finally {
+    loading.value = false;
+  }
+};
+
+// Charger les statistiques au montage du composant
 onMounted(() => {
+  loadBasicStats();
   // Initialize authentication state from sessionStorage
   authStore.initialize();
 });
@@ -65,6 +86,50 @@ const logout = () => {
               Sign Out
             </button>
           </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Ajouter cette section après le HeroComponent -->
+  <section v-if="authStore.isLoggedIn" class="py-8">
+    <div class="container mx-auto px-4">
+      <div class="max-w-4xl mx-auto">
+        <h2 class="text-2xl font-bold mb-4">Email Security Overview</h2>
+
+        <div v-if="loading" class="flex justify-center py-8">
+          <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-700"></div>
+        </div>
+
+        <div v-else-if="stats" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-blue-500">
+            <p class="text-sm text-gray-500">Total Emails</p>
+            <p class="text-2xl font-bold">{{ stats.totalMails }}</p>
+          </div>
+
+          <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-yellow-500">
+            <p class="text-sm text-gray-500">In Quarantine</p>
+            <p class="text-2xl font-bold">{{ stats.mailsByStatus?.QUARANTINE || 0 }}</p>
+          </div>
+
+          <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-red-500">
+            <p class="text-sm text-gray-500">Errors</p>
+            <p class="text-2xl font-bold">{{ stats.mailsByStatus?.ERROR || 0 }}</p>
+          </div>
+
+          <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-green-500">
+            <p class="text-sm text-gray-500">Safe</p>
+            <p class="text-2xl font-bold">{{ stats.mailsByStatus?.SAFE || 0 }}</p>
+          </div>
+        </div>
+
+        <div class="text-center">
+          <RouterLink
+            to="/statistics"
+            class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-500 active:bg-blue-700 focus:outline-none focus:border-blue-700 focus:ring ring-blue-300 disabled:opacity-25 transition ease-in-out duration-150"
+          >
+            View Full Statistics <i class="pi pi-arrow-right ml-2"></i>
+          </RouterLink>
         </div>
       </div>
     </div>
