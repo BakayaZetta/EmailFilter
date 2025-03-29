@@ -11,17 +11,24 @@ export default {
       params: { status: statusList }
     });
 
-    // Normaliser les données pour compatibilité
-    return response.data.map(mail => ({
-      ID_Mail: mail.id || mail.ID_Mail,
-      ID_Utilisateur: mail.user?.id || mail.ID_Utilisateur,
-      Emetteur: mail.sender || mail.Emetteur,
-      Sujet: mail.subject || mail.Sujet,
-      Date_Reception: mail.receivedDate || mail.Date_Reception,
-      Statut: mail.status || mail.Statut,
-      // Conserver l'objet original également
-      originalData: mail
-    }));
+    // Normaliser les données pour compatibilité en préservant plus d'informations
+    return response.data.map(mail => {
+      // Extraire l'email du destinataire si disponible
+      const destinataire = mail.recipient || mail.to || mail.Destinataire ||
+        (mail.user?.email ? mail.user.email : `User ID: ${mail.ID_Utilisateur || mail.user?.id}`);
+
+      return {
+        ID_Mail: mail.id || mail.ID_Mail,
+        ID_Utilisateur: mail.user?.id || mail.ID_Utilisateur,
+        Emetteur: mail.sender || mail.Emetteur,
+        Destinataire: destinataire,
+        Sujet: mail.subject || mail.Sujet,
+        Date_Reception: mail.receivedDate || mail.Date_Reception,
+        Statut: mail.status || mail.Statut,
+        // Conserver l'objet complet original également
+        originalData: mail
+      };
+    });
   },
 
   /**

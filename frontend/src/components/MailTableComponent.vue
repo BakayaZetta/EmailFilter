@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import MailComponent from '@/components/MailComponent.vue';
 import { formatDateTime, getStatusClass, getStatusMap } from '@/utils/formatters';
+import SearchBarComponent from '@/components/SearchBarComponent.vue';
 
 const props = defineProps({
   mails: {
@@ -35,6 +36,10 @@ const props = defineProps({
   statusTypes: {
     type: Array,
     default: () => []
+  },
+  searchQuery: {
+    type: Object,
+    default: () => ({})
   }
 });
 
@@ -46,7 +51,9 @@ const emit = defineEmits([
   'toggle-sort',
   'update-mail-status',
   'bulk-update-status',
-  'refresh'
+  'refresh',
+  'search',
+  'reset-search'
 ]);
 
 // Computed pour vérifier si tous les mails sont sélectionnés
@@ -102,6 +109,14 @@ const getSortIcon = (column) => {
       <!-- Slot pour la description -->
     </slot>
 
+    <!-- Barre de recherche -->
+    <SearchBarComponent
+      :status-options="statusTypes"
+      :initial-query="searchQuery"
+      @search="query => emit('search', query)"
+      @reset="emit('reset-search')"
+    />
+
     <!-- Légende des statuts -->
     <div class="flex flex-wrap items-center space-x-4 mb-2 text-xs">
       <div class="text-gray-500">Status:</div>
@@ -109,6 +124,24 @@ const getSortIcon = (column) => {
         <div :class="['w-3 h-3 rounded-full mr-1', status.color]"></div>
         <span>{{ status.name }}</span>
       </div>
+    </div>
+
+    <!-- Indicateur de filtrage -->
+    <div v-if="Object.values(searchQuery).some(v => v !== '')" class="bg-blue-50 border-l-4 border-blue-500 p-2 text-sm mb-3">
+      <p class="text-blue-700">
+        Showing {{ mails.length }} filtered results
+        <button
+          @click="$emit('reset-search')"
+          class="ml-2 text-blue-600 hover:text-blue-800 underline"
+        >
+          Reset filters
+        </button>
+      </p>
+    </div>
+
+    <!-- Ajouter dans le template après l'indicateur de filtrage, à enlever après débogage -->
+    <div v-if="false" class="bg-gray-100 p-2 text-xs mb-3 whitespace-pre overflow-auto max-h-32">
+      Structure de données: {{ JSON.stringify(mails[0], null, 2) }}
     </div>
 
     <!-- Indicateur de chargement -->

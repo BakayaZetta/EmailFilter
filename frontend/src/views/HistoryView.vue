@@ -17,13 +17,16 @@ const {
   sortColumn,
   sortDirection,
   sortedMails,
+  searchQuery,
   loadMails,
   toggleSelectAll,
   toggleSelect,
   toggleExpand,
   toggleSort,
   bulkUpdateStatus,
-  updateMailStatus
+  updateMailStatus,
+  updateSearchQuery,
+  resetSearch
 } = useMailTable();
 
 // Fonctions spécifiques à la vue History
@@ -35,7 +38,7 @@ const loadHistoryMails = async () => {
 // Actions spécifiques à la vue History
 const bulkRestoreToQuarantine = async () => {
   if (selectedMails.value.length === 0) {
-    alert('Please select at least one email to restore to quarantine.');
+    alert('Please select at least one email to move to quarantine.');
     return;
   }
   await bulkUpdateStatus('QUARANTINE');
@@ -43,6 +46,15 @@ const bulkRestoreToQuarantine = async () => {
 
 const restoreToQuarantine = async (mailId) => {
   await updateMailStatus(mailId, 'QUARANTINE');
+};
+
+// Méthodes pour la recherche
+const handleSearch = (query) => {
+  updateSearchQuery(query);
+};
+
+const handleResetSearch = () => {
+  resetSearch();
 };
 
 // Vérifier l'authentification et charger les données au montage
@@ -71,11 +83,14 @@ onMounted(async () => {
           :sort-column="sortColumn"
           :sort-direction="sortDirection"
           :status-types="['SAFE', 'DELETED', 'PASS']"
+          :search-query="searchQuery"
           @toggle-select-all="toggleSelectAll"
           @toggle-select="toggleSelect"
           @toggle-expand="toggleExpand"
           @toggle-sort="toggleSort"
           @refresh="loadHistoryMails"
+          @search="handleSearch"
+          @reset-search="handleResetSearch"
         >
           <!-- Header slot avec titre personnalisé -->
           <template #header>

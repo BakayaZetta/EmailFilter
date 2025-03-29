@@ -17,13 +17,16 @@ const {
   sortColumn,
   sortDirection,
   sortedMails,
+  searchQuery,
   loadMails,
   toggleSelectAll,
   toggleSelect,
   toggleExpand,
   toggleSort,
   bulkUpdateStatus,
-  updateMailStatus
+  updateMailStatus,
+  updateSearchQuery,
+  resetSearch
 } = useMailTable();
 
 // Fonctions spécifiques à la vue Quarantine
@@ -62,6 +65,18 @@ const deleteMail = async (mailId) => {
   }
 };
 
+// Méthodes pour la recherche
+const handleSearch = (query) => {
+  updateSearchQuery(query);
+  // Ne pas recharger les mails, car cela réinitialise searchQuery
+  // Le filtrage est déjà géré par le computed filteredMails dans useMailTable
+};
+
+const handleResetSearch = () => {
+  resetSearch();
+  // Pas besoin de recharger les mails ici non plus
+};
+
 // Vérifier l'authentification et charger les données au montage
 onMounted(async () => {
   authStore.initialize();
@@ -88,11 +103,14 @@ onMounted(async () => {
           :sort-column="sortColumn"
           :sort-direction="sortDirection"
           :status-types="['QUARANTINE', 'ERROR']"
+          :search-query="searchQuery"
           @toggle-select-all="toggleSelectAll"
           @toggle-select="toggleSelect"
           @toggle-expand="toggleExpand"
           @toggle-sort="toggleSort"
           @refresh="loadQuarantineMails"
+          @search="handleSearch"
+          @reset-search="handleResetSearch"
         >
           <!-- Header slot avec titre personnalisé -->
           <template #header>

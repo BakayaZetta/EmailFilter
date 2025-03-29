@@ -13,18 +13,96 @@ export function useMailTable() {
   const sortColumn = ref('Date_Reception');
   const sortDirection = ref('desc');
 
-  // Computed property pour vérifier si tous les mails sont sélectionnés
-  const allSelected = computed(() => {
-    return mails.value.length > 0 && selectedMails.value.length === mails.value.length;
+  // Recherche
+  const searchQuery = ref({
+    status: '',
+    sender: '',
+    recipient: '',
+    subject: '',
+    dateFrom: '',
+    dateTo: ''
   });
 
-  // Mails triés selon les critères actuels
-  const sortedMails = computed(() => {
+  // Computed property pour vérifier si tous les mails sont sélectionnés
+  const allSelected = computed(() => {
+    return filteredMails.value.length > 0 && selectedMails.value.length === filteredMails.value.length;
+  });
+
+  // Mails filtrés selon les critères de recherche
+  const filteredMails = computed(() => {
     if (!mails.value?.length) return [];
 
-    const sortedMails = [...mails.value];
+    return mails.value.filter(mail => {
+      // Filtrer par statut
+      if (searchQuery.value.status &&
+          mail.Statut?.toLowerCase() !== searchQuery.value.status.toLowerCase()) {
+        return false;
+      }
 
-    sortedMails.sort((a, b) => {
+      // Filtrer par expéditeur
+      if (searchQuery.value.sender &&
+          !mail.Emetteur?.toLowerCase().includes(searchQuery.value.sender.toLowerCase())) {
+        return false;
+      }
+
+      // Filtrer par destinataire (ID_Utilisateur ou email)
+      if (searchQuery.value.recipient) {
+        const searchTerm = searchQuery.value.recipient.toLowerCase();
+
+        // Récupérer différentes propriétés possibles pour le destinataire
+        const userId = String(mail.ID_Utilisateur || '');
+        const destinataire = String(mail.Destinataire || '');
+
+        // Debug temporaire - voir dans la console ce qui est disponible
+        // console.log('Mail destinataire debug:', {
+        //   mailId: mail.ID_Mail,
+        //   userId: userId,
+        //   destinataire: destinataire,
+        //   searchTerm: searchTerm
+        // });
+
+        // Vérifier les correspondances
+        const idMatch = userId.toLowerCase().includes(searchTerm);
+        const emailMatch = destinataire.toLowerCase().includes(searchTerm);
+
+        // Si ni l'ID ni l'email ne correspondent, exclure ce mail
+        if (!idMatch && !emailMatch) {
+          return false;
+        }
+      }
+
+      // Filtrer par sujet
+      if (searchQuery.value.subject &&
+          !mail.Sujet?.toLowerCase().includes(searchQuery.value.subject.toLowerCase())) {
+        return false;
+      }
+
+      // Filtrer par date (de)
+      if (searchQuery.value.dateFrom) {
+        const dateFrom = new Date(searchQuery.value.dateFrom);
+        const mailDate = new Date(mail.Date_Reception);
+        if (mailDate < dateFrom) return false;
+      }
+
+      // Filtrer par date (à)
+      if (searchQuery.value.dateTo) {
+        const dateTo = new Date(searchQuery.value.dateTo);
+        dateTo.setHours(23, 59, 59, 999); // Fin de journée
+        const mailDate = new Date(mail.Date_Reception);
+        if (mailDate > dateTo) return false;
+      }
+
+      return true;
+    });
+  });
+
+  // Mails triés selon les critères actuels (après filtrage)
+  const sortedMails = computed(() => {
+    if (!filteredMails.value?.length) return [];
+
+    const sorted = [...filteredMails.value];
+
+    sorted.sort((a, b) => {
       let valA, valB;
 
       // Déterminer les valeurs à comparer selon la colonne
@@ -62,15 +140,57 @@ export function useMailTable() {
       }
     });
 
-    return sortedMails;
+    return sorted;
   });
 
+  // Mettre à jour les critères de recherche
+  const updateSearchQuery = (query) => {
+    // Convertir explicitement les valeurs de status en majuscules pour correspondre au format du backend
+    if (query.status) {
+      query.status = query.status.toUpperCase();
+    }
+
+    // Date range - s'assurer que les dates sont dans le bon format
+    if (query.dateFrom && typeof query.dateFrom === 'string') {
+      // S'assurer que dateFrom commence au début de la journée
+      const dateFrom = new Date(query.dateFrom);
+      dateFrom.setHours(0, 0, 0, 0);
+      query.dateFrom = dateFrom.toISOString();
+    }
+
+    if (query.dateTo && typeof query.dateTo === 'string') {
+      // S'assurer que dateTo va jusqu'à la fin de la journée
+      const dateTo = new Date(query.dateTo);
+      dateTo.setHours(23, 59, 59, 999);
+      query.dateTo = dateTo.toISOString();
+    }
+
+    searchQuery.value = { ...searchQuery.value, ...query };
+  };
+
+  // Réinitialiser les critères de recherche
+  const resetSearch = () => {
+    searchQuery.value = {
+      status: '',
+      sender: '',
+      recipient: '',
+      subject: '',
+      dateFrom: '',
+      dateTo: ''
+    };
+  };
+
   // Charger les mails par statut
-  const loadMails = async (statusList) => {
+  const loadMails = async (statusList, keepSearch = false) => {
     loading.value = true;
     error.value = null;
     selectedMails.value = [];
     expandedMailId.value = null;
+
+    // Ne réinitialise la recherche que si le paramètre keepSearch est false
+    if (!keepSearch) {
+      resetSearch();
+    }
 
     try {
       mails.value = await mailService.getMailsByStatus(statusList);
@@ -80,6 +200,11 @@ export function useMailTable() {
     } finally {
       loading.value = false;
     }
+  };
+
+  // Puis ajouter une méthode pour rafraîchir les données tout en conservant la recherche
+  const refreshWithCurrentFilters = async (statusList) => {
+    await loadMails(statusList, true); // true pour garder les critères de recherche
   };
 
   // Actions de sélection
@@ -167,6 +292,7 @@ export function useMailTable() {
     sortDirection,
     sortedMails,
     allSelected,
+    searchQuery,
 
     // Méthodes
     loadMails,
@@ -178,5 +304,8 @@ export function useMailTable() {
     getSortIcon,
     bulkUpdateStatus,
     updateMailStatus,
+    updateSearchQuery,
+    resetSearch,
+    refreshWithCurrentFilters
   };
 }
