@@ -117,6 +117,14 @@ class Database:
                 ")"
             )
         }
+        tables["Blacklist"] = (
+            "CREATE TABLE IF NOT EXISTS Blacklist ("
+            "  ID_Blacklist INT AUTO_INCREMENT PRIMARY KEY,"
+            "  Email VARCHAR(255),"
+            "  IP VARCHAR(255),"
+            "  Domain VARCHAR(255)"
+            ")"
+        )
         for table_name, table_description in tables.items():
             try:
                 logging.info(f"Creating table {table_name}: ")
@@ -344,3 +352,21 @@ class Database:
         self.cursor.execute(add_lien_query, lien_data)
         self.conn.commit()
         return self.cursor.lastrowid
+
+    def is_blacklisted(self, email: str, ip: str, domain: str) -> bool:
+        '''
+        Checks if an email, IP, or domain is in the blacklist.
+
+        Parameters:
+            email (str): The sender's email address.
+            ip (str): The sender's IP address.
+            domain (str): The sender's domain.
+
+        Returns:
+            bool: True if any of the parameters are blacklisted, False otherwise.
+        '''
+        query = (
+            "SELECT * FROM Blacklist WHERE Email = %s OR IP = %s OR Domain = %s"
+        )
+        self.cursor.execute(query, (email, ip, domain))
+        return self.cursor.fetchone() is not None

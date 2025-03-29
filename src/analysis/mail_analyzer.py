@@ -197,7 +197,7 @@ async def check_and_save_URL(email_obj: email.message.EmailMessage, db: Database
 
     return url_result
 
-def determine_conclusion(spf_status: SPFStatus, dkim_status: DKIMStatus, dmarc_status: Optional[DMARCStatus], url_result: dict, ai_result: dict, clamav_result: dict) -> str:
+def determine_conclusion(spf_status: SPFStatus, dkim_status: DKIMStatus, dmarc_status: Optional[DMARCStatus], url_result: dict, ai_result: dict, clamav_result: dict, email_obj: email.message.EmailMessage, db: Database) -> str:
     '''
     Détermine la conclusion basée sur les statuts SPF, DKIM, DMARC, URL, AI et ClamAV.
 
@@ -214,6 +214,14 @@ def determine_conclusion(spf_status: SPFStatus, dkim_status: DKIMStatus, dmarc_s
     '''
     from analysis.ai_analysis.url_analysis import url_is_phishing
     from analysis.ai_analysis.ai_analysis import text_is_phising
+
+    # Étape 0: Vérification de la liste noire
+    sender_email = email_obj['From']
+    sender_domain = sender_email.split('@')[-1] if '@' in sender_email else ''
+    sender_ip = ''  # Placeholder for sender IP extraction logic
+
+    if db.is_blacklisted(sender_email, sender_ip, sender_domain):
+        return 'QUARANTINE'
 
     # Étape 1: Vérification DMARC
     if dmarc_status == DMARCStatus.PASS:
@@ -305,7 +313,7 @@ async def analyze_email(email_obj: email.message.EmailMessage, email_raw, db: Da
     
     spf_status, dkim_status, dmarc_status, ai_result, clamav_result, url_result = await asyncio.gather(spf_task, dkim_task, dmarc_task, ai_task, clamav_task, url_task)
     
-    conclusion = determine_conclusion(spf_status, dkim_status, dmarc_status, url_result, ai_result, clamav_result)
+    conclusion = determine_conclusion(spf_status, dkim_status, dmarc_status, url_result, ai_result, clamav_result, email_obj, db)
     logging.info(f"Conclusion for mail {id_mail}: {conclusion}")
     db.update_mail_status(id_mail, conclusion)
 
