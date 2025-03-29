@@ -98,27 +98,47 @@ const logout = () => {
         <h2 class="text-2xl font-bold mb-4">Email Security Overview</h2>
 
         <div v-if="loading" class="flex justify-center py-8">
-          <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-700"></div>
+          <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-red-500"></div>
         </div>
 
         <div v-else-if="stats" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-blue-500">
-            <p class="text-sm text-gray-500">Total Emails</p>
+            <div class="flex items-center mb-1">
+              <div class="bg-blue-500 rounded-full w-8 h-8 flex items-center justify-center text-white mr-2">
+                <i class="pi pi-envelope"></i>
+              </div>
+              <p class="text-sm text-gray-500">Total Emails</p>
+            </div>
             <p class="text-2xl font-bold">{{ stats.totalMails }}</p>
           </div>
 
           <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-yellow-500">
-            <p class="text-sm text-gray-500">In Quarantine</p>
+            <div class="flex items-center mb-1">
+              <div class="bg-yellow-500 rounded-full w-8 h-8 flex items-center justify-center text-white mr-2">
+                <i class="pi pi-exclamation-circle"></i>
+              </div>
+              <p class="text-sm text-gray-500">In Quarantine</p>
+            </div>
             <p class="text-2xl font-bold">{{ stats.mailsByStatus?.QUARANTINE || 0 }}</p>
           </div>
 
-          <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-red-500">
-            <p class="text-sm text-gray-500">Errors</p>
+          <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-orange-500">
+            <div class="flex items-center mb-1">
+              <div class="bg-orange-500 rounded-full w-8 h-8 flex items-center justify-center text-white mr-2">
+                <i class="pi pi-times-circle"></i>
+              </div>
+              <p class="text-sm text-gray-500">Processing Errors</p>
+            </div>
             <p class="text-2xl font-bold">{{ stats.mailsByStatus?.ERROR || 0 }}</p>
           </div>
 
           <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-green-500">
-            <p class="text-sm text-gray-500">Safe</p>
+            <div class="flex items-center mb-1">
+              <div class="bg-green-500 rounded-full w-8 h-8 flex items-center justify-center text-white mr-2">
+                <i class="pi pi-check-circle"></i>
+              </div>
+              <p class="text-sm text-gray-500">Admin Approved</p>
+            </div>
             <p class="text-2xl font-bold">{{ stats.mailsByStatus?.SAFE || 0 }}</p>
           </div>
         </div>
