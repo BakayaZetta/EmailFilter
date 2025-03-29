@@ -57,14 +57,24 @@ const statusChartData = computed(() => {
   const statuses = statistics.value.mailsByStatus || {};
   const statusColors = {
     'SAFE': '#10B981',     // green
-    'ERROR': '#EF4444',    // red
+    'ERROR': '#FB923C',    // orange
     'QUARANTINE': '#F59E0B', // yellow
-    'PASS': '#6366F1',     // indigo
-    'DELETED': '#9CA3AF',  // gray
+    'PASS': '#3B82F6',     // blue
+    'DELETED': '#EF4444',  // red
     'UNKNOWN': '#6B7280'   // gray-500
   };
 
-  const labels = Object.keys(statuses).map(status => status.charAt(0) + status.slice(1).toLowerCase());
+  // Labels plus descriptifs
+  const statusLabels = {
+    'SAFE': 'Admin Approved',
+    'ERROR': 'Processing Errors',
+    'QUARANTINE': 'In Quarantine',
+    'PASS': 'Auto-Validated',
+    'DELETED': 'Deleted Threats',
+    'UNKNOWN': 'Unknown'
+  };
+
+  const labels = Object.keys(statuses).map(status => statusLabels[status] || status);
   const data = Object.values(statuses);
   const backgroundColor = Object.keys(statuses).map(status => statusColors[status] || '#6B7280');
 
@@ -94,37 +104,94 @@ const topSendersChartData = computed(() => {
 
 // Formater les données pour le graphique linéaire d'emails au fil du temps
 const mailsOverTimeChartData = computed(() => {
-  const timeData = statistics.value.mailsOverTime || [];
+  // Vérifier si nous avons des données réelles
+  let timeData = statistics.value.mailsOverTime || [];
+
+  // Si aucune donnée n'est disponible, générer des données de test
+  if (!timeData || timeData.length === 0) {
+    console.warn('No historical data available, using sample data');
+
+    // Générer des dates pour les 7 derniers jours
+    const today = new Date();
+    timeData = Array.from({ length: 7 }, (_, i) => {
+      const date = new Date();
+      date.setDate(today.getDate() - 6 + i);
+
+      // Format de date YYYY-MM-DD
+      const formattedDate = date.toISOString().split('T')[0];
+
+      // Générer des valeurs aléatoires raisonnables
+      const total = Math.floor(Math.random() * 20) + 10;
+      const quarantine = Math.floor(Math.random() * 5);
+      const error = Math.floor(Math.random() * 3);
+      const safe = total - quarantine - error;
+
+      return {
+        date: formattedDate,
+        total,
+        quarantine,
+        safe,
+        error
+      };
+    });
+  }
+
   return {
     labels: timeData.map(point => point.date),
     datasets: [
       {
-        label: 'All emails',
+        label: 'Total Emails',
         data: timeData.map(point => point.total),
         borderColor: '#3B82F6',
         backgroundColor: 'rgba(59, 130, 246, 0.1)',
-        borderWidth: 2
+        borderWidth: 2,
+        fill: false,
+        tension: 0.4
       },
       {
-        label: 'Quarantine',
+        label: 'In Quarantine',  // QUARANTINE
         data: timeData.map(point => point.quarantine || 0),
         borderColor: '#F59E0B',
         backgroundColor: 'rgba(245, 158, 11, 0.1)',
-        borderWidth: 2
+        borderWidth: 2,
+        fill: false,
+        tension: 0.4
       },
       {
-        label: 'Safe',
+        label: 'Admin Approved',  // SAFE
         data: timeData.map(point => point.safe || 0),
         borderColor: '#10B981',
         backgroundColor: 'rgba(16, 185, 129, 0.1)',
-        borderWidth: 2
+        borderWidth: 2,
+        fill: false,
+        tension: 0.4
       },
       {
-        label: 'Error',
+        label: 'Processing Errors',  // ERROR
         data: timeData.map(point => point.error || 0),
         borderColor: '#EF4444',
         backgroundColor: 'rgba(239, 68, 68, 0.1)',
-        borderWidth: 2
+        borderWidth: 2,
+        fill: false,
+        tension: 0.4
+      },
+      {
+        label: 'Auto-Validated',  // PASS
+        data: timeData.map(point => point.pass || 0),
+        borderColor: '#6366F1',  // indigo
+        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+        borderWidth: 2,
+        fill: false,
+        tension: 0.4
+      },
+      {
+        label: 'Deleted Threats',  // DELETED
+        data: timeData.map(point => point.deleted || 0),
+        borderColor: '#9CA3AF',  // gray
+        backgroundColor: 'rgba(156, 163, 175, 0.1)',
+        borderWidth: 2,
+        fill: false,
+        tension: 0.4
       }
     ]
   };
@@ -221,7 +288,7 @@ onMounted(async () => {
 
       <!-- Loading et error states -->
       <div v-if="loading" class="flex justify-center py-8">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-700"></div>
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500"></div>
       </div>
 
       <div v-else-if="error" class="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
@@ -243,24 +310,53 @@ onMounted(async () => {
             :value="statistics.totalMails"
             icon="pi-envelope"
             color="bg-blue-500"
-          />
-          <StatisticsCard
-            title="Detected Threats"
-            :value="`${threatPercentage}%`"
-            icon="pi-shield"
-            color="bg-red-500"
-          />
-          <StatisticsCard
-            title="Safe Emails"
-            :value="statistics.mailsByStatus.SAFE || 0"
-            icon="pi-check-circle"
-            color="bg-green-500"
+            tooltip="Total count of all emails processed by the system during the selected period"
           />
           <StatisticsCard
             title="In Quarantine"
             :value="statistics.mailsByStatus.QUARANTINE || 0"
             icon="pi-exclamation-circle"
             color="bg-yellow-500"
+            tooltip="Emails detected as potentially malicious and awaiting administrator review"
+          />
+          <StatisticsCard
+            title="Auto-Validated"
+            :value="statistics.mailsByStatus.PASS || 0"
+            icon="pi-check"
+            color="bg-blue-500"
+            tooltip="Emails automatically classified as safe by the system"
+          />
+          <StatisticsCard
+            title="Admin Approved"
+            :value="statistics.mailsByStatus.SAFE || 0"
+            icon="pi-check-circle"
+            color="bg-green-500"
+            tooltip="Quarantined emails manually approved as safe by administrators"
+          />
+        </div>
+
+        <!-- Ajouter une deuxième ligne de statistiques pour les autres statuts -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <StatisticsCard
+            title="Deleted Threats"
+            :value="statistics.mailsByStatus.DELETED || 0"
+            icon="pi-trash"
+            color="bg-red-500"
+            tooltip="Quarantined emails marked as dangerous by administrators and deleted"
+          />
+          <StatisticsCard
+            title="Processing Errors"
+            :value="statistics.mailsByStatus.ERROR || 0"
+            icon="pi-times-circle"
+            color="bg-orange-500"
+            tooltip="Emails that encountered errors during analysis"
+          />
+          <StatisticsCard
+            title="Detection Rate"
+            :value="`${threatPercentage}%`"
+            icon="pi-shield"
+            color="bg-purple-500"
+            tooltip="Percentage of emails detected as suspicious or malicious"
           />
         </div>
 
@@ -324,6 +420,12 @@ onMounted(async () => {
         <!-- Graphique linéaire d'emails au fil du temps -->
         <div class="bg-white p-4 rounded-lg shadow-sm mb-6">
           <h2 class="text-lg font-semibold mb-4">Emails Over Time</h2>
+          <!-- Debug section - à supprimer après débogage -->
+          <details v-if="false" class="mb-3 text-xs">
+            <summary>Debug: données du graphique</summary>
+            <pre class="bg-gray-100 p-2 overflow-auto max-h-40">{{ JSON.stringify(mailsOverTimeChartData, null, 2) }}</pre>
+          </details>
+
           <div v-if="statistics.mailsOverTime && statistics.mailsOverTime.length > 0">
             <LineChartComponent
               :chart-data="mailsOverTimeChartData"
@@ -335,6 +437,47 @@ onMounted(async () => {
             message="No historical data for this period"
             icon="pi-calendar"
           />
+        </div>
+
+        <!-- Ajouter cette légende après les graphiques -->
+        <div class="bg-white p-4 rounded-lg shadow-sm mb-6">
+          <h2 class="text-lg font-semibold mb-2">Understanding Email Status</h2>
+          <p class="text-sm text-gray-600 mb-4">
+            The emails in the system are classified into different categories based on their analysis and administrative actions:
+          </p>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3 text-sm">
+            <div class="flex items-start">
+              <div class="w-3 h-3 rounded-full bg-yellow-500 mt-1.5 mr-2 flex-shrink-0"></div>
+              <div>
+                <span class="font-medium">QUARANTINE:</span> Emails detected as potentially malicious and awaiting review.
+              </div>
+            </div>
+            <div class="flex items-start">
+              <div class="w-3 h-3 rounded-full bg-blue-500 mt-1.5 mr-2 flex-shrink-0"></div>
+              <div>
+                <span class="font-medium">PASS:</span> Emails automatically classified as safe by the analysis system.
+              </div>
+            </div>
+            <div class="flex items-start">
+              <div class="w-3 h-3 rounded-full bg-green-500 mt-1.5 mr-2 flex-shrink-0"></div>
+              <div>
+                <span class="font-medium">SAFE:</span> Formerly quarantined emails that have been approved as safe by administrators.
+              </div>
+            </div>
+            <div class="flex items-start">
+              <div class="w-3 h-3 rounded-full bg-red-500 mt-1.5 mr-2 flex-shrink-0"></div>
+              <div>
+                <span class="font-medium">DELETED:</span> Formerly quarantined emails that have been marked as dangerous and deleted.
+              </div>
+            </div>
+            <div class="flex items-start">
+              <div class="w-3 h-3 rounded-full bg-orange-500 mt-1.5 mr-2 flex-shrink-0"></div>
+              <div>
+                <span class="font-medium">ERROR:</span> Emails that encountered processing errors during analysis.
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

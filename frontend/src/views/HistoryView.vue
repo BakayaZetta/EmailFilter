@@ -123,16 +123,13 @@ onMounted(async () => {
           <!-- Actions par ligne - uniquement déplacement vers quarantaine -->
           <template #row-actions="{ mail }">
             <button
-              v-if="mail.Statut !== 'DELETED'"
               @click="restoreToQuarantine(mail.ID_Mail)"
-              title="Move to Quarantine"
-              class="px-2 py-1 text-white bg-yellow-500 hover:bg-yellow-600 rounded-full"
+              :title="mail.Statut === 'DELETED' ? 'Restore from deletion to Quarantine' : 'Move to Quarantine'"
+              class="px-2 py-1 text-white rounded-full"
+              :class="mail.Statut === 'DELETED' ? 'bg-red-500 hover:bg-red-600' : 'bg-yellow-500 hover:bg-yellow-600'"
             >
               <i class="pi pi-undo text-xs"></i>
             </button>
-            <span v-if="mail.Statut === 'DELETED'" class="text-xs text-gray-500">
-              Deleted
-            </span>
           </template>
         </MailTableComponent>
       </div>

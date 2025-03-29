@@ -4,11 +4,10 @@ import Chart from 'chart.js/auto';
 
 const props = defineProps({
   chartData: {
-    type: Object,
     required: true
   },
   height: {
-    type: Number,
+    type: [String, Number],
     default: 400
   }
 });
@@ -37,10 +36,16 @@ const createChart = () => {
       },
       plugins: {
         legend: {
-          position: 'top'
+          position: 'top',
+          labels: {
+            usePointStyle: true,
+            boxWidth: 6
+          }
         },
         tooltip: {
-          enabled: true
+          enabled: true,
+          mode: 'index',
+          intersect: false
         }
       },
       scales: {
@@ -48,6 +53,9 @@ const createChart = () => {
           title: {
             display: true,
             text: 'Date'
+          },
+          grid: {
+            display: false
           }
         },
         y: {
@@ -55,7 +63,19 @@ const createChart = () => {
           title: {
             display: true,
             text: 'Number of emails'
+          },
+          ticks: {
+            precision: 0
           }
+        }
+      },
+      elements: {
+        line: {
+          tension: 0.4 // Ajoute une courbure aux lignes
+        },
+        point: {
+          radius: 3,
+          hoverRadius: 5
         }
       }
     }
@@ -72,7 +92,7 @@ watch(() => props.chartData, () => {
 </script>
 
 <template>
-  <div class="relative">
+  <div>
     <canvas :ref="el => chartRef = el" :height="height"></canvas>
   </div>
 </template>
