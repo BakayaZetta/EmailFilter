@@ -1,12 +1,26 @@
 <script setup>
-import { onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'vue-router';
 import { useMailTable } from '@/composables/useMailTable';
 import MailTableComponent from '@/components/MailTableComponent.vue';
+import FileDropZone from '@/components/FileDropZone.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();
+
+// État pour contrôler la visibilité de la modal de drag & drop
+const isUploadModalOpen = ref(false);
+
+// Fonction pour ouvrir/fermer la modal de drag & drop
+const openUploadModal = () => {
+  isUploadModalOpen.value = true;
+};
+
+// Fonction pour fermer la modal de drag & drop
+const closeUploadModal = () => {
+  isUploadModalOpen.value = false;
+};
 
 // Utiliser le composable useMailTable pour la logique de gestion des mails
 const {
@@ -68,13 +82,28 @@ const deleteMail = async (mailId) => {
 // Méthodes pour la recherche
 const handleSearch = (query) => {
   updateSearchQuery(query);
-  // Ne pas recharger les mails, car cela réinitialise searchQuery
+// Ne pas recharger les mails, car cela réinitialise searchQuery
   // Le filtrage est déjà géré par le computed filteredMails dans useMailTable
 };
 
 const handleResetSearch = () => {
   resetSearch();
-  // Pas besoin de recharger les mails ici non plus
+// Pas besoin de recharger les mails ici non plus
+};
+
+// Fonction pour gérer les uploads réussis
+const handleUploadSuccess = async ({ fileName }) => {
+  console.log(`File ${fileName} uploaded successfully`);
+
+  // Recharger la liste après un délai
+  setTimeout(() => {
+    loadQuarantineMails();
+  }, 2000); // Délai pour traitement backend
+};
+
+// Fonction pour gérer les erreurs d'upload
+const handleUploadError = ({ fileName, error }) => {
+  console.error(`Error uploading ${fileName}:`, error);
 };
 
 // Vérifier l'authentification et charger les données au montage
@@ -94,6 +123,33 @@ onMounted(async () => {
   <section class="py-4">
     <div class="container mx-auto px-2">
       <div class="max-w-full mx-auto">
+        <!-- Section d'upload pour les fichiers eml -->
+        <div class="mb-6">
+          <div class="flex justify-between items-center mb-2">
+            <h2 class="text-lg font-semibold">Upload New Emails for Analysis</h2>
+            <button
+              @click="openUploadModal"
+              class="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 flex items-center"
+            >
+              <i class="pi pi-upload mr-1"></i>
+              Upload Email
+            </button>
+          </div>
+
+          <p class="text-sm text-gray-500">
+            Click the Upload button to analyze new .eml files for potential threats.
+          </p>
+
+          <!-- Modal de drag & drop -->
+          <FileDropZone
+            :is-open="isUploadModalOpen"
+            :max-size="1000 * 1024 * 1024"
+            @upload-success="handleUploadSuccess"
+            @upload-error="handleUploadError"
+            @close="closeUploadModal"
+          /> <!-- 1GB -->
+        </div>
+
         <MailTableComponent
           :mails="sortedMails"
           :loading="loading"
