@@ -33,29 +33,12 @@ const loadHistoryMails = async () => {
 };
 
 // Actions spécifiques à la vue History
-const bulkDelete = async () => {
-  if (selectedMails.value.length === 0) {
-    alert('Please select at least one email to delete.');
-    return;
-  }
-
-  if (confirm(`Are you sure you want to delete ${selectedMails.value.length} email(s)?`)) {
-    await bulkUpdateStatus('DELETED');
-  }
-};
-
 const bulkRestoreToQuarantine = async () => {
   if (selectedMails.value.length === 0) {
     alert('Please select at least one email to restore to quarantine.');
     return;
   }
   await bulkUpdateStatus('QUARANTINE');
-};
-
-const deleteMail = async (mailId) => {
-  if (confirm('Are you sure you want to delete this mail?')) {
-    await updateMailStatus(mailId, 'DELETED');
-  }
 };
 
 const restoreToQuarantine = async (mailId) => {
@@ -111,7 +94,7 @@ onMounted(async () => {
             No processed emails in the history
           </template>
 
-          <!-- Actions en masse -->
+          <!-- Actions en masse - uniquement déplacement vers quarantaine -->
           <template #bulk-actions="{ selectedCount }">
             <button
               @click="bulkRestoreToQuarantine"
@@ -120,16 +103,9 @@ onMounted(async () => {
             >
               <i class="pi pi-undo mr-1 text-xs"></i> Move to Quarantine
             </button>
-            <button
-              @click="bulkDelete"
-              class="px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600 disabled:opacity-50"
-              :disabled="selectedCount === 0"
-            >
-              <i class="pi pi-trash mr-1 text-xs"></i> Delete
-            </button>
           </template>
 
-          <!-- Actions par ligne -->
+          <!-- Actions par ligne - uniquement déplacement vers quarantaine -->
           <template #row-actions="{ mail }">
             <button
               v-if="mail.Statut !== 'DELETED'"
@@ -138,14 +114,6 @@ onMounted(async () => {
               class="px-2 py-1 text-white bg-yellow-500 hover:bg-yellow-600 rounded-full"
             >
               <i class="pi pi-undo text-xs"></i>
-            </button>
-            <button
-              v-if="mail.Statut !== 'DELETED'"
-              @click="deleteMail(mail.ID_Mail)"
-              title="Delete"
-              class="px-2 py-1 text-white bg-red-500 hover:bg-red-600 rounded-full"
-            >
-              <i class="pi pi-trash text-xs"></i>
             </button>
             <span v-if="mail.Statut === 'DELETED'" class="text-xs text-gray-500">
               Deleted

@@ -27,9 +27,9 @@ export function getStatusClass(status) {
   switch(status?.toUpperCase()) {
     case 'QUARANTINE': return 'bg-yellow-500';
     case 'ERROR': return 'bg-red-500';
-    case 'SAFE': return 'bg-green-500';
+    case 'SAFE': return 'bg-green-300';
     case 'DELETED': return 'bg-red-300';
-    case 'PASS': return 'bg-blue-500';
+    case 'PASS': return 'bg-blue-300';
     default: return 'bg-gray-500';
   }
 }
@@ -40,8 +40,8 @@ export function getStatusClass(status) {
  */
 export function getStatusMap() {
   return [
-    { name: 'Safe', color: 'bg-green-500' },
-    { name: 'Pass', color: 'bg-blue-500' },
+    { name: 'Safe', color: 'bg-green-300' },
+    { name: 'Pass', color: 'bg-blue-300' },
     { name: 'Quarantine', color: 'bg-yellow-500' },
     { name: 'Deleted', color: 'bg-red-300' },
     { name: 'Error', color: 'bg-red-500' }
