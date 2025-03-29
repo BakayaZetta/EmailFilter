@@ -41,11 +41,20 @@ const bulkRestoreToQuarantine = async () => {
     alert('Please select at least one email to move to quarantine.');
     return;
   }
+
+  // Attendre que l'action se termine avant de recharger
   await bulkUpdateStatus('QUARANTINE');
+
+  // Recharger la liste pour refléter les changements
+  await loadHistoryMails();
 };
 
 const restoreToQuarantine = async (mailId) => {
+  // Attendre que l'action se termine avant de recharger
   await updateMailStatus(mailId, 'QUARANTINE');
+
+  // Recharger la liste pour refléter les changements
+  await loadHistoryMails();
 };
 
 // Méthodes pour la recherche
