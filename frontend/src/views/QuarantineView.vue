@@ -352,7 +352,7 @@ onMounted(async () => {
           <!-- Wrapper with shadow and rounded corners -->
           <div class="bg-white shadow rounded-lg overflow-hidden">
             <!-- Container for both horizontal and vertical scrolling -->
-            <div class="overflow-auto max-h-[80vh]">
+            <div class="overflow-auto max-h-[85vh]">
               <table class="w-full divide-y divide-gray-200 text-sm table-fixed">
                 <thead class="bg-gray-50 sticky top-0 z-10">
                   <tr class="text-xs">
