@@ -1,9 +1,10 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '@/views/HomeView.vue'
-import NotFoundView from '@/views/NotFoundView.vue'
 import LoginView from '@/views/LoginView.vue'
 import RegisterView from '@/views/RegisterView.vue'
 import QuarantineView from '@/views/QuarantineView.vue'
+import HistoryView from '@/views/HistoryView.vue'
+import NotFoundView from '@/views/NotFoundView.vue'
 
 
 const router = createRouter({
@@ -23,17 +24,23 @@ const router = createRouter({
       path: '/register',
       name: 'register',
       component: RegisterView,
-    },{
+    },
+    {
       path: '/quarantine',
       name: 'quarantine',
       component: QuarantineView,
+    },
+    {
+      path: '/history',
+      name: 'history',
+      component: HistoryView,
     },
     {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
       component: NotFoundView,
     },
-    // {
+  // {
     //   path: '/',
     //   name: 'home',
     //   component: HomeView,
