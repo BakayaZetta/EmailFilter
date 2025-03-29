@@ -3,8 +3,10 @@ services:
     image: matthl2002/detectish:latest
     container_name: detectish
     depends_on:
-      - mysql
-      - clamav
+      mysql:
+        condition: service_healthy
+      clamav:
+        condition: service_healthy
     networks:
       - detectish-network
     volumes:
@@ -25,6 +27,11 @@ services:
       - "3310:3310" 
     networks:
       - detectish-network
+    healthcheck:
+      test: ["CMD-SHELL", "echo 'PING' | nc -w 5 localhost 3310"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   mysql:
     image: mysql:8.0
@@ -40,6 +47,11 @@ services:
       - detectish-network
     ports:
       - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
 volumes:
   mysql-data:
