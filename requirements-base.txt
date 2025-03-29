@@ -10,3 +10,6 @@ asyncio
 pyspf
 dnspython
 dkimpy
+fastapi
+uvicorn
+python-multipart

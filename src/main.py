@@ -9,45 +9,42 @@ Usage:
 """
 
 from database import Database 
-from analysis.mail_analyzer import load_email, analyze_email
-import os
-from analysis.ai_analysis.ai_analysis import ai_analysis
+from analysis.mail_analyzer import load_email, analyze_email, load_raw_email
+from fastapi import FastAPI, UploadFile
+from fastapi.responses import JSONResponse
+from starlette.background import BackgroundTasks
+import uvicorn
 import logging
-from database import Database
-from analysis.mail_analyzer import load_email, load_raw_email , analyze_email
-import os
-import asyncio
-import random
-from email.message import EmailMessage
-import sys
+import tempfile
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
-async def main() -> None:
-    '''
-    Main function to analyze emails and save results to the database.
+# Initialize FastAPI app
+app = FastAPI()
 
-    Parameters:
-        None
+db = Database()
 
-    Returns:
-        None
-    '''
-    db = Database()
-    if len(sys.argv) > 1:
-        email_files = sys.argv[1:]
-    else:
-        email_list = [f"phishing_email_example/{file}" for file in os.listdir("phishing_email_example") if file.endswith(".eml")]
-        email_files = [email for email in email_list if email.startswith("phishing_email_example/test")]
-    tasks = []
-    for email_file in email_files:
-        logging.info(f"Analyzing {email_file}")
-        email_obj = load_email(email_file)
-        email_raw = load_raw_email(email_file)
-        tasks.append(analyze_email(email_obj, email_raw, db))
-    await asyncio.gather(*tasks)
+async def process_email(filename: str, email_content: bytes):
+    """Process the uploaded email file."""
+    logger.info("Started processing email file: %s", filename)
+    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+        temp_file.write(email_content)
+        temp_file_path = temp_file.name
+    email_obj = load_email(temp_file_path)
+    email_raw = load_raw_email(temp_file_path)
+    await analyze_email(email_obj, email_raw, db)
+    logger.info("Finished processing email file: %s", filename)
+
+@app.post("/analyse")
+async def analyse_email(file: UploadFile, background_tasks: BackgroundTasks):
+    """Endpoint to analyze an email file."""
+    logger.info("Received request to analyze email file: %s", file.filename)
+    email_content = await file.read()  # Read the file content here
+    background_tasks.add_task(process_email, file.filename, email_content)  # Pass the content to the background task
+    return JSONResponse(content={"message": "Email analysis started."}, status_code=202)
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    uvicorn.run(app, host="0.0.0.0", port=6969)
 
