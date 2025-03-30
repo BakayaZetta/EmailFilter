@@ -198,52 +198,90 @@ const handleOutsideClick = (e) => {
   }
 };
 
-// Initialisation des event listeners
+// Initialisation des event listeners - Modifications pour corriger le drag & drop
 onMounted(() => {
-  nextTick(() => {
-    document.addEventListener('keydown', handleEscape);
-    document.addEventListener('mousedown', handleOutsideClick);
-
-    const zone = dropZone.value;
-    if (zone) {
-      ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        zone.addEventListener(eventName, preventDefaults, false);
+  // Observer les changements dans isOpen pour attacher les event listeners
+  // seulement quand la modal est visible
+  watch(() => props.isOpen, (isOpen) => {
+    if (isOpen) {
+      nextTick(() => {
+        setupDragAndDropListeners();
       });
-
-      ['dragenter', 'dragover'].forEach(eventName => {
-        zone.addEventListener(eventName, highlight, false);
-      });
-
-      ['dragleave', 'drop'].forEach(eventName => {
-        zone.addEventListener(eventName, unhighlight, false);
-      });
-
-      zone.addEventListener('drop', handleDrop, false);
+    } else {
+      cleanupDragAndDropListeners();
     }
-  });
+  }, { immediate: true });
+
+  // Ajouter les listeners globaux
+  document.addEventListener('keydown', handleEscape);
+  document.addEventListener('mousedown', handleOutsideClick);
 });
+
+// Fonction pour configurer tous les listeners de drag & drop
+const setupDragAndDropListeners = () => {
+  const zone = dropZone.value;
+  if (!zone) return;
+
+  console.log('Setting up drag and drop listeners'); // Debug
+
+  // Ajouter les événements sur la zone de drop
+  ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+    zone.addEventListener(eventName, preventDefaults, false);
+  });
+
+  ['dragenter', 'dragover'].forEach(eventName => {
+    zone.addEventListener(eventName, highlight, false);
+  });
+
+  ['dragleave', 'drop'].forEach(eventName => {
+    zone.addEventListener(eventName, unhighlight, false);
+  });
+
+  zone.addEventListener('drop', handleDrop, false);
+
+  // Ajouter aussi des événements sur la modal pour s'assurer que le drag
+  // fonctionne même quand le curseur se déplace
+  const modalElement = modal.value;
+  if (modalElement) {
+    ['dragenter', 'dragover', 'drop'].forEach(eventName => {
+      modalElement.addEventListener(eventName, preventDefaults, false);
+    });
+  }
+};
+
+// Fonction pour nettoyer tous les listeners de drag & drop
+const cleanupDragAndDropListeners = () => {
+  const zone = dropZone.value;
+  if (!zone) return;
+
+  ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+    zone.removeEventListener(eventName, preventDefaults);
+  });
+
+  ['dragenter', 'dragover'].forEach(eventName => {
+    zone.removeEventListener(eventName, highlight);
+  });
+
+  ['dragleave', 'drop'].forEach(eventName => {
+    zone.removeEventListener(eventName, unhighlight);
+  });
+
+  zone.removeEventListener('drop', handleDrop);
+
+  // Nettoyer aussi les événements sur la modal
+  const modalElement = modal.value;
+  if (modalElement) {
+    ['dragenter', 'dragover', 'drop'].forEach(eventName => {
+      modalElement.removeEventListener(eventName, preventDefaults);
+    });
+  }
+};
 
 // Nettoyage des event listeners
 onUnmounted(() => {
   document.removeEventListener('keydown', handleEscape);
   document.removeEventListener('mousedown', handleOutsideClick);
-
-  const zone = dropZone.value;
-  if (zone) {
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-      zone.removeEventListener(eventName, preventDefaults);
-    });
-
-    ['dragenter', 'dragover'].forEach(eventName => {
-      zone.removeEventListener(eventName, highlight);
-    });
-
-    ['dragleave', 'drop'].forEach(eventName => {
-      zone.removeEventListener(eventName, unhighlight);
-    });
-
-    zone.removeEventListener('drop', handleDrop);
-  }
+  cleanupDragAndDropListeners();
 });
 
 // Réinitialiser les fichiers quand la modal se ferme
@@ -254,15 +292,36 @@ watch(() => props.isOpen, (isOpen) => {
     });
   }
 });
+
+// Ajout d'une fonction pour calculer la progression globale
+const calculateOverallProgress = () => {
+  if (uploadingFiles.value.length === 0) return 0;
+
+  // Calculer la moyenne de progression de tous les fichiers en cours d'upload
+  const totalProgress = uploadingFiles.value.reduce((sum, file) => sum + file.progress, 0);
+
+  // Tenir compte également des fichiers déjà uploadés
+  const completedWeight = uploadedFiles.value.length * 100;
+  const totalItems = uploadingFiles.value.length + uploadedFiles.value.length;
+
+  if (totalItems === 0) return 0;
+
+  return Math.round((totalProgress + completedWeight) / totalItems);
+};
 </script>
 
 <template>
-  <!-- Modal backdrop -->
-  <div v-if="isOpen" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 transition-opacity duration-300" @click="closeModal">
-    <!-- Modal -->
+  <!-- Modal backdrop - ajout effet de flou -->
+  <div
+    v-if="isOpen"
+    class="fixed inset-0 bg-opacity-20 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-opacity duration-300"
+    @click="closeModal"
+  >
+    <!-- Modal - ombre plus prononcée et effet de relief -->
     <div
       ref="modal"
-      class="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[80vh] overflow-hidden flex flex-col transition-transform duration-300 transform"
+      class="bg-white rounded-lg shadow-2xl w-full max-w-3xl max-h-[80vh] overflow-hidden flex flex-col transform transition-all duration-300 scale-in-center border border-gray-100"
+      style="box-shadow: rgba(17, 12, 46, 0.15) 0px 48px 100px 0px;"
       @click.stop
     >
       <!-- Modal header -->
@@ -275,10 +334,24 @@ watch(() => props.isOpen, (isOpen) => {
 
       <!-- Modal body -->
       <div class="px-6 py-4 overflow-y-auto flex-grow">
+        <!-- Barre de progression globale si un upload est en cours -->
+        <div v-if="uploadingFiles.length > 0" class="mb-4">
+          <div class="flex justify-between items-center mb-1">
+            <span class="text-sm font-medium text-gray-700">Overall Progress</span>
+            <span class="text-sm text-gray-500">{{ calculateOverallProgress() }}%</span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-2.5">
+            <div
+              class="bg-blue-500 h-2.5 rounded-full transition-all duration-300"
+              :style="{ width: `${calculateOverallProgress()}%` }"
+            ></div>
+          </div>
+        </div>
+
         <!-- Drop zone -->
         <div
           ref="dropZone"
-          class="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors mb-4"
+          class="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors mb-4 relative"
           :class="[
             isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'
           ]"
@@ -429,3 +502,21 @@ watch(() => props.isOpen, (isOpen) => {
     </div>
   </div>
 </template>
+
+<style scoped>
+/* Animation d'entrée pour la modal */
+.scale-in-center {
+  animation: scale-in-center 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+@keyframes scale-in-center {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+</style>
