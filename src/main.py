@@ -25,6 +25,7 @@ from starlette.background import BackgroundTasks
 import uvicorn
 import logging
 import tempfile
+import mistral_explain
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -52,8 +53,12 @@ async def process_email(filename: str, email_content: bytes):
         temp_file_path = temp_file.name
     email_obj = load_email(temp_file_path)
     email_raw = load_raw_email(temp_file_path)
-    await analyze_email(email_obj, email_raw, db)
+
+    #######################################
+    # await analyze_email(email_obj, email_raw, db) #CHANGED
+    json_res = await analyze_email(email_obj, email_raw, db) #CHANGED
     logger.info("Finished processing email file: %s", filename)
+    return json_res # CHANGED
 
 @app.post("/analyse/")
 async def analyse_email(file: UploadFile, background_tasks: BackgroundTasks):
@@ -69,14 +74,23 @@ async def analyse_email(file: UploadFile, background_tasks: BackgroundTasks):
     """
     logger.info("Received request to analyze email file: %s", file.filename)
     email_content = await file.read()  # Read the file content here
-    background_tasks.add_task(process_email, file.filename, email_content)  # Pass the content to the background task
-    return JSONResponse(content={"message": "Email analysis started."}, status_code=202)
+
+    ##################################
+    #CHANGED
+    # background_tasks.add_task(process_email, file.filename, email_content)  # Pass the content to the background task
+    json_res = await process_email(file.filename, email_content)
+    return JSONResponse(content={"message": json_res}, status_code=202)
 
 # Add a health check endpoint
 @app.get("/health")
 def health_check():
     """Health check endpoint."""
     return {"status": "ok"}
+
+@app.post("/mistral")
+async def ai_answer(file_to_explain):
+    return mistral_explain.mistral_answer(file_to_explain)
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=6969)

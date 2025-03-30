@@ -20,6 +20,11 @@ class DKIMStatus(Enum):
     DNS_ERROR = "DNS error."
     DKIM_ERROR = "Error during DKIM verification."
 
+def serialize_dkim_status(obj):
+    if isinstance(obj, DKIMStatus):
+        return obj.value
+    raise TypeError(f"Type {type(obj)} not serializable")
+
 def extract_dkim_domain_selector(dkim_header: str):
     """
     Extracts the domain and selector from the DKIM-Signature header.
