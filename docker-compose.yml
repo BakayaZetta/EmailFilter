@@ -55,7 +55,7 @@ services:
       CLAMAV_PORT: 3310
       JWT_SECRET: your_secure_random_string_here
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:3000/backend-health || exit 1"]
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:3000/backend-health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -78,7 +78,7 @@ services:
       VITE_BACKEND_URL: "http://backend:3000"
       VITE_DETECTISH_URL: "http://detectish:6969"
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:80/frontend-health/index.json || exit 1"]
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:80/frontend-health/index.json || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
