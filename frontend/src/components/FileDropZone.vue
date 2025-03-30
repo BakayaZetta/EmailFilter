@@ -143,12 +143,63 @@ const uploadFile = async (fileItem) => {
   }
 };
 
-// Upload tous les fichiers non encore uploadés
+// Upload tous les fichiers non encore uploadés en parallèle
 const uploadAllFiles = async () => {
   const filesToUpload = files.value.filter(f => !f.uploaded && !f.uploading && !f.error);
 
-  for (const file of filesToUpload) {
-    await uploadFile(file);
+  if (filesToUpload.length === 0) return;
+
+  // Marquer tous les fichiers comme "uploading" avant de commencer
+  filesToUpload.forEach(file => {
+    file.uploading = true;
+    file.progress = 0;
+    file.error = null;
+  });
+
+  // Créer un tableau de promesses pour tous les uploads
+  const uploadPromises = filesToUpload.map(fileItem => {
+    const formData = new FormData();
+    formData.append('file', fileItem.file);
+
+    return axios.post('/analyse', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      },
+      onUploadProgress: (progressEvent) => {
+        fileItem.progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+      }
+    })
+    .then(response => {
+      fileItem.uploaded = true;
+      fileItem.uploading = false;
+
+      emit('upload-success', {
+        fileName: fileItem.file.name,
+        response: response.data
+      });
+
+      return { success: true, fileItem, response };
+    })
+    .catch(error => {
+      console.error(`Upload error for ${fileItem.file.name}:`, error);
+      fileItem.error = error.response?.data?.message || 'Upload failed. Please try again.';
+      fileItem.uploading = false;
+
+      emit('upload-error', {
+        fileName: fileItem.file.name,
+        error
+      });
+
+      return { success: false, fileItem, error };
+    });
+  });
+
+  // Exécuter tous les uploads en parallèle et attendre leur résolution
+  try {
+    await Promise.allSettled(uploadPromises);
+    console.log('All upload requests completed');
+  } catch (error) {
+    console.error('Error during parallel uploads:', error);
   }
 };
 
