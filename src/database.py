@@ -122,7 +122,9 @@ class Database:
             "  ID_Blacklist INT AUTO_INCREMENT PRIMARY KEY,"
             "  Email VARCHAR(255),"
             "  IP VARCHAR(255),"
-            "  Domain VARCHAR(255)"
+            "  Domain VARCHAR(255),"
+            "  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,"
+            "  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
             ")"
         )
         for table_name, table_description in tables.items():
@@ -365,8 +367,33 @@ class Database:
         Returns:
             bool: True if any of the parameters are blacklisted, False otherwise.
         '''
-        query = (
-            "SELECT * FROM Blacklist WHERE Email = %s OR IP = %s OR Domain = %s"
-        )
-        self.cursor.execute(query, (email, ip, domain))
-        return self.cursor.fetchone() is not None
+        params = []
+        conditions = []
+        
+        if email and email.strip():
+            email = email.lower()
+            conditions.append("LOWER(Email) = %s")
+            params.append(email)
+        
+        if domain and domain.strip():
+            domain = domain.lower()
+            conditions.append("LOWER(Domain) = %s")
+            params.append(domain)
+        
+        if ip and ip.strip():
+            conditions.append("IP = %s")
+            params.append(ip)
+        
+        if not conditions:
+            return False
+        
+        query = f"SELECT * FROM Blacklist WHERE {' OR '.join(conditions)}"
+        
+        try:
+            self.cursor.execute(query, params)
+            result = self.cursor.fetchone() is not None
+            logging.info(f"Blacklist check: {query} with params {params} -> Result: {result}")
+            return result
+        except Exception as e:
+            logging.error(f"Error in blacklist check: {e}")
+            return False

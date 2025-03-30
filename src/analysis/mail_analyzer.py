@@ -215,13 +215,24 @@ def determine_conclusion(spf_status: SPFStatus, dkim_status: DKIMStatus, dmarc_s
     from analysis.ai_analysis.url_analysis import url_is_phishing
     from analysis.ai_analysis.ai_analysis import text_is_phising
 
-    # Étape 0: Vérification de la liste noire
-    sender_email = email_obj['From']
+    # Étape 0: Vérification de la liste noire - CORRIGÉ
+    raw_from = email_obj.get('From', '')
+    sender_name, sender_email = parseaddr(raw_from)
+    
+    # Normaliser l'adresse email en minuscules
+    sender_email = sender_email.lower() if sender_email else ''
+    
+    # Extraire le domaine si l'adresse email est valide
     sender_domain = sender_email.split('@')[-1] if '@' in sender_email else ''
     sender_ip = ''  # Placeholder for sender IP extraction logic
-
+    
+    logging.info(f"Checking blacklist for: Email='{sender_email}', Domain='{sender_domain}'")
+    
     if db.is_blacklisted(sender_email, sender_ip, sender_domain):
+        logging.info(f"BLACKLISTED: Email sender {sender_email} is in the blacklist")
         return 'QUARANTINE'
+    else:
+        logging.info(f"Not blacklisted: {sender_email}")
 
     # Étape 1: Vérification DMARC
     if dmarc_status == DMARCStatus.PASS:

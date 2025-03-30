@@ -12,6 +12,7 @@ const authStore = useAuthStore();
 const authenticatedLinks = [
   { name: 'Home', path: '/' },
   { name: 'Quarantine', path: '/quarantine' },
+  { name: 'History', path: '/history' },
   { name: 'Statistics', path: '/statistics' },
   { name: 'Settings', path: '/settings' },
 ];

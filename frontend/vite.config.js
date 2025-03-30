@@ -28,8 +28,11 @@ export default defineConfig({
         target: 'http://localhost:3000',
         changeOrigin: true,
         // rewrite: (path) => path.replace(/^\/api/, '')
+      },
+      '/analyse': {
+        target: 'http://0.0.0.0:6969', // Pointe vers l'API Python
+        changeOrigin: true,
       }
-
     },
   },
   resolve: {
