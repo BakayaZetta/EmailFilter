@@ -55,7 +55,6 @@ def clean_email_text(text: str) -> str:
     text = re.sub(r'\s+', ' ', text).strip()  # extra space
     text = re.sub(r'(?<=\s)\|(?=\s)|^\||\|$', '', text)  # isolated pipes
     text = re.sub(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', '', text)
-    text = re.sub(r'http[s]?://\S+|www\.\S+', '', text)
     return text
 
 
