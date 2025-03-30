@@ -11,6 +11,7 @@ from email.message import EmailMessage
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.getLogger("transformers").setLevel(logging.ERROR)
 
 tokenizer = AutoTokenizer.from_pretrained("ealvaradob/bert-finetuned-phishing")
 model = AutoModelForSequenceClassification.from_pretrained("ealvaradob/bert-finetuned-phishing")
@@ -28,11 +29,28 @@ def read_split_ai_analysis(email_obj: EmailMessage) -> list[dict]:
                      Each dictionary has keys 'label' and 'score'.
     '''
     results = []
-    text =  preprocessing_mail.extract_email_text(email_obj)
+    text = preprocessing_mail.extract_email_text(email_obj)
     groups_to_analyze = preprocessing_mail.split_512_token(text)
     for sentence in groups_to_analyze:
-        prediction = classifier(sentence)
-        results.append(prediction)
+        try:
+            prediction = classifier(sentence)
+            results.append(prediction)
+        except RuntimeError:
+            pass 
+    return results
+
+def read_from_text(txt):
+    '''
+    Analyzes, but from text directly
+    '''
+    results = []
+    groups_to_analyze = preprocessing_mail.split_512_token(txt)
+    for sentence in groups_to_analyze:
+        try:
+            prediction = classifier(sentence)
+            results.append(prediction)
+        except RuntimeError:
+            pass 
     return results
 
 def phishing_statistics(group: list[list[dict]]) -> dict:

@@ -32,7 +32,7 @@ services:
     image: clamav/clamav:latest
     container_name: clamav
     ports:
-      - "3310:3310" 
+      - "3310:3310"
     networks:
       - detectish-network
     healthcheck:
@@ -43,7 +43,7 @@ services:
     restart: always
 
   mysql:
-    image: mysql:latest
+    image: mysql:lts
     container_name: mysql
     environment:
       MYSQL_ROOT_PASSWORD: MYSQL_ROOT_PASSWORD

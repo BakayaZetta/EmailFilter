@@ -2,7 +2,6 @@
 .env
 env/
 __pycache__/
-phishing_email_example
 
 # Logs
 logs
@@ -98,4 +97,5 @@ cython_debug/
 
 result_phishing.json
 result_safe.json
-test.eml
+
+phishing_email_example
