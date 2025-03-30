@@ -13,7 +13,7 @@ Functions:
 Usage:
     Run this script directly to start the FastAPI server.
     Example curl command to analyze an email file:
-        curl -X POST "http://0.0.0.0:6969/analyse" -F "file=@path_to_email_file.eml"
+        curl -X POST "http://0.0.0.0:6969/analyse/" -F "file=@path_to_email_file.eml"
         Replace `path_to_email_file.eml` with the path to the email file you want to analyze.
 """
 
@@ -87,7 +87,7 @@ def health_check():
     """Health check endpoint."""
     return {"status": "ok"}
 
-@app.post("/mistral")
+@app.post("/mistral/")
 async def ai_answer(file_to_explain):
     return mistral_explain.mistral_answer(file_to_explain)
 
