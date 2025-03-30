@@ -27,6 +27,14 @@ class SPFStatus(Enum):
     DNS_ERROR = "DNS error."
     SPF_ERROR = "Error during SPF verification."
 
+    def __str__(self):
+        return self.value
+
+def serialize_spf_status(obj):
+    if isinstance(obj, SPFStatus):
+        return obj.value
+    raise TypeError(f"Type {type(obj)} not serializable")
+
 def extract_email(address: str) -> str:
     '''
     Extracts the email address from a From or Sender field.

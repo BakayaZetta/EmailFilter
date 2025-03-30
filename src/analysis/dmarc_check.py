@@ -18,6 +18,14 @@ class DMARCStatus(Enum):
     DNS_ERROR = "DNS error."
     DMARC_ERROR = "Error during DMARC verification."
 
+    def __str__(self):
+        return self.value
+
+def serialize_dmarc_status(obj):
+    if isinstance(obj, DMARCStatus):
+        return obj.value
+    raise TypeError(f"Type {type(obj)} not serializable")
+
 def extract_email(address: str) -> str:
     '''
     Extracts the email address from a From or Sender field.
