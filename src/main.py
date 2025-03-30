@@ -25,6 +25,7 @@ from starlette.background import BackgroundTasks
 import uvicorn
 import logging
 import tempfile
+import mistral_explain
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -85,6 +86,11 @@ async def analyse_email(file: UploadFile, background_tasks: BackgroundTasks):
 def health_check():
     """Health check endpoint."""
     return {"status": "ok"}
+
+@app.post("/mistral")
+async def ai_answer(file_to_explain):
+    return mistral_explain.mistral_answer(file_to_explain)
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=6969)
