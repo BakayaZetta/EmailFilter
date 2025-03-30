@@ -7,7 +7,6 @@ import HistoryView from '@/views/HistoryView.vue'
 import StatisticsView from '@/views/StatisticsView.vue'
 import NotFoundView from '@/views/NotFoundView.vue'
 
-
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -40,6 +39,12 @@ const router = createRouter({
       path: '/statistics',
       name: 'statistics',
       component: StatisticsView,
+    },
+    {
+      path: '/settings',
+      name: 'settings',
+      component: () => import('@/views/SettingsView.vue'),
+      meta: { requiresAuth: true }
     },
     {
       path: '/:pathMatch(.*)*',
