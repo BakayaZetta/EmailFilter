@@ -115,7 +115,7 @@ const uploadFile = async (fileItem) => {
     fileItem.progress = 0;
     fileItem.error = null;
 
-    const response = await axios.post('/analyse', formData, {
+    const response = await axios.post('/analyse/', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       },
@@ -161,7 +161,7 @@ const uploadAllFiles = async () => {
     const formData = new FormData();
     formData.append('file', fileItem.file);
 
-    return axios.post('/analyse', formData, {
+    return axios.post('/analyse/', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       },

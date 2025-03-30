@@ -55,7 +55,7 @@ async def process_email(filename: str, email_content: bytes):
     await analyze_email(email_obj, email_raw, db)
     logger.info("Finished processing email file: %s", filename)
 
-@app.post("/analyse")
+@app.post("/analyse/")
 async def analyse_email(file: UploadFile, background_tasks: BackgroundTasks):
     """
     Endpoint to analyze an email file.
