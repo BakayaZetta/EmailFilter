@@ -2,7 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const path = require('path');
-require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
+require('dotenv').config();
 
 const userRoutes = require('./routes/userRoutes');
 const mailRoutes = require('./routes/mailRoutes');
@@ -32,14 +32,20 @@ app.use((err, req, res, next) => {
   res.status(500).send('Something broke!');
 });
 
+// Health check endpoint
+app.get('/backend-health', (req, res) => {
+  res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });
+});
+
 // Verfy the access to the environment variables
-// console.log("------------------");
-// console.log(process.env.DB_HOST);
-// console.log(process.env.DB_USER);
-// console.log(process.env.DB_PASSWORD);
-// console.log(process.env.DB_NAME);
-// console.log(process.env.DB_PORT);
-// console.log("------------------");
+console.log("------------------");
+console.log(process.env.DB_HOST);
+console.log(process.env.DB_USER);
+console.log(process.env.DB_PASSWORD);
+console.log(process.env.DB_NAME);
+console.log(process.env.DB_PORT);
+console.log(process.env.PORT);
+console.log("------------------");
 
 // Export the app
 module.exports = app;

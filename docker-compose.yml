@@ -26,6 +26,61 @@ services:
       test: ["CMD-SHELL", "curl -f http://localhost:6969/health || exit 1"]
       interval: 30s
       timeout: 10s
+      retries: 10
+      start_period: 30s
+      # start_period is the time to wait before starting health checks
+
+  backend:
+    build: ./backend
+    container_name: detectish-backend
+    depends_on:
+      mysql:
+        condition: service_healthy
+      clamav:
+        condition: service_healthy
+      detectish:
+        condition: service_healthy
+    networks:
+      - detectish-network
+    ports:
+      - "3000:3000"
+    restart: always
+    environment:
+      DB_NAME: detectish_db
+      DB_USER: detectish_user
+      DB_PASSWORD: detectish_password
+      DB_HOST: mysql
+      DB_PORT: 3306
+      CLAMAV_HOST: clamav
+      CLAMAV_PORT: 3310
+      JWT_SECRET: your_secure_random_string_here
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/backend-health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  frontend:
+    build: ./frontend
+    container_name: detectish-frontend
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - detectish-network
+    ports:
+      - "8000:80"
+    restart: always
+    environment:
+      # For production in Docker, API calls are proxied through Nginx
+      VITE_API_URL: "/api"
+      # These are used at build time, and tell the app where APIs are in the Docker network
+      VITE_BACKEND_URL: "http://backend:3000"
+      VITE_DETECTISH_URL: "http://detectish:6969"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:80/frontend-health/index.json || exit 1"]
+      interval: 30s
+      timeout: 10s
       retries: 5
 
   clamav:
