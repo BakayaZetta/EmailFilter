@@ -13,3 +13,4 @@ dkimpy
 fastapi
 uvicorn
 python-multipart
+mistralai

@@ -4,7 +4,7 @@ import asyncio
 import logging
 from typing import Optional
 from email.utils import parseaddr
-
+import json
 # Adjust the import paths dynamically based on the script's execution context
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'analysis', 'ai_analysis'))
@@ -23,6 +23,12 @@ from analysis.ai_analysis.url_analysis import url_analysis
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+
+def serialize_status(obj):
+    if isinstance(obj, (SPFStatus, DKIMStatus, DMARCStatus)):
+        return obj.value
+    raise TypeError(f"Type {type(obj)} not serializable")
 
 def load_raw_email(eml_file_path: str) -> bytes:
     with open(eml_file_path, 'rb') as f:
@@ -317,7 +323,21 @@ async def analyze_email(email_obj: email.message.EmailMessage, email_raw, db: Da
     logging.info(f"Conclusion for mail {id_mail}: {conclusion}")
     db.update_mail_status(id_mail, conclusion)
 
-    
+    ########################################################################
+    # CHANGED 
+    # we put all the data ina json
+    json_gather = {
+    "spf_status": spf_status,
+    "dkim_status": dkim_status,
+    "dmarc_status": dmarc_status,
+    "ai_url_result":url_result,
+    "ai_result":ai_result,
+    "clamav": clamav_result
+    }
+    json_result = json.dumps(json_gather, default=serialize_status, indent=4)
+
+    return json_result
+
 if __name__ == "__main__":
     db = Database()
     email_files = ["phishing_email_example/1.eml", "phishing_email_example/2.eml", "phishing_email_example/3.eml"]
