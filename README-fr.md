@@ -41,11 +41,15 @@ TODO
 
 L'intelligence artificielle utilisée atteint une précision proche de 95 %. Les tests ont été réalisés sur une base de données disponible sur [Kaggle](https://www.kaggle.com/datasets/subhajournal/phishingemails).
 
+<p align="center">
+
 - **Matrice de confusion**  
   ![Matrice de confusion](./img/confusion_matrix.png)
 
 - **Matrice de confusion (pourcentage)**  
   ![Matrice de confusion pourcentage](./img/matrix_percentage_confusion.png)
+
+</p>
 
 > Plus de 10 000 emails ont été analysés avec les résultats présentés ci-dessus.
 
