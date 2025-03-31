@@ -10,9 +10,9 @@ French version : [here](./README-fr.md)
 
 Detectish analyzes emails using multiple methods:
 
-- **SPF Analysis** (Sender Policy Framework) [SPF](https://en.wikipedia.org/wiki/Sender_Policy_Framework)
-- **DMARC Analysis** (Domain-based Message Authentication) [DMARC](https://en.wikipedia.org/wiki/DMARC)
-- **DKIM Analysis** (DomainKeys Identified Mail) [DKIM](https://en.wikipedia.org/wiki/DomainKeys_Identified_Mail)
+- **SPF Analysis** [(Sender Policy Framework)](https://en.wikipedia.org/wiki/Sender_Policy_Framework)
+- **DMARC Analysis** [(Domain-based Message Authentication)](https://en.wikipedia.org/wiki/DMARC)
+- **DKIM Analysis** [(DomainKeys Identified Mail)](https://en.wikipedia.org/wiki/DomainKeys_Identified_Mail)
 - **Attachment Analysis** with [ClamAV](https://www.clamav.net/)
 - **Link Analysis** using a fine-tuned BERT model
 - **Email Text Analysis** using the same BERT model
@@ -32,7 +32,7 @@ The artificial intelligence used reaches an accuracy of nearly 95%. The tests we
   ![Confusion Matrix](./img/confusion_matrix.png)
 
 - **Confusion Matrix (Percentage)**  
-  ![Percentage Confusion Matrix](./img/matrix_percentage_confusion.png.png)
+  ![Percentage Confusion Matrix](./img/matrix_percentage_confusion.png)
 
 > Over 10,000 emails were analyzed, as illustrated by the results above.
 
