@@ -2,6 +2,17 @@
 
 Version anglaise : [ici](README.md)
 
+## 📖 Table des matières  
+- [🌟 Introduction](#-introduction)  
+- [🛠️ Fonctionnalités](#-fonctionnalités)  
+- [📸 Capture d'écran](#capture-décran)  
+- [🚀 Performances de l'analyse](#-performances-de-lanalyse)  
+- [🏗️ Installation et Configuration](#-installation-et-configuration)  
+  - [Prérequis](#prérequis)  
+  - [Étapes d'installation](#étapes-dinstallation)  
+- [👥 Auteurs](#-auteurs)  
+- [⚠️ Avertissement](#-avertissement)  
+
 ## 🌟 Introduction
 
 **Detectish** est une solution conteneurisée qui met en place une infrastructure d'analyse des emails à l'aide de diverses technologies. Grâce à cette solution, vous pouvez visualiser les résultats de l'analyse, voir quels tests ont échoué et consulter la liste des emails mis en quarantaine. Pour les utilisateurs ayant peu de connaissances en sécurité informatique, nous avons intégré Mistral AI (via un token API) qui explique de manière détaillée pourquoi certains tests ont échoué et pourquoi l'email a été mis en quarantaine.
@@ -44,7 +55,7 @@ Le modèle AI est disponible sur [Hugging Face](https://huggingface.co/ealvarado
 ### Prérequis
 
 - **Docker** & **Docker Compose**
-- Une machine avec au minimum **4 Go de RAM** (8 Go recommandés pour de meilleures performances)
+- Une machine avec au minimum **4 Go de RAM disponible pour docker** (8 Go recommandés pour de meilleures performances)
 - Un fichier `.env` avec les variables de configuration suivantes :
 
 ```env
