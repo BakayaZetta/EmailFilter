@@ -40,7 +40,7 @@ TODO
 
 The artificial intelligence used reaches an accuracy of nearly 95%. The tests were conducted on a dataset available on [Kaggle](https://www.kaggle.com/datasets/subhajournal/phishingemails).
 
-<p align="center">
+<div align="center">
 
 - **Confusion Matrix**  
   ![Confusion Matrix](./img/confusion_matrix.png)
@@ -48,7 +48,7 @@ The artificial intelligence used reaches an accuracy of nearly 95%. The tests we
 - **Confusion Matrix (Percentage)**  
   ![Percentage Confusion Matrix](./img/matrix_percentage_confusion.png)
 
-</p>
+</div>
 
 > Over 10,000 emails were analyzed, as illustrated by the results above.
 
