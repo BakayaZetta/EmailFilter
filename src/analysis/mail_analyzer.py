@@ -24,12 +24,6 @@ from analysis.ai_analysis.url_analysis import url_analysis
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-
-def serialize_status(obj):
-    if isinstance(obj, (SPFStatus, DKIMStatus, DMARCStatus)):
-        return obj.value
-    raise TypeError(f"Type {type(obj)} not serializable")
-
 def load_raw_email(eml_file_path: str) -> bytes:
     with open(eml_file_path, 'rb') as f:
         return f.read()
@@ -333,21 +327,6 @@ async def analyze_email(email_obj: email.message.EmailMessage, email_raw, db: Da
     conclusion = determine_conclusion(spf_status, dkim_status, dmarc_status, url_result, ai_result, clamav_result, email_obj, db)
     logging.info(f"Conclusion for mail {id_mail}: {conclusion}")
     db.update_mail_status(id_mail, conclusion)
-
-    ########################################################################
-    # CHANGED 
-    # we put all the data ina json
-    json_gather = {
-    "spf_status": spf_status,
-    "dkim_status": dkim_status,
-    "dmarc_status": dmarc_status,
-    "ai_url_result":url_result,
-    "ai_result":ai_result,
-    "clamav": clamav_result
-    }
-    json_result = json.dumps(json_gather, default=serialize_status, indent=4)
-
-    return json_result
 
 if __name__ == "__main__":
     db = Database()
