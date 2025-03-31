@@ -2,16 +2,17 @@
 
 Version anglaise : [ici](README.md)
 
-## 📖 Table des matières  
-- [🌟 Introduction](#-introduction)  
-- [🛠️ Fonctionnalités](#-fonctionnalités)  
-- [📸 Capture d'écran](#capture-décran)  
-- [🚀 Performances de l'analyse](#-performances-de-lanalyse)  
-- [🏗️ Installation et Configuration](#-installation-et-configuration)  
-  - [Prérequis](#prérequis)  
-  - [Étapes d'installation](#étapes-dinstallation)  
-- [👥 Auteurs](#-auteurs)  
-- [⚠️ Avertissement](#-avertissement)  
+## 📖 Table des matières
+
+- [🌟 Introduction](#-introduction)
+- [🛠️ Fonctionnalités](#️-fonctionnalités)
+- [📸 Capture d'écran](#capture-décran)
+- [🚀 Performances de l'analyse](#-performances-de-lanalyse)
+- [🏗️ Installation et Configuration](#️-installation-et-configuration)
+  - [Prérequis](#prérequis)
+  - [Étapes d'installation](#étapes-dinstallation)
+- [👥 Auteurs](#-auteurs)
+- [⚠️ Avertissement](#avertissement-️)
 
 ## 🌟 Introduction
 

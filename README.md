@@ -2,16 +2,17 @@
 
 French version : [here](./README-fr.md)
 
-## 📖 Table of Contents  
-- [🌟 Introduction](#-introduction)  
-- [🛠️ Features](#-features)  
-- [📸 Screenshot](#screenshot)  
-- [🚀 Analysis Performance](#-analysis-performance)  
-- [🏗️ Setup and Configuration](#-setup-and-configuration)  
-  - [Prerequisites](#prerequisites)  
-  - [Installation Steps](#installation-steps)  
-- [👥 Authors](#-authors)  
-- [⚠️ Disclaimer](#-disclaimer)  
+## 📖 Table of Contents
+
+- [🌟 Introduction](#-introduction)
+- [🛠️ Features](#️-features)
+- [📸 Screenshot](#-screenshot)
+- [🚀 Analysis Performance](#-analysis-performance)
+- [🏗️ Setup and Configuration](#️-setup-and-configuration)
+  - [Prerequisites](#prerequisites)
+  - [Installation Steps](#installation-steps)
+- [👥 Authors](#-authors)
+- [⚠️ Disclaimer](#disclaimer-️)
 
 ## 🌟 Introduction
 
@@ -96,7 +97,6 @@ JWT_SECRET=your_secure_random_string_here
 - **Matthias Lapu**
 - **Eliséo Chaussoy**
 
-
-### Disclaimer ⚠️  
+### Disclaimer ⚠️
 
 This project was developed as part of a university assignment. It has never been tested in a real-world environment, even though everything should work it is not guaranteed. Use it at your own risk! 🚧
