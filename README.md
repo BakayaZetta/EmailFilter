@@ -84,3 +84,8 @@ JWT_SECRET=your_secure_random_string_here
 - **Esteban Becker**
 - **Matthias Lapu**
 - **Eliséo Chaussoy**
+
+
+### Disclaimer ⚠️  
+
+This project was developed as part of a university assignment. It has never been tested in a real-world environment, even though everything should work it is not guaranteed. Use it at your own risk! 🚧

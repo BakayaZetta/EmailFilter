@@ -18,7 +18,7 @@ Detectish analyse les emails en utilisant différentes méthodes :
 - **Analyse du texte** de l’email avec le même modèle BERT
 - **Liste noire** permettant de mettre automatiquement certaines adresses email en quarantaine
 
-Les emails sont ensuite stockés dans une base de données MySQL. 
+Les emails sont ensuite stockés dans une base de données MySQL.
 Le site web est développé en **Vue.js** pour le frontend et **Express.js** pour le backend.
 
 ## Capture d'écran
@@ -38,8 +38,6 @@ L'intelligence artificielle utilisée atteint une précision proche de 95 %. Les
 > Plus de 10 000 emails ont été analysés avec les résultats présentés ci-dessus.
 
 Le modèle AI est disponible sur [Hugging Face](https://huggingface.co/ealvaradob/bert-finetuned-phishing).
-
-
 
 ## 🏗️ Installation et Configuration
 
@@ -87,3 +85,7 @@ JWT_SECRET=your_secure_random_string_here
 - **Esteban Becker**
 - **Matthias Lapu**
 - **Eliséo Chaussoy**
+
+### Avertissement ⚠️
+
+Ce projet a été développé dans le cadre d'un travail universitaire. Il n'a jamais été testé en environnement réel, et son bon fonctionnement n'est pas garanti. Utilisez-le à vos risques et périls ! 🚧
