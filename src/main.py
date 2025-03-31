@@ -83,7 +83,7 @@ def health_check():
 
 @app.post("/mistral/")
 async def ai_answer(file_to_explain):
-    return mistral_explain.mistral_answer(file_to_explain)
+    return mistral_explain.answer(file_to_explain)
 
  
 if __name__ == "__main__":
