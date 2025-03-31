@@ -53,9 +53,6 @@ jobs:
           push-to-registry: true
 
   push_detectish_frontend:
-    defaults:
-      run:
-        working-directory: ./frontend
     name: DETECTISH-FRONTEND -  Push Docker image to Docker Hub
     runs-on: ubuntu-latest
     permissions:
@@ -83,6 +80,8 @@ jobs:
         id: push
         uses: docker/build-push-action@v3
         with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
           push: true
           tags: |
             ${{ steps.meta.outputs.tags }}
@@ -98,9 +97,6 @@ jobs:
 
   push_detectish_backend:
     name: DETECTISH-BACKEND -  Push Docker image to Docker Hub
-    defaults:
-      run:
-        working-directory: ./backend
     runs-on: ubuntu-latest
     permissions:
       packages: write
@@ -127,6 +123,8 @@ jobs:
         id: push
         uses: docker/build-push-action@v3
         with:
+          context: ./backend
+          file: ./backend/Dockerfile
           push: true
           tags: |
             ${{ steps.meta.outputs.tags }}
