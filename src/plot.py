@@ -157,8 +157,8 @@ def plot_confusion_matrix(conf_matrix,filename):
     Plot a confusion matrix and saves it using the filename given as argument
     '''
     matrix_labels = [
-        ["Vrai Positif (VP)", "Faux Positif (FP)"],
-        ["Faux Négatif (FN)", "Vrai Négatif (VN)"]
+        ["Vrai phishing", ""],
+        ["Faux Bénin", "Vrai Bénin"]
     ]
 
     plt.figure(figsize=(6,5))
@@ -167,7 +167,7 @@ def plot_confusion_matrix(conf_matrix,filename):
     
     plt.title("Matrice de Confusion")
     plt.savefig(filename, bbox_inches="tight")
-    plt.close()  # Fermer la figure pour libérer la mémoire
+    plt.close()  
 
 if __name__ == "__main__":
 
