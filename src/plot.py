@@ -128,8 +128,8 @@ def get_confusion_matrix(data):
             elif res == "benign" and actual == "phishing": 
                 false_benign += 1
 
-    confusion_matrix = np.array([[true_phishing, false_phishing], 
-                     [false_benign, true_benign]])
+    confusion_matrix = np.array([[true_phishing, false_benign], 
+                     [false_phishing, true_benign]])
 
     # percentage 
 
@@ -143,32 +143,27 @@ def get_confusion_matrix(data):
     false_positif_percent = 100-true_positif_percent
 
     matrix_percentage = np.array([
-    [true_positif_percent,false_positif_percent],
-    [false_negatif_percent,true_negatif_percent] ]
+    [true_positif_percent,false_negatif_percent],
+    [false_positif_percent,true_negatif_percent] ]
     )
     
     return (confusion_matrix,matrix_percentage)
 
-
-
-
-def plot_confusion_matrix(conf_matrix,filename):
+def plot_confusion_matrix(conf_matrix, filename):
     '''
-    Plot a confusion matrix and saves it using the filename given as argument
+    Plot a confusion matrix and save it using the given filename.
     '''
-    matrix_labels = [
-        ["Vrai Positif (VP)", "Faux Positif (FP)"],
-        ["Faux Négatif (FN)", "Vrai Négatif (VN)"]
-    ]
-
+    
     plt.figure(figsize=(6,5))
     
-    sns.heatmap(conf_matrix, annot=True, cmap="Blues", fmt='g', xticklabels=matrix_labels[1], yticklabels=matrix_labels[0])
+    sns.heatmap(conf_matrix, annot=True, cmap="Blues", fmt='g', xticklabels=["Predicted Phishing", "Predicted Safe"], yticklabels=["Actual Phishing", "Actual Safe"])
     
-    plt.title("Matrice de Confusion")
+    plt.title("Confusion Matrix")
+    plt.xlabel("Prediction")
+    plt.ylabel("Actual")
     plt.savefig(filename, bbox_inches="tight")
-    plt.close()  # Fermer la figure pour libérer la mémoire
-
+    plt.close()
+    
 if __name__ == "__main__":
 
     # analysizing data 

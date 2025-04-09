@@ -17,7 +17,7 @@ def send_curl_requests(filename):
     return result.stdout 
 
 
-def mistral_answer(filename):
+def answer(filename):
     try:
         model = "mistral-large-latest"
 
@@ -50,4 +50,4 @@ def mistral_answer(filename):
 if __name__ == '__main__':
     filename="test_SPF.eml"
     print(send_curl_requests(filename))
-    mistral_answer(filename)
+    answer(filename)
