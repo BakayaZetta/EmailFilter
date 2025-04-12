@@ -1,5 +1,5 @@
 <script setup>
-import { reactive } from 'vue'
+import { reactive, onMounted, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router';
 import api from '@/services/api'; // Importez le service API
 import { useAuthStore } from '@/stores/authStore'; // Importez le store d'authentification
@@ -8,6 +8,7 @@ import { useToast } from 'vue-toastification'; // Import du service de toast
 const router = useRouter();
 const authStore = useAuthStore(); // Utilisez le store d'authentification
 const toast = useToast(); // Initialisation du toast
+const firstNameInput = ref(null); // Référence pour auto-focus
 
 const registerForm = reactive({
   firstName: '',
@@ -24,6 +25,15 @@ const registerForm = reactive({
   emailError: '',
   passwordError: '',
   confirmPasswordError: ''
+});
+
+// Auto-focus sur le champ prénom au chargement
+onMounted(() => {
+  setTimeout(() => {
+    if (firstNameInput.value) {
+      firstNameInput.value.focus();
+    }
+  }, 100);
 });
 
 // First name validation
@@ -86,6 +96,39 @@ const validateConfirmPassword = () => {
   return true
 }
 
+// Validation à la volée quand l'utilisateur quitte un champ
+const validateFirstNameOnBlur = () => {
+  validateFirstName();
+}
+
+const validateLastNameOnBlur = () => {
+  validateLastName();
+}
+
+const validateEmailOnBlur = () => {
+  validateEmail();
+}
+
+const validatePasswordOnBlur = () => {
+  validatePassword();
+  // Valider aussi la confirmation si elle existe déjà
+  if (registerForm.confirmPassword) {
+    validateConfirmPassword();
+  }
+}
+
+const validateConfirmPasswordOnBlur = () => {
+  validateConfirmPassword();
+}
+
+// Gestion de la navigation clavier entre les champs
+const handleKeyDown = (event, nextFieldId) => {
+  if (event.key === 'Enter') {
+    event.preventDefault();
+    document.getElementById(nextFieldId).focus();
+  }
+}
+
 // Form submission
 const handleSubmit = async () => {
   // Reset errors
@@ -100,7 +143,21 @@ const handleSubmit = async () => {
 
   if (!isFirstNameValid || !isLastNameValid || !isEmailValid || !isPasswordValid || !isConfirmPasswordValid) {
     toast.error("Please correct the errors in the form"); // Notification d'erreur de validation
-    return
+
+    // Mettre le focus sur le premier champ avec erreur
+    if (!isFirstNameValid) {
+      document.getElementById('firstName').focus();
+    } else if (!isLastNameValid) {
+      document.getElementById('lastName').focus();
+    } else if (!isEmailValid) {
+      document.getElementById('email').focus();
+    } else if (!isPasswordValid) {
+      document.getElementById('password').focus();
+    } else {
+      document.getElementById('confirmPassword').focus();
+    }
+
+    return;
   }
 
   try {
@@ -135,6 +192,9 @@ const handleSubmit = async () => {
     toast.error(errorMessage);
 
     console.error('Registration error:', error)
+
+    // Focus sur le premier champ
+    document.getElementById('firstName').focus();
   } finally {
     registerForm.isLoading = false
   }
@@ -183,8 +243,9 @@ const handleSubmit = async () => {
               </div>
               <div class="mt-1 relative">
                 <div class="relative">
-                  <input id="firstName" v-model="registerForm.firstName" name="firstName" type="text"
-                    autocomplete="given-name" required
+                  <input id="firstName" ref="firstNameInput" v-model="registerForm.firstName" name="firstName" type="text"
+                    autocomplete="given-name" required @blur="validateFirstNameOnBlur"
+                    @keydown="(e) => handleKeyDown(e, 'lastName')"
                     class="relative block w-full disabled:cursor-not-allowed disabled:opacity-75 focus:outline-none border-0 rounded-md placeholder-gray-400 text-sm px-2.5 py-1.5 shadow-sm bg-white text-gray-900 ring-1 ring-inset ring-gray-300  focus:ring-2 focus:ring-red-500"
                     placeholder="Enter your first name" :class="{ 'ring-red-300': registerForm.firstNameError }" />
                 </div>
@@ -203,7 +264,8 @@ const handleSubmit = async () => {
               <div class="mt-1 relative">
                 <div class="relative">
                   <input id="lastName" v-model="registerForm.lastName" name="lastName" type="text"
-                    autocomplete="family-name" required
+                    autocomplete="family-name" required @blur="validateLastNameOnBlur"
+                    @keydown="(e) => handleKeyDown(e, 'email')"
                     class="relative block w-full disabled:cursor-not-allowed disabled:opacity-75 focus:outline-none border-0 rounded-md placeholder-gray-400 text-sm px-2.5 py-1.5 shadow-sm bg-white text-gray-900 ring-1 ring-inset ring-gray-300  focus:ring-2 focus:ring-red-500"
                     placeholder="Enter your last name" :class="{ 'ring-red-300': registerForm.lastNameError }" />
                 </div>
@@ -221,7 +283,8 @@ const handleSubmit = async () => {
               </div>
               <div class="mt-1 relative">
                 <div class="relative">
-                  <input id="email" v-model="registerForm.email" name="email" type="email" autocomplete="email" required
+                  <input id="email" v-model="registerForm.email" name="email" type="email" autocomplete="email"
+                    required @blur="validateEmailOnBlur" @keydown="(e) => handleKeyDown(e, 'password')"
                     class="relative block w-full disabled:cursor-not-allowed disabled:opacity-75 focus:outline-none border-0 rounded-md placeholder-gray-400 text-sm px-2.5 py-1.5 shadow-sm bg-white text-gray-900 ring-1 ring-inset ring-gray-300  focus:ring-2 focus:ring-red-500"
                     placeholder="Enter your email address" :class="{ 'ring-red-300': registerForm.emailError }" />
                 </div>
@@ -240,7 +303,7 @@ const handleSubmit = async () => {
                 <div class="relative">
                   <input id="password" v-model="registerForm.password"
                     :type="registerForm.showPassword ? 'text' : 'password'" name="password" autocomplete="new-password"
-                    required
+                    required @blur="validatePasswordOnBlur" @keydown="(e) => handleKeyDown(e, 'confirmPassword')"
                     class="relative block w-full disabled:cursor-not-allowed disabled:opacity-75 focus:outline-none border-0 rounded-md placeholder-gray-400 text-sm px-2.5 py-1.5 shadow-sm bg-white text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-red-500 pe-9"
                     placeholder="Enter your password" :class="{ 'ring-red-300': registerForm.passwordError }" />
                   <button type="button" @click="registerForm.showPassword = !registerForm.showPassword"
@@ -265,7 +328,7 @@ const handleSubmit = async () => {
                 <div class="relative">
                   <input id="confirmPassword" v-model="registerForm.confirmPassword"
                     :type="registerForm.showPassword ? 'text' : 'password'" name="confirmPassword"
-                    autocomplete="new-password" required
+                    autocomplete="new-password" required @blur="validateConfirmPasswordOnBlur"
                     class="relative block w-full disabled:cursor-not-allowed disabled:opacity-75 focus:outline-none border-0 rounded-md placeholder-gray-400 text-sm px-2.5 py-1.5 shadow-sm bg-white text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-red-500 pe-9"
                     placeholder="Confirm your password"
                     :class="{ 'ring-red-300': registerForm.confirmPasswordError }" />
