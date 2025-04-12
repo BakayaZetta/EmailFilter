@@ -2,6 +2,7 @@
 import { ref, onMounted, computed } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'vue-router';
+import { useToast } from 'vue-toastification'; // Import pour toast
 import statisticsService from '@/services/statisticsService';
 import StatisticsCard from '@/components/statistics/StatisticsCard.vue';
 import LineChartComponent from '@/components/statistics/LineChartComponent.vue';
@@ -11,6 +12,7 @@ import NoDataMessage from '@/components/statistics/NoDataMessage.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();
+const toast = useToast(); // Initialiser toast
 const loading = ref(true);
 const error = ref(null);
 const statistics = ref({
@@ -32,9 +34,11 @@ const loadStatistics = async () => {
   try {
     // Utiliser le service dédié au lieu de l'API directement
     statistics.value = await statisticsService.getStatistics(timePeriod.value);
+    toast.info(`Statistics for ${timePeriod.value} period loaded successfully`);
   } catch (err) {
     console.error('Failed to load statistics:', err);
     error.value = 'Failed to load statistics. Please try again later.';
+    toast.error('Failed to load statistics. Please try again later.');
   } finally {
     loading.value = false;
   }
@@ -204,36 +208,43 @@ const changePeriod = (period) => {
 
 // Exporter les statistiques en CSV
 const exportStatistics = () => {
-  // Préparer les données
-  const data = [];
+  try {
+    // Préparer les données
+    const data = [];
 
-  // En-têtes
-  data.push(['Category', 'Value']);
+    // En-têtes
+    data.push(['Category', 'Value']);
 
-  // Données générales
-  data.push(['Total Emails', statistics.value.totalMails]);
-  data.push(['Threat Percentage', `${threatPercentage.value}%`]);
+    // Données générales
+    data.push(['Total Emails', statistics.value.totalMails]);
+    data.push(['Threat Percentage', `${threatPercentage.value}%`]);
 
-  // Statuts
-  Object.entries(statistics.value.mailsByStatus || {}).forEach(([status, count]) => {
-    data.push([`Status: ${status}`, count]);
-  });
+    // Statuts
+    Object.entries(statistics.value.mailsByStatus || {}).forEach(([status, count]) => {
+      data.push([`Status: ${status}`, count]);
+    });
 
-  // Convertir en CSV
-  const csvContent = data.map(row => row.join(',')).join('\n');
+    // Convertir en CSV
+    const csvContent = data.map(row => row.join(',')).join('\n');
 
-  // Créer un lien de téléchargement
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement('a');
-  const url = URL.createObjectURL(blob);
+    // Créer un lien de téléchargement
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
 
-  link.setAttribute('href', url);
-  link.setAttribute('download', `email-statistics-${timePeriod.value}-${new Date().toISOString().split('T')[0]}.csv`);
-  link.style.visibility = 'hidden';
+    link.setAttribute('href', url);
+    link.setAttribute('download', `email-statistics-${timePeriod.value}-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
 
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast.success('Statistics exported successfully!');
+  } catch (error) {
+    toast.error('Failed to export statistics. Please try again.');
+    console.error('Export error:', error);
+  }
 };
 
 // Initialiser la page

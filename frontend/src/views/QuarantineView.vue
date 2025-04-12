@@ -62,38 +62,67 @@ const loadQuarantineMails = async () => {
 // Actions spécifiques à la vue Quarantine
 const bulkMarkAsSafe = async () => {
   if (selectedMails.value.length === 0) {
-    alert('Please select at least one email to mark as safe.');
+    toast.warning('Please select at least one email to mark as safe.');
     return;
   }
-  await bulkUpdateStatus('SAFE');
-  // Recharger spécifiquement les mails en quarantaine après la mise à jour
-  await loadQuarantineMails();
+
+  const selectedCount = selectedMails.value.length; // Stocker le nombre avant l'action
+
+  try {
+    await bulkUpdateStatus('SAFE');
+    toast.success(`${selectedCount} email(s) marked as safe successfully!`);
+    // Recharger spécifiquement les mails en quarantaine après la mise à jour
+    await loadQuarantineMails();
+  } catch (error) {
+    toast.error('Failed to mark emails as safe. Please try again.');
+    console.error(error);
+  }
 };
 
 const bulkDelete = async () => {
   if (selectedMails.value.length === 0) {
-    alert('Please select at least one email to delete.');
+    toast.warning('Please select at least one email to delete.');
     return;
   }
 
-  if (confirm(`Are you sure you want to delete ${selectedMails.value.length} email(s)?`)) {
-    await bulkUpdateStatus('DELETED');
-    // Recharger spécifiquement les mails en quarantaine après la mise à jour
-    await loadQuarantineMails();
+  const selectedCount = selectedMails.value.length; // Stocker le nombre avant l'action
+
+  if (confirm(`Are you sure you want to delete ${selectedCount} email(s)?`)) {
+    try {
+      await bulkUpdateStatus('DELETED');
+      toast.success(`${selectedCount} email(s) deleted successfully!`);
+      // Recharger spécifiquement les mails en quarantaine après la mise à jour
+      await loadQuarantineMails();
+    } catch (error) {
+      toast.error('Failed to delete emails. Please try again.');
+      console.error(error);
+    }
   }
 };
 
 const markAsSafe = async (mailId) => {
-  await updateMailStatus(mailId, 'SAFE');
-  // Recharger spécifiquement les mails en quarantaine après la mise à jour
-  await loadQuarantineMails();
+  try {
+    await updateMailStatus(mailId, 'SAFE');
+    toast.success('Email marked as safe successfully!');
+    // Recharger spécifiquement les mails en quarantaine après la mise à jour
+    await loadQuarantineMails();
+  } catch (error) {
+    toast.error('Failed to mark email as safe. Please try again.');
+    console.error(error);
+  }
 };
 
 const deleteMail = async (mailId) => {
-  if (confirm('Are you sure you want to delete this mail?')) {
-    await updateMailStatus(mailId, 'DELETED');
-    // Recharger spécifiquement les mails en quarantaine après la mise à jour
-    await loadQuarantineMails();
+  if (confirm('Are you sure you want to delete this email?')) {
+    try {
+      await updateMailStatus(mailId, 'DELETED');
+      toast.success('Email deleted successfully!');
+      // Recharger spécifiquement les mails en quarantaine après la mise à jour
+      await loadQuarantineMails();
+    } catch (error) {
+      toast.error('Failed to delete email. Please try again.');
+      console.error(error);
+    }
   }
 };
 
@@ -112,6 +141,7 @@ const handleResetSearch = () => {
 // Fonction pour gérer les uploads réussis
 const handleUploadSuccess = async ({ fileName }) => {
   console.log(`File ${fileName} uploaded successfully`);
+  toast.success(`File ${fileName} uploaded and analyzed successfully!`);
 
   // Recharger la liste après un délai
   setTimeout(() => {
@@ -122,6 +152,7 @@ const handleUploadSuccess = async ({ fileName }) => {
 // Fonction pour gérer les erreurs d'upload
 const handleUploadError = ({ fileName, error }) => {
   console.error(`Error uploading ${fileName}:`, error);
+  toast.error(`Error uploading ${fileName}: ${error}`);
 };
 
 const handleAskMistral = async (mailId) => {
@@ -142,7 +173,12 @@ onMounted(async () => {
   authStore.initialize();
 
   if (authStore.isLoggedIn) {
-    await loadQuarantineMails();
+    try {
+      await loadQuarantineMails();
+    } catch (error) {
+      toast.error('Failed to load quarantined emails. Please refresh the page.');
+      console.error(error);
+    }
   } else {
     // Rediriger vers login si non connecté
     router.push('/login');

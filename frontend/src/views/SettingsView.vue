@@ -2,10 +2,29 @@
 import { onMounted } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'vue-router';
+import { useToast } from 'vue-toastification'; // Import pour toast
 import FilterRulesList from '@/components/settings/FilterRulesList.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();
+const toast = useToast(); // Initialiser toast
+
+// Handler pour les événements du composant enfant
+const handleRuleAdded = () => {
+  toast.success('Filtering rule added successfully!');
+};
+
+const handleRuleUpdated = () => {
+  toast.success('Filtering rule updated successfully!');
+};
+
+const handleRuleDeleted = () => {
+  toast.success('Filtering rule deleted successfully!');
+};
+
+const handleRuleError = (errorMessage) => {
+  toast.error(errorMessage || 'An error occurred with filtering rules');
+};
 
 // Check authentication on mount
 onMounted(async () => {
@@ -39,7 +58,12 @@ onMounted(async () => {
             Configure which email senders will be automatically blocked. Emails from these senders won't appear in your inbox.
           </p>
 
-          <FilterRulesList />
+          <FilterRulesList
+            @rule-added="handleRuleAdded"
+            @rule-updated="handleRuleUpdated"
+            @rule-deleted="handleRuleDeleted"
+            @rule-error="handleRuleError"
+          />
         </div>
 
         <!-- Help section -->

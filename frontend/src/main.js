@@ -23,7 +23,7 @@ app.use(PrimeVue);
 
 const toastOptions = {
   position: "top-right",
-  timeout: 5000,
+  timeout: 3000,
   closeOnClick: true,
   pauseOnFocusLoss: true,
   pauseOnHover: true,
