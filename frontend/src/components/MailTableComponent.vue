@@ -475,4 +475,15 @@ tbody tr:hover {
 tbody tr.selected {
   background-color: rgba(219, 234, 254, 0.5); /* Bleu très clair */
 }
+
+/* Style pour la ligne sélectionnée */
+tbody tr.bg-blue-100 {
+  background-color: rgba(219, 234, 254, 0.7);
+}
+
+/* Style pour rendre le tableau focusable mais sans bordure visible */
+.overflow-auto:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3); /* Subtil halo bleu quand focus */
+}
 </style>
