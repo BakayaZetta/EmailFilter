@@ -111,9 +111,9 @@ const getSortIcon = (column) => {
 const handleRowClick = (event, mailId) => {
   // Ne pas développer si on clique sur une checkbox ou un bouton
   if (event.target.type === 'checkbox' ||
-      event.target.tagName === 'BUTTON' ||
-      event.target.closest('button') ||
-      event.target.tagName === 'I') {
+    event.target.tagName === 'BUTTON' ||
+    event.target.closest('button') ||
+    event.target.tagName === 'I') {
     return;
   }
 
@@ -168,10 +168,10 @@ const handleDocumentClick = (event) => {
 
   // Vérifier si le clic est sur un élément interactif (bouton, checkbox, etc.)
   const isInteractive = event.target.closest('button') ||
-                        event.target.tagName === 'INPUT' ||
-                        event.target.tagName === 'BUTTON' ||
-                        event.target.tagName === 'A' ||
-                        event.target.tagName === 'I';
+    event.target.tagName === 'INPUT' ||
+    event.target.tagName === 'BUTTON' ||
+    event.target.tagName === 'A' ||
+    event.target.tagName === 'I';
 
   // Ne pas fermer si on clique sur un élément interactif
   if (isInteractive) return;
@@ -210,10 +210,8 @@ onUnmounted(() => {
         <h1 class="text-3xl font-bold">Mail List</h1>
       </slot>
 
-      <button
-        @click="emit('refresh')"
-        class="text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded flex items-center"
-      >
+      <button @click="emit('refresh')"
+        class="text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded flex items-center">
         <i class="pi pi-refresh mr-1 text-xs"></i>Refresh
       </button>
     </div>
@@ -223,12 +221,8 @@ onUnmounted(() => {
     </slot>
 
     <!-- Barre de recherche -->
-    <SearchBarComponent
-      :status-options="statusTypes"
-      :initial-query="searchQuery"
-      @search="query => emit('search', query)"
-      @reset="emit('reset-search')"
-    />
+    <SearchBarComponent :status-options="statusTypes" :initial-query="searchQuery"
+      @search="query => emit('search', query)" @reset="emit('reset-search')" />
 
     <!-- Légende des statuts -->
     <div class="flex flex-wrap items-center space-x-4 mb-2 text-xs">
@@ -240,13 +234,11 @@ onUnmounted(() => {
     </div>
 
     <!-- Indicateur de filtrage -->
-    <div v-if="Object.values(searchQuery).some(v => v !== '')" class="bg-blue-50 border-l-4 border-blue-500 p-2 text-sm mb-3">
+    <div v-if="Object.values(searchQuery).some(v => v !== '')"
+      class="bg-blue-50 border-l-4 border-blue-500 p-2 text-sm mb-3">
       <p class="text-blue-700">
         Showing {{ mails.length }} filtered results
-        <button
-          @click="$emit('reset-search')"
-          class="ml-2 text-blue-600 hover:text-blue-800 underline"
-        >
+        <button @click="$emit('reset-search')" class="ml-2 text-blue-600 hover:text-blue-800 underline">
           Reset filters
         </button>
       </p>
@@ -297,32 +289,22 @@ onUnmounted(() => {
               <tr class="text-xs">
                 <!-- Checkbox pour tout sélectionner -->
                 <th scope="col" class="w-[3%] px-2 py-2 text-center">
-                  <input
-                    type="checkbox"
-                    :checked="allSelected"
-                    @change="emit('toggle-select-all')"
-                    class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
+                  <input type="checkbox" :checked="allSelected" @change="emit('toggle-select-all')"
+                    class="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
                 </th>
 
                 <!-- Colonnes triables -->
-                <th
-                  v-for="(column, index) in [
-                    { key: 'Statut', name: 'Status', width: 'w-[5%]', center: true },
-                    { key: 'ID_Utilisateur', name: 'ID', width: 'w-[5%]', center: true },
-                    { key: 'Emetteur', name: 'Sender', width: 'w-[20%]' },
-                    { key: 'Sujet', name: 'Subject', width: 'w-[42%]' },
-                    { key: 'Date_Reception', name: 'Received', width: 'w-[17%]' }
-                  ]"
-                  :key="index"
-                  scope="col"
-                  @click="emit('toggle-sort', column.key)"
-                  :class="[
-                    column.width,
-                    'px-2 py-2 font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100',
-                    column.center ? 'text-center' : 'text-left'
-                  ]"
-                >
+                <th v-for="(column, index) in [
+                  { key: 'Statut', name: 'Status', width: 'w-[5%]', center: true },
+                  { key: 'ID_Utilisateur', name: 'ID', width: 'w-[5%]', center: true },
+                  { key: 'Emetteur', name: 'Sender', width: 'w-[20%]' },
+                  { key: 'Sujet', name: 'Subject', width: 'w-[42%]' },
+                  { key: 'Date_Reception', name: 'Received', width: 'w-[17%]' }
+                ]" :key="index" scope="col" @click="emit('toggle-sort', column.key)" :class="[
+                  column.width,
+                  'px-2 py-2 font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100',
+                  column.center ? 'text-center' : 'text-left'
+                ]">
                   <div :class="['flex items-center', column.center ? 'justify-center' : '']">
                     <span>{{ column.name }}</span>
                     <i class="pi ml-1" :class="getSortIcon(column.key)"></i>
@@ -339,29 +321,21 @@ onUnmounted(() => {
             <tbody class="bg-white divide-y divide-gray-200">
               <template v-for="mail in mails" :key="mail.ID_Mail">
                 <!-- Ligne de mail cliquable -->
-                <tr
-                  class="hover:bg-gray-50 cursor-pointer"
-                  :class="{'bg-blue-50': expandedMailId === mail.ID_Mail}"
-                  @click="handleRowClick($event, mail.ID_Mail)"
-                  :data-mail-id="mail.ID_Mail"
-                >
+                <tr class="hover:bg-gray-50 cursor-pointer" :class="{
+                  'bg-blue-50': expandedMailId === mail.ID_Mail,
+                  'bg-blue-100': isSelected(mail.ID_Mail) && expandedMailId !== mail.ID_Mail
+                }" @click="handleRowClick($event, mail.ID_Mail)" :data-mail-id="mail.ID_Mail">
                   <!-- Checkbox -->
                   <td class="px-2 py-2 text-center">
-                    <input
-                      type="checkbox"
-                      :checked="isSelected(mail.ID_Mail)"
-                      @change="emit('toggle-select', mail.ID_Mail)"
-                      @click.stop
-                      class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    />
+                    <input type="checkbox" :checked="isSelected(mail.ID_Mail)"
+                      @change="emit('toggle-select', mail.ID_Mail)" @click.stop
+                      class="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
                   </td>
 
                   <!-- Statut -->
                   <td class="px-2 py-2 text-center">
-                    <div
-                      :class="['w-3 h-3 rounded-full mx-auto', getStatusClass(mail.Statut)]"
-                      :title="mail.Statut"
-                    ></div>
+                    <div :class="['w-3 h-3 rounded-full mx-auto', getStatusClass(mail.Statut)]" :title="mail.Statut">
+                    </div>
                   </td>
 
                   <!-- ID Utilisateur -->
@@ -388,12 +362,9 @@ onUnmounted(() => {
                   <td class="px-2 py-2 text-center whitespace-nowrap">
                     <div class="flex justify-center space-x-2">
                       <!-- Bouton Mistral - maintenant conditionnel -->
-                      <button
-                        v-if="showMistralButton"
-                        @click.stop="askMistral(mail.ID_Mail)"
+                      <button v-if="showMistralButton" @click.stop="askMistral(mail.ID_Mail)"
                         title="Expliquer avec Mistral"
-                        class="px-2 py-1 text-white rounded-full bg-purple-500 hover:bg-purple-600"
-                      >
+                        class="px-2 py-1 text-white rounded-full bg-purple-500 hover:bg-purple-600">
                         <i class="pi pi-comment text-xs"></i>
                       </button>
 
@@ -407,12 +378,8 @@ onUnmounted(() => {
                 <tr v-if="expandedMailId === mail.ID_Mail">
                   <td colspan="7" class="bg-gray-50 px-4 py-4">
                     <div :id="`mail-detail-${mail.ID_Mail}`">
-                      <MailComponent
-                        ref="mailComponentRef"
-                        :mail="mail"
-                        :expanded="true"
-                        @close="emit('toggle-expand', mail.ID_Mail)"
-                      />
+                      <MailComponent ref="mailComponentRef" :mail="mail" :expanded="true"
+                        @close="emit('toggle-expand', mail.ID_Mail)" />
                     </div>
                   </td>
                 </tr>
@@ -424,22 +391,23 @@ onUnmounted(() => {
     </div>
 
     <!-- Modal Mistral -->
-    <MistralResponseModal
-      v-if="showMistralModal"
-      :response="mistralResponse"
-      :loading="mistralLoading"
-      :error="mistralError"
-      :emailId="mistralEmailId"
-      @close="closeMistralModal"
-    />
+    <MistralResponseModal v-if="showMistralModal" :response="mistralResponse" :loading="mistralLoading"
+      :error="mistralError" :emailId="mistralEmailId" @close="closeMistralModal" />
   </div>
 </template>
 
 <style scoped>
 /* Animation pour l'apparition du contenu développé */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .animate-fadeIn {
@@ -458,22 +426,26 @@ th .pi {
 }
 
 th:hover .pi.text-gray-300 {
-  color: #6b7280; /* Rendre l'icône plus visible au survol de l'en-tête */
+  color: #6b7280;
+  /* Rendre l'icône plus visible au survol de l'en-tête */
 }
 
 /* Mise en évidence de la colonne active */
 th:has(.text-blue-500) {
-  background-color: rgba(219, 234, 254, 0.3); /* Bleu très clair */
+  background-color: rgba(219, 234, 254, 0.3);
+  /* Bleu très clair */
 }
 
 /* Style pour indiquer qu'une ligne est cliquable */
 tbody tr:hover {
-  background-color: rgba(243, 244, 246, 0.8); /* Gris très léger au survol */
+  background-color: rgba(243, 244, 246, 0.8);
+  /* Gris très léger au survol */
 }
 
 /* Style pour la ligne active/sélectionnée */
 tbody tr.selected {
-  background-color: rgba(219, 234, 254, 0.5); /* Bleu très clair */
+  background-color: rgba(219, 234, 254, 0.5);
+  /* Bleu très clair */
 }
 
 /* Style pour la ligne sélectionnée */
@@ -484,6 +456,7 @@ tbody tr.bg-blue-100 {
 /* Style pour rendre le tableau focusable mais sans bordure visible */
 .overflow-auto:focus {
   outline: none;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3); /* Subtil halo bleu quand focus */
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+  /* Subtil halo bleu quand focus */
 }
 </style>
