@@ -23,41 +23,39 @@ const props = defineProps({
 
 const emit = defineEmits(['close']);
 
-// Référence pour la modal
+// Reference for the modal
 const modalRef = ref(null);
 
-// Fonction pour fermer la modal
+// Function to close the modal
 const closeModal = () => {
   emit('close');
 };
 
-// Gestionnaire de la touche Escape
+// Escape key handler
 const handleEscape = (e) => {
   if (e.key === 'Escape') {
     closeModal();
   }
 };
 
-// Gestionnaire de clic en dehors de la modal
+// Outside click handler
 const handleOutsideClick = (e) => {
   if (modalRef.value && !modalRef.value.contains(e.target)) {
     closeModal();
   }
 };
 
-// Initialisation des event listeners
 onMounted(() => {
   document.addEventListener('keydown', handleEscape);
   document.addEventListener('mousedown', handleOutsideClick);
 });
 
-// Nettoyage des event listeners
 onUnmounted(() => {
   document.removeEventListener('keydown', handleEscape);
   document.removeEventListener('mousedown', handleOutsideClick);
 });
 
-// Convertir le markdown en HTML
+// Convert markdown to HTML
 const formattedResponse = computed(() => {
   if (!props.response) return '';
   try {
@@ -75,57 +73,57 @@ const formattedResponse = computed(() => {
       ref="modalRef"
       class="bg-white rounded-lg shadow-xl w-full max-w-2xl animate-scale-in"
     >
-      <!-- En-tête -->
+      <!-- Header -->
       <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
         <h3 class="text-lg font-semibold text-gray-900 flex items-center">
           <i class="pi pi-comment-dots text-purple-500 mr-2"></i>
-          Explication Mistral
+          Mistral Explanation
         </h3>
         <button @click="closeModal" class="text-gray-400 hover:text-gray-500">
           <i class="pi pi-times"></i>
         </button>
       </div>
 
-      <!-- Contenu -->
+      <!-- Content -->
       <div class="p-6 overflow-y-auto max-h-[60vh]">
-        <!-- Chargement -->
+        <!-- Loading -->
         <div v-if="loading" class="flex flex-col items-center py-10">
           <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
-          <p class="mt-3 text-gray-600">Génération de l'explication en cours...</p>
-          <p class="text-sm text-gray-500 mt-1">Cela peut prendre quelques secondes</p>
+          <p class="mt-3 text-gray-600">Generating explanation...</p>
+          <p class="text-sm text-gray-500 mt-1">This may take a few seconds</p>
         </div>
 
-        <!-- Erreur -->
+        <!-- Error -->
         <div v-else-if="error" class="bg-red-50 border-l-4 border-red-500 p-4 rounded">
           <div class="flex">
             <i class="pi pi-exclamation-circle text-red-500 mr-3 mt-0.5"></i>
             <div>
-              <h3 class="text-red-800 font-medium">Une erreur est survenue</h3>
+              <h3 class="text-red-800 font-medium">An error occurred</h3>
               <p class="text-red-700 mt-1">{{ error }}</p>
             </div>
           </div>
         </div>
 
-        <!-- Réponse -->
+        <!-- Response -->
         <div v-else-if="response" class="prose max-w-none">
           <div class="mb-4 rounded-md">
             <div v-html="formattedResponse" class="text-gray-800"></div>
           </div>
         </div>
 
-        <!-- Pas de réponse -->
+        <!-- No response -->
         <div v-else class="text-center py-6 text-gray-500">
-          Aucune explication disponible
+          No explanation available
         </div>
       </div>
 
-      <!-- Pied de modal -->
+      <!-- Footer -->
       <div class="px-6 py-4 border-t border-gray-200 flex justify-end">
         <button
           @click="closeModal"
           class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded text-gray-800"
         >
-          Fermer
+          Close
         </button>
       </div>
     </div>
@@ -148,7 +146,6 @@ const formattedResponse = computed(() => {
   animation: scale-in 0.2s ease-out forwards;
 }
 
-/* Style pour le contenu HTML généré */
 :deep(h1) {
   font-size: 1.5rem;
   font-weight: 600;

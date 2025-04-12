@@ -44,17 +44,17 @@ const props = defineProps({
     type: Object,
     default: () => ({})
   },
-  // Nouvelle prop pour contrôler l'affichage du bouton Mistral
+  // Control whether to display the Mistral button
   showMistralButton: {
     type: Boolean,
     default: true
   }
 });
 
-// Référence pour le composant de mail développé
+// Reference for expanded mail component
 const mailComponentRef = ref(null);
 
-// Émissions pour communiquer avec le composant parent
+// Emissions to communicate with parent component
 const emit = defineEmits([
   'toggle-select-all',
   'toggle-select',
@@ -67,7 +67,7 @@ const emit = defineEmits([
   'reset-search',
 ]);
 
-// États pour la fonctionnalité Mistral
+// Mistral functionality states
 const showMistralModal = ref(false);
 const mistralLoading = ref(false);
 const mistralResponse = ref(null);
@@ -75,29 +75,29 @@ const mistralError = ref(null);
 const mistralEmailId = ref(null);
 const mistralMailDetails = ref(null);
 
-// Computed pour vérifier si tous les mails sont sélectionnés
+// Check if all mails are selected
 const allSelected = computed(() => {
   return props.mails.length > 0 && props.selectedMails.length === props.mails.length;
 });
 
-// Vérifier si un mail est sélectionné
+// Check if a mail is selected
 const isSelected = (mailId) => {
   return props.selectedMails.includes(mailId);
 };
 
 const statusMap = computed(() => {
-  // Si les types de statuts sont fournis, utiliser ceux-là
+  // If status types are provided, use those
   if (props.statusTypes.length > 0) {
     return props.statusTypes.map(status => ({
       name: status,
       color: getStatusClass(status)
     }));
   }
-  // Sinon utiliser la map par défaut
+  // Otherwise use default map
   return getStatusMap();
 });
 
-// Obtenir l'icône pour le tri
+// Get icon for sorting
 const getSortIcon = (column) => {
   if (props.sortColumn !== column) {
     return 'pi-filter text-gray-300';
@@ -107,9 +107,9 @@ const getSortIcon = (column) => {
     : 'pi-sort-amount-down text-blue-500';
 };
 
-// Gestionnaire de clic sur une ligne pour développer/réduire le mail
+// Click handler for row to expand/collapse mail
 const handleRowClick = (event, mailId) => {
-  // Ne pas développer si on clique sur une checkbox ou un bouton
+  // Don't expand if clicking on checkbox or button
   if (event.target.type === 'checkbox' ||
     event.target.tagName === 'BUTTON' ||
     event.target.closest('button') ||
@@ -120,7 +120,7 @@ const handleRowClick = (event, mailId) => {
   emit('toggle-expand', mailId);
 };
 
-// Fonction pour demander une explication à Mistral
+// Function to request an explanation from Mistral
 const askMistral = async (emailId) => {
   mistralLoading.value = true;
   mistralError.value = null;
@@ -130,27 +130,27 @@ const askMistral = async (emailId) => {
   showMistralModal.value = true;
 
   try {
-    // Récupérer les détails du mail
+    // Retrieve mail details
     const mailDetails = await mailService.getMailDetails(emailId);
     mistralMailDetails.value = mailDetails;
 
-    // Envoyer ces détails à Mistral
+    // Send these details to Mistral
     const data = await mistralService.getExplanation(emailId, mailDetails);
     mistralResponse.value = data.explanation;
   } catch (error) {
-    console.error("Erreur lors de la demande d'explication à Mistral:", error);
+    console.error("Error requesting explanation from Mistral:", error);
 
     if (error.response) {
-      mistralError.value = error.response.data?.message || "Erreur lors de la communication avec l'API";
+      mistralError.value = error.response.data?.message || "Error communicating with the API";
     } else {
-      mistralError.value = "Impossible de contacter le service d'explication. Veuillez réessayer plus tard.";
+      mistralError.value = "Unable to contact the explanation service. Please try again later.";
     }
   } finally {
     mistralLoading.value = false;
   }
 };
 
-// Fonction pour fermer le modal Mistral
+// Function to close Mistral modal
 const closeMistralModal = () => {
   showMistralModal.value = false;
   setTimeout(() => {
@@ -158,41 +158,41 @@ const closeMistralModal = () => {
     mistralResponse.value = null;
     mistralError.value = null;
     mistralEmailId.value = null;
-  }, 300); // Délai pour l'animation de fermeture
+  }, 300); // Delay for closing animation
 };
 
-// Gestionnaire pour fermer le mail détaillé quand on clique en dehors
+// Handler to close detailed mail when clicking outside
 const handleDocumentClick = (event) => {
-  // Si aucun mail n'est développé, on ne fait rien
+  // If no mail is expanded, do nothing
   if (!props.expandedMailId) return;
 
-  // Vérifier si le clic est sur un élément interactif (bouton, checkbox, etc.)
+  // Check if click is on an interactive element (button, checkbox, etc.)
   const isInteractive = event.target.closest('button') ||
     event.target.tagName === 'INPUT' ||
     event.target.tagName === 'BUTTON' ||
     event.target.tagName === 'A' ||
     event.target.tagName === 'I';
 
-  // Ne pas fermer si on clique sur un élément interactif
+  // Don't close if clicking on an interactive element
   if (isInteractive) return;
 
-  // Vérifier si le clic est à l'intérieur du composant mail développé
+  // Check if click is inside the expanded mail component
   const mailComponent = document.getElementById(`mail-detail-${props.expandedMailId}`);
   if (mailComponent && mailComponent.contains(event.target)) return;
 
-  // Vérifier si le clic est sur une ligne de mail
+  // Check if click is on a mail row
   const clickedRow = event.target.closest('tr');
   if (clickedRow) {
-    // Si c'est la ligne du mail développé, ne pas fermer
+    // If it's the row of the expanded mail, don't close
     const mailIdAttribute = clickedRow.getAttribute('data-mail-id');
     if (mailIdAttribute && parseInt(mailIdAttribute) === props.expandedMailId) return;
   }
 
-  // Dans tous les autres cas, fermer le mail développé
+  // In all other cases, close the expanded mail
   emit('toggle-expand', null);
 };
 
-// Ajouter et supprimer le gestionnaire de clic sur le document
+// Add and remove document click handler
 onMounted(() => {
   document.addEventListener('click', handleDocumentClick);
 });
@@ -206,7 +206,6 @@ onUnmounted(() => {
   <div>
     <div class="flex justify-between items-center mb-2">
       <slot name="header">
-        <!-- Slot par défaut pour le titre -->
         <h1 class="text-3xl font-bold">Mail List</h1>
       </slot>
 
@@ -216,15 +215,13 @@ onUnmounted(() => {
       </button>
     </div>
 
-    <slot name="description">
-      <!-- Slot pour la description -->
-    </slot>
+    <slot name="description"></slot>
 
-    <!-- Barre de recherche -->
+    <!-- Search bar -->
     <SearchBarComponent :status-options="statusTypes" :initial-query="searchQuery"
       @search="query => emit('search', query)" @reset="emit('reset-search')" />
 
-    <!-- Légende des statuts -->
+    <!-- Status legend -->
     <div class="flex flex-wrap items-center space-x-4 mb-2 text-xs">
       <div class="text-gray-500">Status:</div>
       <div v-for="status in statusMap" :key="status.name" class="flex items-center">
@@ -233,7 +230,7 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <!-- Indicateur de filtrage -->
+    <!-- Filter indicator -->
     <div v-if="Object.values(searchQuery).some(v => v !== '')"
       class="bg-blue-50 border-l-4 border-blue-500 p-2 text-sm mb-3">
       <p class="text-blue-700">
@@ -249,18 +246,18 @@ onUnmounted(() => {
       Structure de données: {{ JSON.stringify(mails[0], null, 2) }}
     </div>
 
-    <!-- Indicateur de chargement -->
+    <!-- Loading indicator -->
     <div v-if="loading" class="flex justify-center py-10">
       <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-500"></div>
       <span class="ml-3 text-red-500">Loading emails...</span>
     </div>
 
-    <!-- Message d'erreur -->
+    <!-- Error message -->
     <div v-else-if="error" class="bg-red-50 border-l-4 border-red-500 p-2 mb-3 text-sm">
       <p class="text-red-700">{{ error }}</p>
     </div>
 
-    <!-- Aucun résultat -->
+    <!-- No results -->
     <div v-else-if="mails.length === 0" class="bg-gray-50 rounded-lg p-4 text-center">
       <div class="text-gray-500 text-sm mb-1">No emails found</div>
       <p class="text-gray-400 text-xs">
@@ -268,9 +265,9 @@ onUnmounted(() => {
       </p>
     </div>
 
-    <!-- Affichage des emails -->
+    <!-- Display emails -->
     <div v-else>
-      <!-- Barre d'actions en masse -->
+      <!-- Bulk action bar -->
       <div class="bg-gray-50 p-3 mb-3 rounded-lg flex justify-between items-center">
         <div class="flex items-center">
           <span class="text-sm mr-2">With selected:</span>
@@ -281,19 +278,19 @@ onUnmounted(() => {
         </div>
       </div>
 
-      <!-- Table des emails -->
+      <!-- Emails table -->
       <div class="bg-white shadow rounded-lg overflow-hidden">
         <div class="overflow-auto max-h-[85vh]">
           <table class="w-full divide-y divide-gray-200 text-sm table-fixed">
             <thead class="bg-gray-50 sticky top-0 z-10">
               <tr class="text-xs">
-                <!-- Checkbox pour tout sélectionner -->
+                <!-- Checkbox to select all -->
                 <th scope="col" class="w-[3%] px-2 py-2 text-center">
                   <input type="checkbox" :checked="allSelected" @change="emit('toggle-select-all')"
                     class="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
                 </th>
 
-                <!-- Colonnes triables -->
+                <!-- Sortable columns -->
                 <th v-for="(column, index) in [
                   { key: 'Statut', name: 'Status', width: 'w-[5%]', center: true },
                   { key: 'ID_Utilisateur', name: 'ID', width: 'w-[5%]', center: true },
@@ -311,7 +308,7 @@ onUnmounted(() => {
                   </div>
                 </th>
 
-                <!-- Colonne actions - réduite en largeur -->
+                <!-- Actions column -->
                 <th scope="col" class="w-[10%] px-2 py-2 text-center font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
@@ -320,7 +317,7 @@ onUnmounted(() => {
 
             <tbody class="bg-white divide-y divide-gray-200">
               <template v-for="mail in mails" :key="mail.ID_Mail">
-                <!-- Ligne de mail cliquable -->
+                <!-- Clickable mail row -->
                 <tr class="hover:bg-gray-50 cursor-pointer" :class="{
                   'bg-blue-50': expandedMailId === mail.ID_Mail,
                   'bg-blue-100': isSelected(mail.ID_Mail) && expandedMailId !== mail.ID_Mail
@@ -332,49 +329,49 @@ onUnmounted(() => {
                       class="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
                   </td>
 
-                  <!-- Statut -->
+                  <!-- Status -->
                   <td class="px-2 py-2 text-center">
                     <div :class="['w-3 h-3 rounded-full mx-auto', getStatusClass(mail.Statut)]" :title="mail.Statut">
                     </div>
                   </td>
 
-                  <!-- ID Utilisateur -->
+                  <!-- User ID -->
                   <td class="px-2 py-2 text-center text-xs">
                     {{ mail.ID_Utilisateur }}
                   </td>
 
-                  <!-- Émetteur -->
+                  <!-- Sender -->
                   <td class="px-2 py-2 truncate" :title="mail.Emetteur">
                     {{ mail.Emetteur }}
                   </td>
 
-                  <!-- Sujet -->
+                  <!-- Subject -->
                   <td class="px-2 py-2 truncate" :title="mail.Sujet">
                     {{ mail.Sujet }}
                   </td>
 
-                  <!-- Date de réception -->
+                  <!-- Received date -->
                   <td class="px-2 py-2 text-xs">
                     {{ formatDateTime(mail.Date_Reception) }}
                   </td>
 
-                  <!-- Actions - Bouton Mistral et actions spécifiques uniquement -->
+                  <!-- Actions -->
                   <td class="px-2 py-2 text-center whitespace-nowrap">
                     <div class="flex justify-center space-x-2">
-                      <!-- Bouton Mistral - maintenant conditionnel -->
+                      <!-- Mistral button - conditional -->
                       <button v-if="showMistralButton" @click.stop="askMistral(mail.ID_Mail)"
-                        title="Expliquer avec Mistral"
+                        title="Explain with Mistral"
                         class="px-2 py-1 text-white rounded-full bg-purple-500 hover:bg-purple-600">
                         <i class="pi pi-comment text-xs"></i>
                       </button>
 
-                      <!-- Slot pour actions spécifiques -->
+                      <!-- Slot for specific actions -->
                       <slot name="row-actions" :mail="mail"></slot>
                     </div>
                   </td>
                 </tr>
 
-                <!-- Ligne de contenu développée utilisant MailComponent -->
+                <!-- Expanded content row using MailComponent -->
                 <tr v-if="expandedMailId === mail.ID_Mail">
                   <td colspan="7" class="bg-gray-50 px-4 py-4">
                     <div :id="`mail-detail-${mail.ID_Mail}`">
@@ -390,14 +387,14 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <!-- Modal Mistral -->
+    <!-- Mistral Modal -->
     <MistralResponseModal v-if="showMistralModal" :response="mistralResponse" :loading="mistralLoading"
       :error="mistralError" :emailId="mistralEmailId" @close="closeMistralModal" />
   </div>
 </template>
 
 <style scoped>
-/* Animation pour l'apparition du contenu développé */
+/* Animation for expanded content */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -414,7 +411,7 @@ onUnmounted(() => {
   animation: fadeIn 0.2s ease-out forwards;
 }
 
-/* Styles pour les en-têtes de colonnes triables */
+/* Styles for sortable column headers */
 th.cursor-pointer {
   position: relative;
   transition: background-color 0.2s;
@@ -427,36 +424,21 @@ th .pi {
 
 th:hover .pi.text-gray-300 {
   color: #6b7280;
-  /* Rendre l'icône plus visible au survol de l'en-tête */
 }
 
-/* Mise en évidence de la colonne active */
+/* Active column highlight */
 th:has(.text-blue-500) {
   background-color: rgba(219, 234, 254, 0.3);
-  /* Bleu très clair */
 }
 
-/* Style pour indiquer qu'une ligne est cliquable */
-tbody tr:hover {
-  background-color: rgba(243, 244, 246, 0.8);
-  /* Gris très léger au survol */
-}
-
-/* Style pour la ligne active/sélectionnée */
-tbody tr.selected {
-  background-color: rgba(219, 234, 254, 0.5);
-  /* Bleu très clair */
-}
-
-/* Style pour la ligne sélectionnée */
+/* Style for the selected row */
 tbody tr.bg-blue-100 {
   background-color: rgba(219, 234, 254, 0.7);
 }
 
-/* Style pour rendre le tableau focusable mais sans bordure visible */
+/* Style for focusable table */
 .overflow-auto:focus {
   outline: none;
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
-  /* Subtil halo bleu quand focus */
 }
 </style>

@@ -37,10 +37,10 @@ logger = logging.getLogger(__name__)
 # Initialize FastAPI app
 app = FastAPI()
 
-# Configuration CORS pour permettre les requêtes du frontend
+# CORS configuration to allow requests from the frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # En production, limitez aux origines spécifiques
+    allow_origins=["*"],  # In production, limit to specific origins
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -100,23 +100,23 @@ async def ai_answer(file_to_explain):
 @app.post("/analyse/mistral/")
 async def generate_mistral_explanation(data: Dict[str, Any]):
     """
-    Endpoint pour générer une explication Mistral pour un email
+    Endpoint to generate a Mistral explanation for an email
     
     Args:
-        data: Données contenant l'ID de l'email et ses détails complets
+        data: Data containing the email ID and its complete details
     """
     try:
         email_id = data.get("emailId")
         email_data = data.get("emailData")
         
         if not email_id:
-            return {"error": "Email ID manquant", "status": "error"}
+            return {"error": "Missing email ID", "status": "error"}
             
-        # Utiliser les données détaillées de l'email si disponibles
+        # Use the detailed email data if available
         if email_data:
-            print(f"Données complètes reçues pour l'email ID {email_id}")
+            print(f"Complete data received for email ID {email_id}")
             
-            # Générer l'explication à partir des données détaillées
+            # Generate explanation from the detailed data
             explanation = mistral_explain.generate_explanation(email_data)
             
             return {
@@ -124,20 +124,20 @@ async def generate_mistral_explanation(data: Dict[str, Any]):
                 "status": "success"
             }
         else:
-            # Fallback: récupérer les données depuis la base de données
-            print(f"Aucune donnée détaillée reçue pour l'email ID {email_id}, récupération depuis la base de données")
-            email_data = {"id": email_id, "message": "Données non disponibles"}
+            # Fallback: retrieve data from the database
+            print(f"No detailed data received for email ID {email_id}, retrieving from database")
+            email_data = {"id": email_id, "message": "Data not available"}
             
-            explanation = "Je n'ai pas reçu suffisamment d'informations pour analyser cet email. Veuillez vérifier la configuration du système."
+            explanation = "I did not receive enough information to analyze this email. Please verify the system configuration."
             
             return {
                 "explanation": explanation,
                 "status": "limited"
             }
     except Exception as e:
-        print(f"Erreur lors de la génération de l'explication: {str(e)}")
+        print(f"Error generating explanation: {str(e)}")
         return {
-            "explanation": f"Une erreur s'est produite lors de l'analyse: {str(e)}",
+            "explanation": f"An error occurred during analysis: {str(e)}",
             "status": "error"
         }
 

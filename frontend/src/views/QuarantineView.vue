@@ -161,8 +161,8 @@ const handleAskMistral = async (mailId) => {
   } catch (error) {
     toast.add({
       severity: 'error',
-      summary: 'Erreur',
-      detail: "Impossible d'obtenir une explication pour cet email",
+      summary: 'Error',
+      detail: "Impossible to obtain en explanation for this mail",
       life: 3000
     });
     console.error('Error asking Mistral:', error);

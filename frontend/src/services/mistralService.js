@@ -1,36 +1,36 @@
 import axios from 'axios';
 
 /**
- * Service pour interagir avec l'API Mistral
+ * Service to interact with Mistral API
  */
 export default {
   /**
-   * Demande une explication à Mistral pour un email spécifique
-   * Cette implémentation envoie une requête directe au service Python
-   * @param {number|string} emailId - L'identifiant de l'email
-   * @param {Object} mailDetails - Les détails complets de l'email
-   * @returns {Promise} Promise contenant l'explication
+   * Request an explanation from Mistral for a specific email
+   * This implementation sends a direct request to the Python service
+   * @param {number|string} emailId - Email identifier
+   * @param {Object} mailDetails - Complete email details
+   * @returns {Promise} Promise containing the explanation
    */
   async getExplanation(emailId, mailDetails) {
     try {
-      // Préparer les données à envoyer
+      // Prepare data to send
       const requestData = {
         emailId: emailId,
-        // Envoyer les détails complets du mail
+        // Send complete mail details
         emailData: mailDetails
       };
 
-      // Appel direct au service Python sans passer par /api/
+      // Direct call to Python service without going through /api/
       const response = await axios.post('/analyse/mistral/', requestData, {
         headers: {
           'Content-Type': 'application/json'
         }
       });
 
-      // Si la réponse est réussie mais sans explication, utiliser une explication par défaut
+      // If response is successful but without explanation, use a default explanation
       if (response.data && !response.data.explanation) {
         return {
-          explanation: "Aucune explication détaillée n'a été fournie par le service d'analyse.",
+          explanation: "No detailed explanation was provided by the analysis service.",
           status: response.data.status || 'success'
         };
       }
@@ -39,7 +39,7 @@ export default {
     } catch (error) {
       console.error('Error getting Mistral explanation:', error);
 
-      // En cas d'erreur, revenir à une explication simulée pour une meilleure UX
+      // In case of error, fall back to a simulated explanation for better UX
       return {
         explanation: this._generateFallbackExplanation(emailId, error, mailDetails),
         status: 'fallback'
@@ -48,73 +48,73 @@ export default {
   },
 
   /**
-   * Génère une explication de fallback en cas d'échec de l'appel à l'API
+   * Generate a fallback explanation if the API call fails
    * @private
-   * @param {number|string} emailId - L'identifiant de l'email
-   * @param {Error} error - L'erreur rencontrée
-   * @param {Object} mailDetails - Les détails du mail si disponibles
-   * @returns {string} Explication au format markdown
+   * @param {number|string} emailId - Email identifier
+   * @param {Error} error - The error encountered
+   * @param {Object} mailDetails - Mail details if available
+   * @returns {string} Explanation in markdown format
    */
   _generateFallbackExplanation(emailId, error, mailDetails) {
-    // Si nous avons des détails du mail, générer une explication plus pertinente
+    // If we have mail details, generate a more relevant explanation
     if (mailDetails) {
-      const subject = mailDetails.Sujet || 'Sans objet';
-      const sender = mailDetails.Emetteur || 'inconnu';
+      const subject = mailDetails.Sujet || 'No subject';
+      const sender = mailDetails.Emetteur || 'unknown';
       const status = mailDetails.Statut || 'UNKNOWN';
 
-      return `# Analyse de l'email
+      return `# Email Analysis
 
-## Informations sur l'email
-- **Sujet**: ${subject}
-- **Expéditeur**: ${sender}
-- **Statut**: ${status}
+## Email Information
+- **Subject**: ${subject}
+- **Sender**: ${sender}
+- **Status**: ${status}
 
-## Explication provisoire
-Nous n'avons pas pu obtenir une analyse automatisée complète pour cet email. Voici quelques points qui pourraient expliquer son statut:
+## Provisional Explanation
+We couldn't get a complete automated analysis for this email. Here are some points that could explain its status:
 
 ${status === 'QUARANTINED' ? `
-- L'email pourrait contenir des éléments suspects
-- L'expéditeur pourrait ne pas être confirmé
-- Des problèmes de vérification SPF, DKIM ou DMARC pourraient être présents
+- The email may contain suspicious elements
+- The sender may not be confirmed
+- SPF, DKIM or DMARC verification issues may be present
 ` : ''}
 
 ${status === 'SPAM' ? `
-- L'email a été identifié comme spam potentiel
-- Il pourrait contenir des mots-clés associés au spam
-- L'expéditeur pourrait être sur une liste de surveillance
+- The email has been identified as potential spam
+- It may contain keywords associated with spam
+- The sender may be on a watchlist
 ` : ''}
 
 ${status === 'DELIVERED' ? `
-- L'email a passé toutes les vérifications de sécurité
-- Aucun élément suspect n'a été détecté
+- The email passed all security checks
+- No suspicious elements were detected
 ` : ''}
 
-## Message technique
+## Technical Message
 \`\`\`
-${error?.message || "Erreur de communication avec le service d'analyse"}
+${error?.message || "Communication error with analysis service"}
 \`\`\`
 `;
     }
 
-    // Fallback si pas de détails
-    return `# Problème de communication avec le service d'analyse
+    // Fallback if no details
+    return `# Communication problem with analysis service
 
-Nous n'avons pas pu obtenir une explication automatisée pour cet email (ID: ${emailId}).
+We couldn't get an automated explanation for this email (ID: ${emailId}).
 
-## Raison possible
+## Possible reason
 
-Le service d'analyse Mistral n'est pas accessible actuellement. Cela peut être dû à:
+The Mistral analysis service is currently unavailable. This may be due to:
 
-- Le service est en cours de maintenance
-- Un problème de connectivité réseau
-- Une erreur de configuration
+- The service is undergoing maintenance
+- A network connectivity issue
+- A configuration error
 
-## Message d'erreur technique
+## Technical error message
 
 \`\`\`
-${error?.message || "Erreur inconnue"}
+${error?.message || "Unknown error"}
 \`\`\`
 
-Veuillez réessayer ultérieurement ou contacter l'administrateur système si le problème persiste.`;
+Please try again later or contact your system administrator if the problem persists.`;
   }
 };
