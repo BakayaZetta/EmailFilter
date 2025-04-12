@@ -3,9 +3,11 @@ import { reactive } from 'vue'
 import { RouterLink, useRouter } from 'vue-router';
 import api from '@/services/api'; // Importez le service API
 import { useAuthStore } from '@/stores/authStore'; // Importez le store d'authentification
+import { useToast } from 'vue-toastification'; // Import du service de toast
 
 const router = useRouter();
 const authStore = useAuthStore(); // Utilisez le store d'authentification
+const toast = useToast(); // Initialisation du toast
 
 const registerForm = reactive({
   firstName: '',
@@ -97,6 +99,7 @@ const handleSubmit = async () => {
   const isConfirmPasswordValid = validateConfirmPassword()
 
   if (!isFirstNameValid || !isLastNameValid || !isEmailValid || !isPasswordValid || !isConfirmPasswordValid) {
+    toast.error("Please correct the errors in the form"); // Notification d'erreur de validation
     return
   }
 
@@ -117,16 +120,26 @@ const handleSubmit = async () => {
     // Utiliser authStore au lieu de sessionStorage
     authStore.login(data.user, data.token);
 
+    // Notification de succès
+    toast.success("Account created successfully! Welcome to Detectish!");
+
     // Redirect to /
     router.push('/');
 
   } catch (error) {
     // Gestion des erreurs améliorée avec Axios
-    registerForm.error = error.response?.data?.message || 'Failed to create account. Please try again later.'
+    const errorMessage = error.response?.data?.message || 'Failed to create account. Please try again later.';
+    registerForm.error = errorMessage;
+
+    // Notification d'erreur
+    toast.error(errorMessage);
+
     console.error('Registration error:', error)
   } finally {
     registerForm.isLoading = false
   }
+
+  return false; // Pour s'assurer que la soumission du formulaire est complètement contrôlée
 }
 </script>
 
@@ -176,7 +189,7 @@ const handleSubmit = async () => {
                     placeholder="Enter your first name" :class="{ 'ring-red-300': registerForm.firstNameError }" />
                 </div>
                 <p v-if="registerForm.firstNameError" class="mt-1 text-sm text-red-600">{{ registerForm.firstNameError
-                  }}</p>
+                }}</p>
               </div>
             </div>
 
