@@ -3,11 +3,15 @@ import { ref, onMounted } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'vue-router';
 import { useMailTable } from '@/composables/useMailTable';
+// Correct import for vue-toastification
+import { useToast } from 'vue-toastification';
 import MailTableComponent from '@/components/MailTableComponent.vue';
 import FileDropZone from '@/components/FileDropZone.vue';
+import MistralResponseModal from '@/components/MistralResponseModal.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();
+const toast = useToast();
 
 // État pour contrôler la visibilité de la modal de drag & drop
 const isUploadModalOpen = ref(false);
@@ -40,7 +44,13 @@ const {
   bulkUpdateStatus,
   updateMailStatus,
   updateSearchQuery,
-  resetSearch
+  resetSearch,
+  mistralLoading,
+  mistralResponse,
+  mistralError,
+  mistralEmailId,
+  askMistral,
+  resetMistral
 } = useMailTable();
 
 // Fonctions spécifiques à la vue Quarantine
@@ -106,6 +116,19 @@ const handleUploadError = ({ fileName, error }) => {
   console.error(`Error uploading ${fileName}:`, error);
 };
 
+const handleAskMistral = async (mailId) => {
+  try {
+    await askMistral(mailId);
+  } catch (error) {
+    toast.add({
+      severity: 'error',
+      summary: 'Erreur',
+      detail: "Impossible d'obtenir une explication pour cet email",
+      life: 3000
+    });
+  }
+};
+
 // Vérifier l'authentification et charger les données au montage
 onMounted(async () => {
   authStore.initialize();
@@ -167,6 +190,7 @@ onMounted(async () => {
           @refresh="loadQuarantineMails"
           @search="handleSearch"
           @reset-search="handleResetSearch"
+          @ask-mistral="handleAskMistral"
         >
           <!-- Header slot avec titre personnalisé -->
           <template #header>
@@ -221,6 +245,16 @@ onMounted(async () => {
             </button>
           </template>
         </MailTableComponent>
+
+        <!-- Modal pour afficher la réponse de Mistral -->
+        <MistralResponseModal
+          v-if="mistralLoading || mistralResponse || mistralError"
+          :loading="mistralLoading"
+          :response="mistralResponse"
+          :error="mistralError"
+          :emailId="mistralEmailId"
+          @close="resetMistral"
+        />
       </div>
     </div>
   </section>

@@ -1,8 +1,11 @@
 <script setup>
-import { computed } from 'vue';
+import { ref, computed } from 'vue';
 import MailComponent from '@/components/MailComponent.vue';
 import { formatDateTime, getStatusClass, getStatusMap } from '@/utils/formatters';
 import SearchBarComponent from '@/components/SearchBarComponent.vue';
+import MistralResponseModal from '@/components/MistralResponseModal.vue';
+import mistralService from '@/services/mistralService';
+import mailService from '@/services/mailService'; // Ajout de l'import du service mail
 
 const props = defineProps({
   mails: {
@@ -53,8 +56,16 @@ const emit = defineEmits([
   'bulk-update-status',
   'refresh',
   'search',
-  'reset-search'
+  'reset-search',
 ]);
+
+// États pour la fonctionnalité Mistral
+const showMistralModal = ref(false);
+const mistralLoading = ref(false);
+const mistralResponse = ref(null);
+const mistralError = ref(null);
+const mistralEmailId = ref(null);
+const mistralMailDetails = ref(null); // Ajout pour stocker les détails du mail
 
 // Computed pour vérifier si tous les mails sont sélectionnés
 const allSelected = computed(() => {
@@ -86,6 +97,47 @@ const getSortIcon = (column) => {
   return props.sortDirection === 'asc'
     ? 'pi-sort-amount-up-alt text-blue-500'
     : 'pi-sort-amount-down text-blue-500';
+};
+
+// Fonction modifiée pour demander une explication à Mistral
+const askMistral = async (emailId) => {
+  mistralLoading.value = true;
+  mistralError.value = null;
+  mistralResponse.value = null;
+  mistralEmailId.value = emailId;
+  mistralMailDetails.value = null;
+  showMistralModal.value = true;
+
+  try {
+    // Récupérer les détails du mail comme pour la fonction "Show content"
+    const mailDetails = await mailService.getMailDetails(emailId);
+    mistralMailDetails.value = mailDetails;
+
+    // Envoyer ces détails à Mistral
+    const data = await mistralService.getExplanation(emailId, mailDetails);
+    mistralResponse.value = data.explanation;
+  } catch (error) {
+    console.error("Erreur lors de la demande d'explication à Mistral:", error);
+
+    if (error.response) {
+      mistralError.value = error.response.data?.message || "Erreur lors de la communication avec l'API";
+    } else {
+      mistralError.value = "Impossible de contacter le service d'explication. Veuillez réessayer plus tard.";
+    }
+  } finally {
+    mistralLoading.value = false;
+  }
+};
+
+// Fonction pour fermer le modal Mistral
+const closeMistralModal = () => {
+  showMistralModal.value = false;
+  setTimeout(() => {
+    mistralLoading.value = false;
+    mistralResponse.value = null;
+    mistralError.value = null;
+    mistralEmailId.value = null;
+  }, 300); // Délai pour l'animation de fermeture
 };
 </script>
 
@@ -280,6 +332,15 @@ const getSortIcon = (column) => {
                         <i class="pi pi-search text-xs"></i>
                       </button>
 
+                      <!-- Nouveau bouton Mistral -->
+                      <button
+                        @click="askMistral(mail.ID_Mail)"
+                        title="Expliquer avec Mistral"
+                        class="px-2 py-1 text-white rounded-full bg-purple-500 hover:bg-purple-600"
+                      >
+                        <i class="pi pi-comment text-xs"></i>
+                      </button>
+
                       <!-- Slot pour actions spécifiques -->
                       <slot name="row-actions" :mail="mail"></slot>
                     </div>
@@ -302,6 +363,16 @@ const getSortIcon = (column) => {
         </div>
       </div>
     </div>
+
+    <!-- Modal Mistral -->
+    <MistralResponseModal
+      v-if="showMistralModal"
+      :response="mistralResponse"
+      :loading="mistralLoading"
+      :error="mistralError"
+      :emailId="mistralEmailId"
+      @close="closeMistralModal"
+    />
   </div>
 </template>
 

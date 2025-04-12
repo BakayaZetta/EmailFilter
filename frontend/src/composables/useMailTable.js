@@ -1,5 +1,6 @@
 import { ref, computed } from 'vue';
 import mailService from '@/services/mailService';
+import axios from 'axios';
 
 export function useMailTable() {
   // États
@@ -22,6 +23,12 @@ export function useMailTable() {
     dateFrom: '',
     dateTo: ''
   });
+
+  // États pour Mistral
+  const mistralLoading = ref(false);
+  const mistralResponse = ref(null);
+  const mistralError = ref(null);
+  const mistralEmailId = ref(null);
 
   // Computed property pour vérifier si tous les mails sont sélectionnés
   const allSelected = computed(() => {
@@ -48,24 +55,10 @@ export function useMailTable() {
       // Filtrer par destinataire (ID_Utilisateur ou email)
       if (searchQuery.value.recipient) {
         const searchTerm = searchQuery.value.recipient.toLowerCase();
-
-        // Récupérer différentes propriétés possibles pour le destinataire
         const userId = String(mail.ID_Utilisateur || '');
         const destinataire = String(mail.Destinataire || '');
-
-        // Debug temporaire - voir dans la console ce qui est disponible
-        // console.log('Mail destinataire debug:', {
-        //   mailId: mail.ID_Mail,
-        //   userId: userId,
-        //   destinataire: destinataire,
-        //   searchTerm: searchTerm
-        // });
-
-        // Vérifier les correspondances
         const idMatch = userId.toLowerCase().includes(searchTerm);
         const emailMatch = destinataire.toLowerCase().includes(searchTerm);
-
-        // Si ni l'ID ni l'email ne correspondent, exclure ce mail
         if (!idMatch && !emailMatch) {
           return false;
         }
@@ -281,6 +274,58 @@ export function useMailTable() {
     }
   };
 
+  // Méthode modifiée pour appeler directement l'API Mistral
+  const askMistral = async (emailId) => {
+    mistralLoading.value = true;
+    mistralError.value = null;
+    mistralResponse.value = null;
+    mistralEmailId.value = emailId;
+
+    try {
+      // D'abord, récupérez toutes les données détaillées de l'email
+      const emailDetails = await mailService.getMailDetails(emailId);
+
+      // Ensuite, envoyez ces données détaillées à l'API Mistral
+      const response = await axios.post('/analyse/mistral', {
+        emailId: emailId,
+        emailData: emailDetails // Envoi des données complètes de l'email
+      }, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.data && response.data.explanation) {
+        mistralResponse.value = response.data.explanation;
+      } else {
+        mistralResponse.value = "Aucune explication disponible.";
+      }
+    } catch (error) {
+      console.error("Erreur lors de la demande d'explication à Mistral:", error);
+
+      mistralResponse.value = `# Problème lors de l'analyse de l'email
+
+Nous n'avons pas pu générer une explication satisfaisante pour cet email.
+
+## Causes possibles:
+- Données insuffisantes pour l'analyse
+- Le service d'IA n'a pas pu traiter correctement les informations
+- Problème de connexion avec le service d'analyse
+
+Veuillez consulter les détails de l'email manuellement pour comprendre pourquoi il a été filtré.`;
+
+    } finally {
+      mistralLoading.value = false;
+    }
+  };
+
+  const resetMistral = () => {
+    mistralLoading.value = false;
+    mistralResponse.value = null;
+    mistralError.value = null;
+    mistralEmailId.value = null;
+  };
+
   return {
     // État
     mails,
@@ -306,6 +351,14 @@ export function useMailTable() {
     updateMailStatus,
     updateSearchQuery,
     resetSearch,
-    refreshWithCurrentFilters
+    refreshWithCurrentFilters,
+
+    // États et méthodes pour Mistral
+    mistralLoading,
+    mistralResponse,
+    mistralError,
+    mistralEmailId,
+    askMistral,
+    resetMistral
   };
 }

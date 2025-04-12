@@ -19,13 +19,16 @@ Usage:
 
 from database import Database 
 from analysis.mail_analyzer import load_email, analyze_email, load_raw_email
-from fastapi import FastAPI, UploadFile
+from fastapi import FastAPI, UploadFile, BackgroundTasks, Body
 from fastapi.responses import JSONResponse
-from starlette.background import BackgroundTasks
+from fastapi.middleware.cors import CORSMiddleware
+from typing import Dict, Any
 import uvicorn
 import logging
 import tempfile
 import mistral_explain
+import json
+import os
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -33,6 +36,15 @@ logger = logging.getLogger(__name__)
 
 # Initialize FastAPI app
 app = FastAPI()
+
+# Configuration CORS pour permettre les requêtes du frontend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # En production, limitez aux origines spécifiques
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 db = Database()
 
@@ -85,7 +97,50 @@ def health_check():
 async def ai_answer(file_to_explain):
     return mistral_explain.answer(file_to_explain)
 
- 
+@app.post("/analyse/mistral/")
+async def generate_mistral_explanation(data: Dict[str, Any]):
+    """
+    Endpoint pour générer une explication Mistral pour un email
+    
+    Args:
+        data: Données contenant l'ID de l'email et ses détails complets
+    """
+    try:
+        email_id = data.get("emailId")
+        email_data = data.get("emailData")
+        
+        if not email_id:
+            return {"error": "Email ID manquant", "status": "error"}
+            
+        # Utiliser les données détaillées de l'email si disponibles
+        if email_data:
+            print(f"Données complètes reçues pour l'email ID {email_id}")
+            
+            # Générer l'explication à partir des données détaillées
+            explanation = mistral_explain.generate_explanation(email_data)
+            
+            return {
+                "explanation": explanation,
+                "status": "success"
+            }
+        else:
+            # Fallback: récupérer les données depuis la base de données
+            print(f"Aucune donnée détaillée reçue pour l'email ID {email_id}, récupération depuis la base de données")
+            email_data = {"id": email_id, "message": "Données non disponibles"}
+            
+            explanation = "Je n'ai pas reçu suffisamment d'informations pour analyser cet email. Veuillez vérifier la configuration du système."
+            
+            return {
+                "explanation": explanation,
+                "status": "limited"
+            }
+    except Exception as e:
+        print(f"Erreur lors de la génération de l'explication: {str(e)}")
+        return {
+            "explanation": f"Une erreur s'est produite lors de l'analyse: {str(e)}",
+            "status": "error"
+        }
+
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=6969)
 
