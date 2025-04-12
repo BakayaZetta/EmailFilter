@@ -66,6 +66,8 @@ const bulkMarkAsSafe = async () => {
     return;
   }
   await bulkUpdateStatus('SAFE');
+  // Recharger spécifiquement les mails en quarantaine après la mise à jour
+  await loadQuarantineMails();
 };
 
 const bulkDelete = async () => {
@@ -76,16 +78,22 @@ const bulkDelete = async () => {
 
   if (confirm(`Are you sure you want to delete ${selectedMails.value.length} email(s)?`)) {
     await bulkUpdateStatus('DELETED');
+    // Recharger spécifiquement les mails en quarantaine après la mise à jour
+    await loadQuarantineMails();
   }
 };
 
 const markAsSafe = async (mailId) => {
   await updateMailStatus(mailId, 'SAFE');
+  // Recharger spécifiquement les mails en quarantaine après la mise à jour
+  await loadQuarantineMails();
 };
 
 const deleteMail = async (mailId) => {
   if (confirm('Are you sure you want to delete this mail?')) {
     await updateMailStatus(mailId, 'DELETED');
+    // Recharger spécifiquement les mails en quarantaine après la mise à jour
+    await loadQuarantineMails();
   }
 };
 
