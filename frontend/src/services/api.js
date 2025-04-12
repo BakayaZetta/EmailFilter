@@ -24,11 +24,20 @@ api.interceptors.response.use(
   error => {
     // Gestion des erreurs globales (ex: 401 Unauthorized, etc.)
     if (error.response?.status === 401) {
+      // Ne pas rediriger vers login si on est déjà sur la page login
+      // Vérifier si l'URL actuelle contient "/login"
+      const isLoginPage = window.location.pathname.includes('/login');
+
       // Créer une nouvelle instance du store
       const authStore = useAuthStore();
+
       // Appeler l'action logout du store
       authStore.logout();
-      window.location.href = '/login';
+
+      // Ne rediriger que si nous ne sommes pas déjà sur la page de connexion
+      if (!isLoginPage) {
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }

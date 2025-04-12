@@ -3,9 +3,11 @@ import { reactive } from 'vue'
 import { RouterLink, useRouter } from 'vue-router';
 import api from '@/services/api'; // Importez le service API
 import { useAuthStore } from '@/stores/authStore';
+import { useToast } from 'vue-toastification'; // Importez useToast
 
 const router = useRouter();
 const authStore = useAuthStore();
+const toast = useToast(); // Initialiser le toast
 
 const loginForm = reactive({
   email: '',
@@ -52,7 +54,8 @@ const handleSubmit = async () => {
   const isPasswordValid = validatePassword()
 
   if (!isEmailValid || !isPasswordValid) {
-    return
+    toast.error("Please correct the errors in the form");
+    return;
   }
 
   try {
@@ -70,16 +73,29 @@ const handleSubmit = async () => {
     // Store token in sessionStorage (au lieu de localStorage)
     authStore.login(data.user, data.token);
 
+    // Afficher un toast de succès
+    toast.success("Login successful! Welcome back!");
+
     // Redirect to /
     router.push('/');
 
   } catch (error) {
+    console.error('Login error:', error);
+
     // Gestion des erreurs améliorée avec Axios
-    loginForm.error = error.response?.data?.message || 'Failed to sign in. Please check your credentials and try again.'
-    console.error('Login error:', error)
+    const errorMessage = error.response?.data?.message || 'Failed to sign in. Please check your credentials and try again.';
+    loginForm.error = errorMessage;
+
+    // Afficher un toast d'erreur
+    toast.error(errorMessage);
+
+    // NE PAS rediriger après une erreur
   } finally {
-    loginForm.isLoading = false
+    loginForm.isLoading = false;
   }
+
+  // Retourner false pour être absolument sûr que rien ne provoque une soumission
+  return false;
 }
 </script>
 
@@ -106,7 +122,7 @@ const handleSubmit = async () => {
           <!-- Form -->
           <form class="space-y-6" @submit.prevent="handleSubmit">
 
-            <!-- General error alert -->
+            <!-- General error alert - on peut le garder en plus des toasts -->
             <div v-if="loginForm.error" class="bg-red-50 border-l-4 border-red-500 p-4">
               <div class="flex">
                 <div class="flex-shrink-0">
