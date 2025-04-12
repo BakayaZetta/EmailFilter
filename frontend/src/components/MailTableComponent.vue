@@ -43,6 +43,11 @@ const props = defineProps({
   searchQuery: {
     type: Object,
     default: () => ({})
+  },
+  // Nouvelle prop pour contrôler l'affichage du bouton Mistral
+  showMistralButton: {
+    type: Boolean,
+    default: true
   }
 });
 
@@ -382,8 +387,9 @@ onUnmounted(() => {
                   <!-- Actions - Bouton Mistral et actions spécifiques uniquement -->
                   <td class="px-2 py-2 text-center whitespace-nowrap">
                     <div class="flex justify-center space-x-2">
-                      <!-- Bouton Mistral -->
+                      <!-- Bouton Mistral - maintenant conditionnel -->
                       <button
+                        v-if="showMistralButton"
                         @click.stop="askMistral(mail.ID_Mail)"
                         title="Expliquer avec Mistral"
                         class="px-2 py-1 text-white rounded-full bg-purple-500 hover:bg-purple-600"

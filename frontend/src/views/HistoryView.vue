@@ -115,6 +115,7 @@ onMounted(async () => {
           :sort-direction="sortDirection"
           :status-types="['SAFE', 'DELETED', 'PASS']"
           :search-query="searchQuery"
+          :show-mistral-button="false"
           @toggle-select-all="toggleSelectAll"
           @toggle-select="toggleSelect"
           @toggle-expand="toggleExpand"
