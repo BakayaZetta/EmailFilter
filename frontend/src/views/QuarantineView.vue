@@ -165,6 +165,7 @@ const handleAskMistral = async (mailId) => {
       detail: "Impossible d'obtenir une explication pour cet email",
       life: 3000
     });
+    console.error('Error asking Mistral:', error);
   }
 };
 
