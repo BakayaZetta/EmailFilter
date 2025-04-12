@@ -1,5 +1,5 @@
 <script setup>
-import { computed, defineProps, defineEmits } from 'vue';
+import { computed, defineProps, defineEmits, ref, onMounted, onUnmounted } from 'vue';
 import { marked } from 'marked';
 
 const props = defineProps({
@@ -23,6 +23,40 @@ const props = defineProps({
 
 const emit = defineEmits(['close']);
 
+// Référence pour la modal
+const modalRef = ref(null);
+
+// Fonction pour fermer la modal
+const closeModal = () => {
+  emit('close');
+};
+
+// Gestionnaire de la touche Escape
+const handleEscape = (e) => {
+  if (e.key === 'Escape') {
+    closeModal();
+  }
+};
+
+// Gestionnaire de clic en dehors de la modal
+const handleOutsideClick = (e) => {
+  if (modalRef.value && !modalRef.value.contains(e.target)) {
+    closeModal();
+  }
+};
+
+// Initialisation des event listeners
+onMounted(() => {
+  document.addEventListener('keydown', handleEscape);
+  document.addEventListener('mousedown', handleOutsideClick);
+});
+
+// Nettoyage des event listeners
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleEscape);
+  document.removeEventListener('mousedown', handleOutsideClick);
+});
+
 // Convertir le markdown en HTML
 const formattedResponse = computed(() => {
   if (!props.response) return '';
@@ -36,15 +70,18 @@ const formattedResponse = computed(() => {
 </script>
 
 <template>
-  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl animate-scale-in">
+  <div class="fixed inset-0 bg-opacity-20 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-opacity duration-300">
+    <div
+      ref="modalRef"
+      class="bg-white rounded-lg shadow-xl w-full max-w-2xl animate-scale-in"
+    >
       <!-- En-tête -->
       <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
         <h3 class="text-lg font-semibold text-gray-900 flex items-center">
           <i class="pi pi-comment-dots text-purple-500 mr-2"></i>
           Explication Mistral
         </h3>
-        <button @click="emit('close')" class="text-gray-400 hover:text-gray-500">
+        <button @click="closeModal" class="text-gray-400 hover:text-gray-500">
           <i class="pi pi-times"></i>
         </button>
       </div>
@@ -85,7 +122,7 @@ const formattedResponse = computed(() => {
       <!-- Pied de modal -->
       <div class="px-6 py-4 border-t border-gray-200 flex justify-end">
         <button
-          @click="emit('close')"
+          @click="closeModal"
           class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded text-gray-800"
         >
           Fermer
