@@ -16,7 +16,6 @@ const error = ref(null);
 const statistics = ref({
   totalMails: 0,
   mailsByStatus: {},
-  threatsByCategory: {},
   mailsOverTime: [],
   topSenders: [],
   detectRatio: 0
@@ -220,11 +219,6 @@ const exportStatistics = () => {
     data.push([`Status: ${status}`, count]);
   });
 
-  // Catégories de menaces
-  Object.entries(statistics.value.threatsByCategory || {}).forEach(([category, count]) => {
-    data.push([`Threat: ${category}`, count]);
-  });
-
   // Convertir en CSV
   const csvContent = data.map(row => row.join(',')).join('\n');
 
@@ -396,26 +390,7 @@ onMounted(async () => {
         </div>
 
         <!-- Tableau récapitulatif des menaces -->
-        <div class="bg-white p-4 rounded-lg shadow-sm mb-6">
-          <h2 class="text-lg font-semibold mb-4">Threat Categories</h2>
-          <div v-if="Object.values(statistics.threatsByCategory || {}).some(v => v > 0)">
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div
-                v-for="(count, category) in statistics.threatsByCategory"
-                :key="category"
-                class="bg-gray-50 p-4 rounded-lg border flex flex-col items-center"
-              >
-                <div class="text-xl font-bold">{{ count }}</div>
-                <div class="text-sm text-gray-500">{{ category }}</div>
-              </div>
-            </div>
-          </div>
-          <NoDataMessage
-            v-else
-            message="No threat data for this period"
-            icon="pi-shield"
-          />
-        </div>
+
 
         <!-- Graphique linéaire d'emails au fil du temps -->
         <div class="bg-white p-4 rounded-lg shadow-sm mb-6">

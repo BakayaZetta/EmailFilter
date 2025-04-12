@@ -35,7 +35,6 @@ exports.getStatistics = async (req, res) => {
     const statistics = {
       totalMails: mails.length,
       mailsByStatus: countMailsByStatus(mails),
-      threatsByCategory: countThreatsByCategory(mails),
       topSenders: getTopSenders(mails, 5),
       detectRatio: calculateDetectRatio(mails)
     };
@@ -174,40 +173,6 @@ function countMailsByStatus(mails) {
   });
   
   return statusCounts;
-}
-
-/**
- * Compte les menaces par catégorie
- * @param {Array} mails - Liste des mails
- * @returns {Object} Comptage par catégorie de menace
- */
-function countThreatsByCategory(mails) {
-  const threatCounts = {
-    'Phishing': 0,
-    'Malware': 0,
-    'Spam': 0,
-    'Other': 0
-  };
-  
-  // Pour cette démo, nous attribuons des catégories en fonction du sujet
-  // En production, il faudrait se baser sur des analyses plus précises
-  mails.forEach(mail => {
-    if (mail.Statut !== 'QUARANTINE' && mail.Statut !== 'ERROR') return;
-    
-    const subject = (mail.Sujet || '').toLowerCase();
-    
-    if (subject.includes('account') || subject.includes('password') || subject.includes('login')) {
-      threatCounts['Phishing']++;
-    } else if (subject.includes('virus') || subject.includes('malware')) {
-      threatCounts['Malware']++;
-    } else if (subject.includes('offer') || subject.includes('discount') || subject.includes('sale')) {
-      threatCounts['Spam']++;
-    } else {
-      threatCounts['Other']++;
-    }
-  });
-  
-  return threatCounts;
 }
 
 /**
