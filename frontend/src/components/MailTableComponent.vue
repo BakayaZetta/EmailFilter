@@ -299,7 +299,7 @@ onUnmounted(() => {
                   { key: 'ID_Utilisateur', name: 'ID', width: 'w-[5%]', center: true },
                   { key: 'Emetteur', name: 'Sender', width: 'w-[20%]' },
                   { key: 'Sujet', name: 'Subject', width: 'w-[42%]' },
-                  { key: 'Date_Reception', name: 'Received', width: 'w-[17%]' }
+                  { key: 'Date_Reception', name: 'Received', width: 'w-[15%]' }
                 ]" :key="index" scope="col" @click="emit('toggle-sort', column.key)" :class="[
                   column.width,
                   'px-2 py-2 font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100',
@@ -312,7 +312,7 @@ onUnmounted(() => {
                 </th>
 
                 <!-- Colonne actions - réduite en largeur -->
-                <th scope="col" class="w-[8%] px-2 py-2 text-center font-medium text-gray-500 uppercase tracking-wider">
+                <th scope="col" class="w-[10%] px-2 py-2 text-center font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
