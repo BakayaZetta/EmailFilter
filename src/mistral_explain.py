@@ -4,7 +4,8 @@ import json
 from mistralai import Mistral
 from dotenv import load_dotenv
 
-# Charger les variables d'environnement
+# Charger les variables d'environnement depuis un fichier .env si disponible
+# (utile pour le développement local)
 load_dotenv()
 
 def send_curl_requests(filename):
@@ -30,7 +31,11 @@ def generate_explanation(email_data):
     try:
         model = "mistral-large-latest"
 
-        api_key = os.environ["MISTRAL_API_KEY"]
+        # Récupérer la clé API depuis les variables d'environnement
+        api_key = os.environ.get("MISTRAL_API_KEY")
+        if not api_key:
+            raise ValueError("La clé API Mistral n'est pas configurée dans les variables d'environnement")
+            
         client = Mistral(api_key=api_key)
         
         # Extraire et organiser les informations importantes pour l'analyse
