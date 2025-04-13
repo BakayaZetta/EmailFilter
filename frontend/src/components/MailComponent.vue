@@ -32,7 +32,7 @@ const loadMailDetails = async () => {
     const response = await api.get(`/mails/${props.mail.ID_Mail}/complete`);
     mailDetails.value = response.data;
   } catch (error) {
-    console.error('Erreur lors du chargement des détails du mail:', error);
+    console.error('Error loading email details:', error);
   } finally {
     loading.value = false;
   }
@@ -85,7 +85,7 @@ onMounted(() => {
       </div>
 
       <div v-else>
-        <!-- Composant d'analyse de sécurité -->
+        <!-- Security analysis component -->
         <div class="mb-4">
           <SecurityAnalysisComponent
             :analyses="mailDetails.analyses"
@@ -94,7 +94,7 @@ onMounted(() => {
           />
         </div>
 
-        <!-- En-tête détaillé du mail -->
+        <!-- Email header details -->
         <div class="mb-3 border-t border-b py-3">
           <div class="grid grid-cols-2 gap-2 text-sm">
             <div>
@@ -112,7 +112,7 @@ onMounted(() => {
           </div>
         </div>
 
-        <!-- Corps du mail -->
+        <!-- Email body -->
         <div class="mb-3">
           <div class="flex justify-between items-center mb-2">
             <h3 class="text-sm font-semibold">Email Content</h3>
@@ -130,31 +130,31 @@ onMounted(() => {
             </div>
           </div>
 
-          <!-- Indicateur de sécurité -->
+          <!-- Security indicator -->
           <div class="bg-red-100 text-red-800 px-3 py-1 mb-3 text-sm rounded flex items-center">
             <i class="pi pi-lock mr-1 text-sm"></i>
             <span>Secure View: Links and forms are disabled</span>
           </div>
 
-          <!-- Contenu interprété (par défaut) -->
+          <!-- Rendered content (default) -->
           <div v-if="!showRawHtml" class="email-content bg-white p-3 rounded border relative" @click="preventClicks">
             <div v-html="mailDetails.content || '<em>The content of this email is not available or is empty.</em>'"></div>
           </div>
 
-          <!-- Contenu brut (option) -->
+          <!-- Raw content (optional) -->
           <div v-else
             class="whitespace-pre-wrap text-sm bg-gray-50 p-3 rounded border overflow-auto max-h-[400px] font-mono">
             {{ mailDetails.content || "The content of this email is not available or is empty." }}
           </div>
 
-          <!-- Avertissement de sécurité -->
+          <!-- Security warning -->
           <div class="text-xs text-amber-600 mt-1 flex items-center">
             <i class="pi pi-exclamation-triangle text-xs mr-1"></i>
             <span>Warning: This email may contain unsafe content</span>
           </div>
         </div>
 
-        <!-- Pied de page avec action fermer -->
+        <!-- Footer with close button -->
         <div class="mt-3 flex justify-end">
           <button @click="close()"
             class="text-xs bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-1 rounded flex items-center">

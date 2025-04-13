@@ -9,7 +9,7 @@ const props = defineProps({
   }
 });
 
-const emit = defineEmits(['close', 'saved']);
+const emit = defineEmits(['close', 'saved', 'error']);
 
 // Form state
 const senderEmail = ref(props.rule ? props.rule.Email || '' : '');
@@ -65,6 +65,7 @@ const submitForm = async () => {
   } catch (error) {
     console.error('Error saving filter rule:', error);
     errors.value.form = "An error occurred. Please try again.";
+    emit('error', "Failed to save filter rule");
   } finally {
     processing.value = false;
   }

@@ -1,6 +1,9 @@
 services:
   detectish:
     image: matthl2002/detectish:latest
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
     container_name: detectish
     depends_on:
       mysql:
@@ -22,6 +25,7 @@ services:
       DB_PORT: 3306
       CLAMAV_HOST: clamav
       CLAMAV_PORT: 3310
+      MISTRAL_API_KEY: your_mistral_api_key # Replace with your actual Mistral API key
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:6969/health || exit 1"]
       interval: 30s
@@ -32,6 +36,9 @@ services:
 
   backend:
     image: matthl2002/detectish-backend:latest
+    # build:
+    #   context: ./backend
+    #   dockerfile: Dockerfile
     container_name: detectish-backend
     depends_on:
       mysql:
@@ -62,6 +69,9 @@ services:
 
   frontend:
     image: matthl2002/detectish-frontend:latest
+    # build:
+    #   context: ./frontend
+    #   dockerfile: Dockerfile
     container_name: detectish-frontend
     depends_on:
       backend:

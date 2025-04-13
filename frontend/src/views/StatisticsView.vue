@@ -2,6 +2,7 @@
 import { ref, onMounted, computed } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'vue-router';
+import { useToast } from 'vue-toastification'; // Import pour toast
 import statisticsService from '@/services/statisticsService';
 import StatisticsCard from '@/components/statistics/StatisticsCard.vue';
 import LineChartComponent from '@/components/statistics/LineChartComponent.vue';
@@ -9,14 +10,25 @@ import PieChartComponent from '@/components/statistics/PieChartComponent.vue';
 import BarChartComponent from '@/components/statistics/BarChartComponent.vue';
 import NoDataMessage from '@/components/statistics/NoDataMessage.vue';
 
+// Définition des couleurs standardisées correspondant aux classes Tailwind
+const COLOR_SCHEME = {
+  BLUE: '#3B82F6',     // bg-blue-500 - Total Emails, Auto-Validated
+  YELLOW: '#F59E0B',   // bg-yellow-500 - In Quarantine
+  GREEN: '#10B981',    // bg-green-500 - Admin Approved
+  RED: '#EF4444',      // bg-red-500 - Deleted Threats
+  ORANGE: '#F97316',   // bg-orange-500 - Processing Errors
+  PURPLE: '#8B5CF6',   // bg-purple-500 - Detection Rate
+  GRAY: '#6B7280'      // bg-gray-500 - Unknown
+};
+
 const router = useRouter();
 const authStore = useAuthStore();
+const toast = useToast(); // Initialiser toast
 const loading = ref(true);
 const error = ref(null);
 const statistics = ref({
   totalMails: 0,
   mailsByStatus: {},
-  threatsByCategory: {},
   mailsOverTime: [],
   topSenders: [],
   detectRatio: 0
@@ -33,9 +45,11 @@ const loadStatistics = async () => {
   try {
     // Utiliser le service dédié au lieu de l'API directement
     statistics.value = await statisticsService.getStatistics(timePeriod.value);
+    toast.info(`Statistics for ${timePeriod.value} period loaded successfully`);
   } catch (err) {
     console.error('Failed to load statistics:', err);
     error.value = 'Failed to load statistics. Please try again later.';
+    toast.error('Failed to load statistics. Please try again later.');
   } finally {
     loading.value = false;
   }
@@ -52,16 +66,18 @@ const threatPercentage = computed(() => {
   return Math.round((threats / total) * 100);
 });
 
-// Formater les données pour le graphique circulaire de statuts
+// Formater les données pour le graphique circulaire de statuts avec nouvelles couleurs
 const statusChartData = computed(() => {
   const statuses = statistics.value.mailsByStatus || {};
+
+  // Mise à jour des couleurs pour correspondre aux cartes
   const statusColors = {
-    'SAFE': '#10B981',     // green
-    'ERROR': '#FB923C',    // orange
-    'QUARANTINE': '#F59E0B', // yellow
-    'PASS': '#3B82F6',     // blue
-    'DELETED': '#EF4444',  // red
-    'UNKNOWN': '#6B7280'   // gray-500
+    'SAFE': COLOR_SCHEME.GREEN,     // green - Admin Approved
+    'ERROR': COLOR_SCHEME.ORANGE,   // orange - Processing Errors
+    'QUARANTINE': COLOR_SCHEME.YELLOW, // yellow - In Quarantine
+    'PASS': COLOR_SCHEME.BLUE,     // blue - Auto-Validated
+    'DELETED': COLOR_SCHEME.RED,   // red - Deleted Threats
+    'UNKNOWN': COLOR_SCHEME.GRAY   // gray - Unknown
   };
 
   // Labels plus descriptifs
@@ -76,7 +92,7 @@ const statusChartData = computed(() => {
 
   const labels = Object.keys(statuses).map(status => statusLabels[status] || status);
   const data = Object.values(statuses);
-  const backgroundColor = Object.keys(statuses).map(status => statusColors[status] || '#6B7280');
+  const backgroundColor = Object.keys(statuses).map(status => statusColors[status] || COLOR_SCHEME.GRAY);
 
   return {
     labels: labels,
@@ -96,7 +112,7 @@ const topSendersChartData = computed(() => {
       {
         label: 'Number of emails',
         data: senders.map(sender => sender.count),
-        backgroundColor: '#3B82F6'
+        backgroundColor: COLOR_SCHEME.BLUE // Mise à jour pour utiliser la couleur bleue standardisée
       }
     ]
   };
@@ -142,8 +158,8 @@ const mailsOverTimeChartData = computed(() => {
       {
         label: 'Total Emails',
         data: timeData.map(point => point.total),
-        borderColor: '#3B82F6',
-        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        borderColor: COLOR_SCHEME.BLUE, // Mise à jour pour utiliser la couleur standardisée
+        backgroundColor: `${COLOR_SCHEME.BLUE}20`, // Version transparente
         borderWidth: 2,
         fill: false,
         tension: 0.4
@@ -151,8 +167,8 @@ const mailsOverTimeChartData = computed(() => {
       {
         label: 'In Quarantine',  // QUARANTINE
         data: timeData.map(point => point.quarantine || 0),
-        borderColor: '#F59E0B',
-        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+        borderColor: COLOR_SCHEME.YELLOW, // Mise à jour - couleur jaune pour In Quarantine
+        backgroundColor: `${COLOR_SCHEME.YELLOW}20`,
         borderWidth: 2,
         fill: false,
         tension: 0.4
@@ -160,8 +176,8 @@ const mailsOverTimeChartData = computed(() => {
       {
         label: 'Admin Approved',  // SAFE
         data: timeData.map(point => point.safe || 0),
-        borderColor: '#10B981',
-        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+        borderColor: COLOR_SCHEME.GREEN, // Mise à jour - couleur verte pour Admin Approved
+        backgroundColor: `${COLOR_SCHEME.GREEN}20`,
         borderWidth: 2,
         fill: false,
         tension: 0.4
@@ -169,8 +185,8 @@ const mailsOverTimeChartData = computed(() => {
       {
         label: 'Processing Errors',  // ERROR
         data: timeData.map(point => point.error || 0),
-        borderColor: '#EF4444',
-        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+        borderColor: COLOR_SCHEME.ORANGE, // Mise à jour - couleur orange pour Processing Errors
+        backgroundColor: `${COLOR_SCHEME.ORANGE}20`,
         borderWidth: 2,
         fill: false,
         tension: 0.4
@@ -178,8 +194,8 @@ const mailsOverTimeChartData = computed(() => {
       {
         label: 'Auto-Validated',  // PASS
         data: timeData.map(point => point.pass || 0),
-        borderColor: '#6366F1',  // indigo
-        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+        borderColor: COLOR_SCHEME.BLUE,  // Mise à jour - couleur bleue pour Auto-Validated
+        backgroundColor: `${COLOR_SCHEME.BLUE}20`,
         borderWidth: 2,
         fill: false,
         tension: 0.4
@@ -187,8 +203,8 @@ const mailsOverTimeChartData = computed(() => {
       {
         label: 'Deleted Threats',  // DELETED
         data: timeData.map(point => point.deleted || 0),
-        borderColor: '#9CA3AF',  // gray
-        backgroundColor: 'rgba(156, 163, 175, 0.1)',
+        borderColor: COLOR_SCHEME.RED,  // Mise à jour - couleur rouge pour Deleted Threats
+        backgroundColor: `${COLOR_SCHEME.RED}20`,
         borderWidth: 2,
         fill: false,
         tension: 0.4
@@ -205,41 +221,43 @@ const changePeriod = (period) => {
 
 // Exporter les statistiques en CSV
 const exportStatistics = () => {
-  // Préparer les données
-  const data = [];
+  try {
+    // Préparer les données
+    const data = [];
 
-  // En-têtes
-  data.push(['Category', 'Value']);
+    // En-têtes
+    data.push(['Category', 'Value']);
 
-  // Données générales
-  data.push(['Total Emails', statistics.value.totalMails]);
-  data.push(['Threat Percentage', `${threatPercentage.value}%`]);
+    // Données générales
+    data.push(['Total Emails', statistics.value.totalMails]);
+    data.push(['Threat Percentage', `${threatPercentage.value}%`]);
 
-  // Statuts
-  Object.entries(statistics.value.mailsByStatus || {}).forEach(([status, count]) => {
-    data.push([`Status: ${status}`, count]);
-  });
+    // Statuts
+    Object.entries(statistics.value.mailsByStatus || {}).forEach(([status, count]) => {
+      data.push([`Status: ${status}`, count]);
+    });
 
-  // Catégories de menaces
-  Object.entries(statistics.value.threatsByCategory || {}).forEach(([category, count]) => {
-    data.push([`Threat: ${category}`, count]);
-  });
+    // Convertir en CSV
+    const csvContent = data.map(row => row.join(',')).join('\n');
 
-  // Convertir en CSV
-  const csvContent = data.map(row => row.join(',')).join('\n');
+    // Créer un lien de téléchargement
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
 
-  // Créer un lien de téléchargement
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement('a');
-  const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `email-statistics-${timePeriod.value}-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
 
-  link.setAttribute('href', url);
-  link.setAttribute('download', `email-statistics-${timePeriod.value}-${new Date().toISOString().split('T')[0]}.csv`);
-  link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+    toast.success('Statistics exported successfully!');
+  } catch (error) {
+    toast.error('Failed to export statistics. Please try again.');
+    console.error('Export error:', error);
+  }
 };
 
 // Initialiser la page
@@ -396,26 +414,7 @@ onMounted(async () => {
         </div>
 
         <!-- Tableau récapitulatif des menaces -->
-        <div class="bg-white p-4 rounded-lg shadow-sm mb-6">
-          <h2 class="text-lg font-semibold mb-4">Threat Categories</h2>
-          <div v-if="Object.values(statistics.threatsByCategory || {}).some(v => v > 0)">
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div
-                v-for="(count, category) in statistics.threatsByCategory"
-                :key="category"
-                class="bg-gray-50 p-4 rounded-lg border flex flex-col items-center"
-              >
-                <div class="text-xl font-bold">{{ count }}</div>
-                <div class="text-sm text-gray-500">{{ category }}</div>
-              </div>
-            </div>
-          </div>
-          <NoDataMessage
-            v-else
-            message="No threat data for this period"
-            icon="pi-shield"
-          />
-        </div>
+
 
         <!-- Graphique linéaire d'emails au fil du temps -->
         <div class="bg-white p-4 rounded-lg shadow-sm mb-6">
@@ -475,6 +474,12 @@ onMounted(async () => {
               <div class="w-3 h-3 rounded-full bg-orange-500 mt-1.5 mr-2 flex-shrink-0"></div>
               <div>
                 <span class="font-medium">ERROR:</span> Emails that encountered processing errors during analysis.
+              </div>
+            </div>
+            <div class="flex items-start">
+              <div class="w-3 h-3 rounded-full bg-purple-500 mt-1.5 mr-2 flex-shrink-0"></div>
+              <div>
+                <span class="font-medium">Detection Rate:</span> Percentage of emails identified as suspicious or malicious.
               </div>
             </div>
           </div>

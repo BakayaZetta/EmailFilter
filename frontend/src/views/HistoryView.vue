@@ -3,10 +3,12 @@ import { onMounted } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'vue-router';
 import { useMailTable } from '@/composables/useMailTable';
+import { useToast } from 'vue-toastification'; // Import pour toast
 import MailTableComponent from '@/components/MailTableComponent.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();
+const toast = useToast(); // Initialiser toast
 
 // Utiliser le composable useMailTable pour la logique de gestion des mails
 const {
@@ -31,30 +33,50 @@ const {
 
 // Fonctions spécifiques à la vue History
 const loadHistoryMails = async () => {
-  // Charger les mails avec statut SAFE, DELETED ou PASS
-  await loadMails('SAFE,DELETED,PASS');
+  try {
+    // Charger les mails avec statut SAFE, DELETED ou PASS
+    await loadMails('SAFE,DELETED,PASS');
+  } catch (error) {
+    toast.error('Failed to load email history. Please try again.');
+    console.error(error);
+  }
 };
 
 // Actions spécifiques à la vue History
 const bulkRestoreToQuarantine = async () => {
   if (selectedMails.value.length === 0) {
-    alert('Please select at least one email to move to quarantine.');
+    toast.warning('Please select at least one email to move to quarantine.');
     return;
   }
 
-  // Attendre que l'action se termine avant de recharger
-  await bulkUpdateStatus('QUARANTINE');
+  // Stocker le nombre d'emails sélectionnés avant l'action
+  const selectedCount = selectedMails.value.length;
 
-  // Recharger la liste pour refléter les changements
-  await loadHistoryMails();
+  try {
+    // Attendre que l'action se termine avant de recharger
+    await bulkUpdateStatus('QUARANTINE');
+    toast.success(`${selectedCount} email(s) moved to quarantine!`);
+
+    // Recharger la liste pour refléter les changements
+    await loadHistoryMails();
+  } catch (error) {
+    toast.error('Failed to move emails to quarantine. Please try again.');
+    console.error(error);
+  }
 };
 
 const restoreToQuarantine = async (mailId) => {
-  // Attendre que l'action se termine avant de recharger
-  await updateMailStatus(mailId, 'QUARANTINE');
+  try {
+    // Attendre que l'action se termine avant de recharger
+    await updateMailStatus(mailId, 'QUARANTINE');
+    toast.success('Email moved to quarantine successfully!');
 
-  // Recharger la liste pour refléter les changements
-  await loadHistoryMails();
+    // Recharger la liste pour refléter les changements
+    await loadHistoryMails();
+  } catch (error) {
+    toast.error('Failed to move email to quarantine. Please try again.');
+    console.error(error);
+  }
 };
 
 // Méthodes pour la recherche
@@ -93,6 +115,7 @@ onMounted(async () => {
           :sort-direction="sortDirection"
           :status-types="['SAFE', 'DELETED', 'PASS']"
           :search-query="searchQuery"
+          :show-mistral-button="false"
           @toggle-select-all="toggleSelectAll"
           @toggle-select="toggleSelect"
           @toggle-expand="toggleExpand"

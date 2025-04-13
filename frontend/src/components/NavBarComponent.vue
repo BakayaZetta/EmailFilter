@@ -3,10 +3,12 @@ import detectish from '@/assets/img/detectish.png';
 import { RouterLink, useRoute, useRouter } from 'vue-router';
 import { onMounted, computed } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
+import { useToast } from 'vue-toastification'; // Import pour toast
 
 const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
+const toast = useToast(); // Initialiser toast
 
 // Links for authenticated users
 const authenticatedLinks = [
@@ -35,6 +37,7 @@ const isActive = (routePath) => {
 // Logout function
 const logout = () => {
   authStore.logout();
+  toast.success('You have been logged out successfully'); // Notification de déconnexion
   router.push('/');
 };
 

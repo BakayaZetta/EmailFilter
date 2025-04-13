@@ -3,10 +3,12 @@ import HeroComponent from '@/components/HeroComponent.vue';
 import { onMounted, ref } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'vue-router';
+import { useToast } from 'vue-toastification'; // Import pour toast
 import statisticsService from '@/services/statisticsService';
 
 const authStore = useAuthStore();
 const router = useRouter();
+const toast = useToast(); // Initialiser toast
 
 // État pour les statistiques
 const stats = ref(null);
@@ -21,6 +23,7 @@ const loadBasicStats = async () => {
     stats.value = await statisticsService.getStatistics('month');
   } catch (err) {
     console.error('Failed to load basic statistics:', err);
+    toast.error('Failed to load dashboard statistics');
   } finally {
     loading.value = false;
   }
@@ -36,6 +39,7 @@ onMounted(() => {
 // Logout function if needed locally in the component
 const logout = () => {
   authStore.logout();
+  toast.success('You have been signed out successfully');
   router.push('/');
 };
 </script>

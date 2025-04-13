@@ -4,6 +4,9 @@ import FilterRuleItem from './FilterRuleItem.vue';
 import FilterRulesForm from './FilterRulesForm.vue';
 import api from '@/services/api';
 
+// Définir les émissions pour communiquer avec le parent
+const emit = defineEmits(['rule-added', 'rule-updated', 'rule-deleted', 'rule-error']);
+
 // States
 const filterRules = ref([]);
 const loading = ref(false);
@@ -24,6 +27,7 @@ const loadFilterRules = async () => {
   } catch (err) {
     console.error('Failed to load filter rules:', err);
     error.value = "Error loading filtering rules";
+    emit('rule-error', "Error loading filtering rules");
   } finally {
     loading.value = false;
   }
@@ -39,9 +43,12 @@ const deleteRule = async (ruleId) => {
     await api.delete(`/filter-rules/${ruleId}`);
     // Update the list
     filterRules.value = filterRules.value.filter(rule => rule.ID_Blacklist !== ruleId);
+    // Émettre l'événement de suppression
+    emit('rule-deleted');
   } catch (err) {
     console.error('Failed to delete rule:', err);
-    alert("Error deleting rule");
+    const errorMessage = err.response?.data?.message || "Error deleting rule";
+    emit('rule-error', errorMessage);
   }
 };
 
@@ -66,9 +73,16 @@ const closeForm = () => {
 };
 
 // After form save
-const handleSaved = () => {
+const handleSaved = (isEdit) => {
   loadFilterRules();
   closeForm();
+
+  // Émettre l'événement approprié
+  if (isEdit) {
+    emit('rule-updated');
+  } else {
+    emit('rule-added');
+  }
 };
 
 // Handle Escape key press
@@ -179,7 +193,7 @@ onUnmounted(() => {
         <FilterRulesForm
           :rule="editingRule"
           @close="closeForm"
-          @saved="handleSaved"
+          @saved="handleSaved(!!editingRule)"
         />
       </div>
     </div>

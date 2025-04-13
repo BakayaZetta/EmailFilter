@@ -1,11 +1,14 @@
 <script setup>
-import { reactive } from 'vue'
+import { reactive, onMounted, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router';
 import api from '@/services/api'; // Importez le service API
 import { useAuthStore } from '@/stores/authStore';
+import { useToast } from 'vue-toastification'; // Importez useToast
 
 const router = useRouter();
 const authStore = useAuthStore();
+const toast = useToast(); // Initialiser le toast
+const emailInput = ref(null); // Référence pour auto-focus
 
 const loginForm = reactive({
   email: '',
@@ -18,7 +21,17 @@ const loginForm = reactive({
   passwordError: ''
 });
 
-// Email validation
+// Auto-focus sur le champ email au chargement
+onMounted(() => {
+  // Focus sur le champ email après le rendu de la page
+  setTimeout(() => {
+    if (emailInput.value) {
+      emailInput.value.focus();
+    }
+  }, 100);
+});
+
+// Email validation avec validation à la volée
 const validateEmail = () => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   if (!loginForm.email) {
@@ -32,7 +45,7 @@ const validateEmail = () => {
   return true
 }
 
-// Password validation
+// Password validation avec validation à la volée
 const validatePassword = () => {
   if (!loginForm.password) {
     loginForm.passwordError = 'Password is required'
@@ -40,6 +53,23 @@ const validatePassword = () => {
   }
   loginForm.passwordError = ''
   return true
+}
+
+// Validation individuelle des champs lors de la perte du focus
+const validateEmailOnBlur = () => {
+  validateEmail();
+}
+
+const validatePasswordOnBlur = () => {
+  validatePassword();
+}
+
+// Gestion de la touche Entrée dans le champ email
+const handleEmailKeyDown = (event) => {
+  if (event.key === 'Enter') {
+    event.preventDefault();
+    document.getElementById('password').focus();
+  }
 }
 
 // Form submission
@@ -52,7 +82,14 @@ const handleSubmit = async () => {
   const isPasswordValid = validatePassword()
 
   if (!isEmailValid || !isPasswordValid) {
-    return
+    toast.error("Please correct the errors in the form");
+    // Focus sur le premier champ avec erreur
+    if (!isEmailValid) {
+      document.getElementById('email').focus();
+    } else {
+      document.getElementById('password').focus();
+    }
+    return;
   }
 
   try {
@@ -70,16 +107,30 @@ const handleSubmit = async () => {
     // Store token in sessionStorage (au lieu de localStorage)
     authStore.login(data.user, data.token);
 
+    // Afficher un toast de succès
+    toast.success("Login successful! Welcome back!");
+
     // Redirect to /
     router.push('/');
 
   } catch (error) {
+    console.error('Login error:', error);
+
     // Gestion des erreurs améliorée avec Axios
-    loginForm.error = error.response?.data?.message || 'Failed to sign in. Please check your credentials and try again.'
-    console.error('Login error:', error)
+    const errorMessage = error.response?.data?.message || 'Failed to sign in. Please check your credentials and try again.';
+    loginForm.error = errorMessage;
+
+    // Afficher un toast d'erreur
+    toast.error(errorMessage);
+
+    // Focus sur le champ email après une erreur
+    document.getElementById('email').focus();
   } finally {
-    loginForm.isLoading = false
+    loginForm.isLoading = false;
   }
+
+  // Retourner false pour être absolument sûr que rien ne provoque une soumission
+  return false;
 }
 </script>
 
@@ -106,7 +157,7 @@ const handleSubmit = async () => {
           <!-- Form -->
           <form class="space-y-6" @submit.prevent="handleSubmit">
 
-            <!-- General error alert -->
+            <!-- General error alert - on peut le garder en plus des toasts -->
             <div v-if="loginForm.error" class="bg-red-50 border-l-4 border-red-500 p-4">
               <div class="flex">
                 <div class="flex-shrink-0">
@@ -127,7 +178,8 @@ const handleSubmit = async () => {
               </div>
               <div class="mt-1 relative">
                 <div class="relative">
-                  <input id="email" v-model="loginForm.email" name="email" type="email" autocomplete="email" required
+                  <input id="email" ref="emailInput" v-model="loginForm.email" name="email" type="email" autocomplete="email" required
+                    @blur="validateEmailOnBlur" @keydown="handleEmailKeyDown"
                     class="relative block w-full disabled:cursor-not-allowed disabled:opacity-75 focus:outline-none border-0 rounded-md placeholder-gray-400 text-sm px-2.5 py-1.5 shadow-sm bg-white text-gray-900 ring-1 ring-inset ring-gray-300  focus:ring-2 focus:ring-red-500"
                     placeholder="Enter your email" :class="{ 'ring-red-300': loginForm.emailError }" />
                 </div>
@@ -145,7 +197,7 @@ const handleSubmit = async () => {
               <div class="mt-1 relative">
                 <div class="relative">
                   <input id="password" v-model="loginForm.password" :type="loginForm.showPassword ? 'text' : 'password'"
-                    name="password" autocomplete="current-password" required
+                    name="password" autocomplete="current-password" required @blur="validatePasswordOnBlur"
                     class="relative block w-full disabled:cursor-not-allowed disabled:opacity-75 focus:outline-none border-0 rounded-md placeholder-gray-400 text-sm px-2.5 py-1.5 shadow-sm bg-white text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-red-500 pe-9"
                     placeholder="Enter your password" :class="{ 'ring-red-300': loginForm.passwordError }" />
                   <button type="button" @click="loginForm.showPassword = !loginForm.showPassword"

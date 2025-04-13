@@ -1,19 +1,20 @@
 import { ref, computed } from 'vue';
 import mailService from '@/services/mailService';
+import axios from 'axios';
 
 export function useMailTable() {
-  // États
+  // State
   const mails = ref([]);
   const loading = ref(false);
   const error = ref(null);
   const expandedMailId = ref(null);
   const selectedMails = ref([]);
 
-  // Tri
+  // Sorting
   const sortColumn = ref('Date_Reception');
   const sortDirection = ref('desc');
 
-  // Recherche
+  // Search
   const searchQuery = ref({
     status: '',
     sender: '',
@@ -23,71 +24,63 @@ export function useMailTable() {
     dateTo: ''
   });
 
-  // Computed property pour vérifier si tous les mails sont sélectionnés
+  // Mistral states
+  const mistralLoading = ref(false);
+  const mistralResponse = ref(null);
+  const mistralError = ref(null);
+  const mistralEmailId = ref(null);
+
+  // Check if all emails are selected
   const allSelected = computed(() => {
     return filteredMails.value.length > 0 && selectedMails.value.length === filteredMails.value.length;
   });
 
-  // Mails filtrés selon les critères de recherche
+  // Emails filtered by search criteria
   const filteredMails = computed(() => {
     if (!mails.value?.length) return [];
 
     return mails.value.filter(mail => {
-      // Filtrer par statut
+      // Filter by status
       if (searchQuery.value.status &&
           mail.Statut?.toLowerCase() !== searchQuery.value.status.toLowerCase()) {
         return false;
       }
 
-      // Filtrer par expéditeur
+      // Filter by sender
       if (searchQuery.value.sender &&
           !mail.Emetteur?.toLowerCase().includes(searchQuery.value.sender.toLowerCase())) {
         return false;
       }
 
-      // Filtrer par destinataire (ID_Utilisateur ou email)
+      // Filter by recipient (User ID or email)
       if (searchQuery.value.recipient) {
         const searchTerm = searchQuery.value.recipient.toLowerCase();
-
-        // Récupérer différentes propriétés possibles pour le destinataire
         const userId = String(mail.ID_Utilisateur || '');
         const destinataire = String(mail.Destinataire || '');
-
-        // Debug temporaire - voir dans la console ce qui est disponible
-        // console.log('Mail destinataire debug:', {
-        //   mailId: mail.ID_Mail,
-        //   userId: userId,
-        //   destinataire: destinataire,
-        //   searchTerm: searchTerm
-        // });
-
-        // Vérifier les correspondances
         const idMatch = userId.toLowerCase().includes(searchTerm);
         const emailMatch = destinataire.toLowerCase().includes(searchTerm);
-
-        // Si ni l'ID ni l'email ne correspondent, exclure ce mail
         if (!idMatch && !emailMatch) {
           return false;
         }
       }
 
-      // Filtrer par sujet
+      // Filter by subject
       if (searchQuery.value.subject &&
           !mail.Sujet?.toLowerCase().includes(searchQuery.value.subject.toLowerCase())) {
         return false;
       }
 
-      // Filtrer par date (de)
+      // Filter by date (from)
       if (searchQuery.value.dateFrom) {
         const dateFrom = new Date(searchQuery.value.dateFrom);
         const mailDate = new Date(mail.Date_Reception);
         if (mailDate < dateFrom) return false;
       }
 
-      // Filtrer par date (à)
+      // Filter by date (to)
       if (searchQuery.value.dateTo) {
         const dateTo = new Date(searchQuery.value.dateTo);
-        dateTo.setHours(23, 59, 59, 999); // Fin de journée
+        dateTo.setHours(23, 59, 59, 999); // End of day
         const mailDate = new Date(mail.Date_Reception);
         if (mailDate > dateTo) return false;
       }
@@ -96,7 +89,7 @@ export function useMailTable() {
     });
   });
 
-  // Mails triés selon les critères actuels (après filtrage)
+  // Emails sorted by current criteria (after filtering)
   const sortedMails = computed(() => {
     if (!filteredMails.value?.length) return [];
 
@@ -105,7 +98,7 @@ export function useMailTable() {
     sorted.sort((a, b) => {
       let valA, valB;
 
-      // Déterminer les valeurs à comparer selon la colonne
+      // Determine values to compare based on column
       switch(sortColumn.value) {
         case 'Statut':
           valA = a.Statut || '';
@@ -132,7 +125,7 @@ export function useMailTable() {
           valB = b[sortColumn.value] || '';
       }
 
-      // Comparaison selon la direction
+      // Compare based on direction
       if (sortDirection.value === 'asc') {
         return valA > valB ? 1 : valA < valB ? -1 : 0;
       } else {
@@ -143,23 +136,23 @@ export function useMailTable() {
     return sorted;
   });
 
-  // Mettre à jour les critères de recherche
+  // Update search criteria
   const updateSearchQuery = (query) => {
-    // Convertir explicitement les valeurs de status en majuscules pour correspondre au format du backend
+    // Explicitly convert status values to uppercase to match backend format
     if (query.status) {
       query.status = query.status.toUpperCase();
     }
 
-    // Date range - s'assurer que les dates sont dans le bon format
+    // Ensure dates are in the correct format
     if (query.dateFrom && typeof query.dateFrom === 'string') {
-      // S'assurer que dateFrom commence au début de la journée
+      // Ensure dateFrom starts at the beginning of the day
       const dateFrom = new Date(query.dateFrom);
       dateFrom.setHours(0, 0, 0, 0);
       query.dateFrom = dateFrom.toISOString();
     }
 
     if (query.dateTo && typeof query.dateTo === 'string') {
-      // S'assurer que dateTo va jusqu'à la fin de la journée
+      // Ensure dateTo extends to the end of the day
       const dateTo = new Date(query.dateTo);
       dateTo.setHours(23, 59, 59, 999);
       query.dateTo = dateTo.toISOString();
@@ -168,7 +161,7 @@ export function useMailTable() {
     searchQuery.value = { ...searchQuery.value, ...query };
   };
 
-  // Réinitialiser les critères de recherche
+  // Reset search criteria
   const resetSearch = () => {
     searchQuery.value = {
       status: '',
@@ -180,14 +173,14 @@ export function useMailTable() {
     };
   };
 
-  // Charger les mails par statut
+  // Load emails by status
   const loadMails = async (statusList, keepSearch = false) => {
     loading.value = true;
     error.value = null;
     selectedMails.value = [];
     expandedMailId.value = null;
 
-    // Ne réinitialise la recherche que si le paramètre keepSearch est false
+    // Only reset search if keepSearch parameter is false
     if (!keepSearch) {
       resetSearch();
     }
@@ -202,12 +195,12 @@ export function useMailTable() {
     }
   };
 
-  // Puis ajouter une méthode pour rafraîchir les données tout en conservant la recherche
+  // Method to refresh data while preserving search criteria
   const refreshWithCurrentFilters = async (statusList) => {
-    await loadMails(statusList, true); // true pour garder les critères de recherche
+    await loadMails(statusList, true); // true to keep search criteria
   };
 
-  // Actions de sélection
+  // Selection actions
   const toggleSelectAll = () => {
     if (allSelected.value) {
       selectedMails.value = [];
@@ -229,12 +222,12 @@ export function useMailTable() {
     return selectedMails.value.includes(mailId);
   };
 
-  // Actions d'expansion
+  // Expansion actions
   const toggleExpand = (mailId) => {
     expandedMailId.value = expandedMailId.value === mailId ? null : mailId;
   };
 
-  // Actions de tri
+  // Sorting actions
   const toggleSort = (column) => {
     if (sortColumn.value === column) {
       sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc';
@@ -253,14 +246,14 @@ export function useMailTable() {
       : 'pi-sort-amount-down text-blue-500';
   };
 
-  // Actions sur les mails
+  // Email actions
   const bulkUpdateStatus = async (status) => {
     if (selectedMails.value.length === 0) return;
 
     try {
       loading.value = true;
       await mailService.bulkUpdateMailStatus(selectedMails.value, status);
-      // Recharger les mails du même statut
+      // Reload emails with the same status
       await loadMails(mails.value[0]?.Statut || '');
     } catch (err) {
       console.error(`Failed to update mail status to ${status}:`, err);
@@ -273,7 +266,7 @@ export function useMailTable() {
   const updateMailStatus = async (mailId, status) => {
     try {
       await mailService.updateMailStatus(mailId, status);
-      // Recharger les mails du même statut
+      // Reload emails with the same status
       await loadMails(mails.value[0]?.Statut || '');
     } catch (err) {
       console.error(`Failed to update mail status to ${status}:`, err);
@@ -281,8 +274,60 @@ export function useMailTable() {
     }
   };
 
+  // Method to call Mistral API directly
+  const askMistral = async (emailId) => {
+    mistralLoading.value = true;
+    mistralError.value = null;
+    mistralResponse.value = null;
+    mistralEmailId.value = emailId;
+
+    try {
+      // First, retrieve all detailed email data
+      const emailDetails = await mailService.getMailDetails(emailId);
+
+      // Then send these detailed data to Mistral API
+      const response = await axios.post('/analyse/mistral', {
+        emailId: emailId,
+        emailData: emailDetails // Send complete email data
+      }, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.data && response.data.explanation) {
+        mistralResponse.value = response.data.explanation;
+      } else {
+        mistralResponse.value = "No explanation available.";
+      }
+    } catch (error) {
+      console.error("Error requesting explanation from Mistral:", error);
+
+      mistralResponse.value = `# Problem analyzing the email
+
+We couldn't generate a satisfactory explanation for this email.
+
+## Possible causes:
+- Insufficient data for analysis
+- The AI service couldn't process the information correctly
+- Connection issue with the analysis service
+
+Please review email details manually to understand why it was filtered.`;
+
+    } finally {
+      mistralLoading.value = false;
+    }
+  };
+
+  const resetMistral = () => {
+    mistralLoading.value = false;
+    mistralResponse.value = null;
+    mistralError.value = null;
+    mistralEmailId.value = null;
+  };
+
   return {
-    // État
+    // State
     mails,
     loading,
     error,
@@ -294,7 +339,7 @@ export function useMailTable() {
     allSelected,
     searchQuery,
 
-    // Méthodes
+    // Methods
     loadMails,
     toggleSelectAll,
     toggleSelect,
@@ -306,6 +351,14 @@ export function useMailTable() {
     updateMailStatus,
     updateSearchQuery,
     resetSearch,
-    refreshWithCurrentFilters
+    refreshWithCurrentFilters,
+
+    // Mistral states and methods
+    mistralLoading,
+    mistralResponse,
+    mistralError,
+    mistralEmailId,
+    askMistral,
+    resetMistral
   };
 }

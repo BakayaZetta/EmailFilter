@@ -4,6 +4,11 @@ import Toast from "vue-toastification";
 // Import the CSS or use your own!
 import "vue-toastification/dist/index.css";
 
+// Import PrimeVue
+import PrimeVue from 'primevue/config';
+
+// Supprimez temporairement les imports CSS de PrimeVue problématiques
+
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
 import App from './App.vue';
@@ -14,10 +19,11 @@ const pinia = createPinia();
 
 app.use(pinia);
 app.use(router);
+app.use(PrimeVue);
 
 const toastOptions = {
   position: "top-right",
-  timeout: 5000,
+  timeout: 3000,
   closeOnClick: true,
   pauseOnFocusLoss: true,
   pauseOnHover: true,
