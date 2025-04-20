@@ -1,9 +1,9 @@
 services:
   detectish:
-    image: matthl2002/detectish:latest
-    # build:
-    #   context: .
-    #   dockerfile: Dockerfile
+    # image: matthl2002/detectish:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: detectish
     depends_on:
       mysql:
@@ -17,15 +17,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./phishing_email_example:/app/phishing_email_example
-    environment:
-      DB_NAME: detectish_db
-      DB_USER: detectish_user
-      DB_PASSWORD: detectish_password
-      DB_HOST: mysql
-      DB_PORT: 3306
-      CLAMAV_HOST: clamav
-      CLAMAV_PORT: 3310
-      MISTRAL_API_KEY: your_mistral_api_key # Replace with your actual Mistral API key
+    env_file: .env
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:6969/health || exit 1"]
       interval: 30s
@@ -35,10 +27,10 @@ services:
       # start_period is the time to wait before starting health checks
 
   backend:
-    image: matthl2002/detectish-backend:latest
-    # build:
-    #   context: ./backend
-    #   dockerfile: Dockerfile
+    # image: matthl2002/detectish-backend:latest
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     container_name: detectish-backend
     depends_on:
       mysql:
@@ -52,15 +44,7 @@ services:
     ports:
       - "3000:3000"
     restart: unless-stopped
-    environment:
-      DB_NAME: detectish_db
-      DB_USER: detectish_user
-      DB_PASSWORD: detectish_password
-      DB_HOST: mysql
-      DB_PORT: 3306
-      CLAMAV_HOST: clamav
-      CLAMAV_PORT: 3310
-      JWT_SECRET: your_secure_random_string_here
+    env_file: .env
     healthcheck:
       test: ["CMD-SHELL", "wget -q -O - http://localhost:3000/backend-health || exit 1"]
       interval: 30s
@@ -68,10 +52,10 @@ services:
       retries: 5
 
   frontend:
-    image: matthl2002/detectish-frontend:latest
-    # build:
-    #   context: ./frontend
-    #   dockerfile: Dockerfile
+    # image: matthl2002/detectish-frontend:latest
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
     container_name: detectish-frontend
     depends_on:
       backend:
@@ -81,12 +65,7 @@ services:
     ports:
       - "80:80"
     restart: unless-stopped
-    environment:
-      # For production in Docker, API calls are proxied through Nginx
-      VITE_API_URL: "/api"
-      # These are used at build time, and tell the app where APIs are in the Docker network
-      VITE_BACKEND_URL: "http://backend:3000"
-      VITE_DETECTISH_URL: "http://detectish:6969"
+    env_file: .env
     healthcheck:
       test: ["CMD-SHELL", "wget -q -O - http://localhost:80/frontend-health/index.json || exit 1"]
       interval: 30s
@@ -110,11 +89,7 @@ services:
   mysql:
     image: mysql:lts
     container_name: mysql
-    environment:
-      MYSQL_ROOT_PASSWORD: MYSQL_ROOT_PASSWORD
-      MYSQL_DATABASE: detectish_db
-      MYSQL_USER: detectish_user
-      MYSQL_PASSWORD: detectish_password
+    env_file: .env
     volumes:
       - mysql-data:/var/lib/mysql
     networks:

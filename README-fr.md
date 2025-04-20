@@ -64,22 +64,33 @@ Le modèle AI est disponible sur [Hugging Face](https://huggingface.co/ealvarado
 - Un fichier `.env` avec les variables de configuration suivantes :
 
 ```env
-MISTRAL_API_KEY=mistral_api_key
-
+# Database configuration
 DB_NAME=detectish_db
 DB_USER=detectish_user
 DB_PASSWORD=detectish_password
-DB_HOST=localhost
+DB_HOST=mysql
 DB_PORT=3306
 
-CLAMAV_HOST=localhost
+# MySQL root credentials
+MYSQL_ROOT_PASSWORD=MYSQL_ROOT_PASSWORD
+MYSQL_DATABASE=detectish_db
+MYSQL_USER=detectish_user
+MYSQL_PASSWORD=detectish_password
+
+# ClamAV configuration
+CLAMAV_HOST=clamav
 CLAMAV_PORT=3310
 
-# Configuration pour le web
-BACKEND_PORT=3000
-FRONTEND_PORT=8000
+# API Keys
+MISTRAL_API_KEY=your_mistral_api_key # Replace with your Mistral API key
 
-JWT_SECRET=your_secure_random_string_here
+# Security
+JWT_SECRET=your_secure_random_string_here # Replace with a secure random string
+
+# Frontend configuration
+VITE_API_URL=/api
+VITE_BACKEND_URL=http://backend:3000
+VITE_DETECTISH_URL=http://detectish:6969
 ```
 
 ### Étapes d'installation
