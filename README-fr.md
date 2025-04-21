@@ -11,6 +11,7 @@ Version anglaise : [ici](README.md)
 - [🏗️ Installation et Configuration](#️-installation-et-configuration)
   - [Prérequis](#prérequis)
   - [Étapes d'installation](#étapes-dinstallation)
+- [Detectish : à quoi ça ressemble ?](#detectish--à-quoi-ça-ressemble-)
 - [👥 Auteurs](#-auteurs)
 - [⚠️ Avertissement](#avertissement-️)
 
@@ -106,6 +107,26 @@ VITE_DETECTISH_URL=http://detectish:6969
    ```bash
    docker-compose up -d
    ```
+
+## Detectish : à quoi ça ressemble ?
+
+Voilà à quoi ressemble l'interface de Detectish sans connexion :
+![Detectish - Landing page](./img/Landing_page.png)
+
+Avec connexion :
+![Detectish - Landing page connecté](./img/Landing_page_connected.png)
+
+La page de quarantaine où vous pouvez voir les emails jugés comme suspicieux ou dangeureux par notre solution:
+![Detectish - Page de quarantaine](./img/Quarantine.png)
+
+Explication des résultats d'analyse fournie par Mistral AI :
+![Detectish - Page d'explication](./img/Mistral_explanation.png)
+
+Des stats sur les emails analysés afin d'avoir une vue d'ensemble de la situation :
+![Detectish - Page de stats](./img/Statisics.png)
+
+La liste noire des emails qui sont mis en quarantaine automatiquement :
+![Detectish - Page de liste noire](./img/Blacklist.png)
 
 ## 👥 Auteurs
 
