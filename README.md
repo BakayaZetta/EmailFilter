@@ -33,9 +33,25 @@ Detectish analyzes emails using multiple methods:
 
 The emails are then stored in a MySQL database. The web interface is developed using **Vue.js** for the frontend and **Express.js** for the backend.
 
-## 📸 Screenshot
+## Detectish: What Does It Look Like?
 
-TODO
+Here is what the Detectish interface looks like without a connection:
+![Detectish - Landing page](./img/Landing_page.png)
+
+With a connection:
+![Detectish - Landing page connecté](./img/Landing_page_connected.png)
+
+The quarantine page where you can see emails deemed suspicious or dangerous by our solution:
+![Detectish - Page de quarantaine](./img/Quarantine.png)
+
+Explanation of analysis results provided by Mistral AI:
+![Detectish - Page d'explication](./img/Mistral_explanation.png)
+
+Statistics on analyzed emails to get an overview of the situation:
+![Detectish - Page de stats](./img/Statisics.png)
+
+The blacklist of emails that are automatically quarantined:
+![Detectish - Page de liste noire](./img/Blacklist.png)
 
 ## 🚀 Analysis Performance
 
@@ -106,26 +122,6 @@ VITE_DETECTISH_URL=http://detectish:6969
    ```bash
    docker-compose up -d
    ```
-
-## Detectish: What Does It Look Like?
-
-Here is what the Detectish interface looks like without a connection:
-![Detectish - Landing page](./img/Landing_page.png)
-
-With a connection:
-![Detectish - Landing page connecté](./img/Landing_page_connected.png)
-
-The quarantine page where you can see emails deemed suspicious or dangerous by our solution:
-![Detectish - Page de quarantaine](./img/Quarantine.png)
-
-Explanation of analysis results provided by Mistral AI:
-![Detectish - Page d'explication](./img/Mistral_explanation.png)
-
-Statistics on analyzed emails to get an overview of the situation:
-![Detectish - Page de stats](./img/Statisics.png)
-
-The blacklist of emails that are automatically quarantined:
-![Detectish - Page de liste noire](./img/Blacklist.png)
 
 ## 👥 Authors
 
