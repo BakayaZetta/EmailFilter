@@ -6,12 +6,11 @@ French version : [here](./README-fr.md)
 
 - [🌟 Introduction](#-introduction)
 - [🛠️ Features](#️-features)
-- [📸 Screenshot](#-screenshot)
+- [📸 Detectish: What Does It Look Like?](#detectish-what-does-it-look-like)
 - [🚀 Analysis Performance](#-analysis-performance)
 - [🏗️ Setup and Configuration](#️-setup-and-configuration)
   - [Prerequisites](#prerequisites)
   - [Installation Steps](#installation-steps)
-- [Detectish: What Does It Look Like?](#detectish-what-does-it-look-like)
 - [👥 Authors](#-authors)
 - [⚠️ Disclaimer](#disclaimer-️)
 
@@ -33,7 +32,7 @@ Detectish analyzes emails using multiple methods:
 
 The emails are then stored in a MySQL database. The web interface is developed using **Vue.js** for the frontend and **Express.js** for the backend.
 
-## Detectish: What Does It Look Like?
+## 📸 Detectish: What Does It Look Like?
 
 Here is what the Detectish interface looks like without a connection:
 ![Detectish - Landing page](./img/Landing_page.png)
