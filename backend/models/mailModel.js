@@ -175,6 +175,30 @@ const getMailsSince = async (startDate) => {
   );
 };
 
+/**
+ * Saves a new email to the database
+ * @param {Object} emailData - The email data to save
+ * @returns {Promise<Object>} The saved email
+ */
+const saveEmail = async (emailData) => {
+    const { subject, content, sender, userId, receivedDate } = emailData;
+
+    const result = await executeQuery(
+        `INSERT INTO Mail (Sujet, Contenu, Emetteur, ID_Utilisateur, Date_Reception)
+         VALUES (?, ?, ?, ?, ?)`,
+        [subject, content, sender, userId, receivedDate]
+    );
+
+    return {
+        id: result.insertId,
+        subject,
+        content,
+        sender,
+        userId,
+        receivedDate,
+    };
+};
+
 module.exports = {
     getMails,
     getMailById,
@@ -183,5 +207,6 @@ module.exports = {
     getMailsByStatus,
     getMailsByUserIdAndStatus,
     getMailCompleteById,
-    getMailsSince
+    getMailsSince,
+    saveEmail
 };

@@ -151,3 +151,31 @@ exports.getMailCompleteById = async (req, res) => {
     }
 };
 
+/**
+ * Uploads an email and saves it to the database
+ * @async
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.uploadEmail = async (req, res) => {
+    try {
+        const { subject, content, sender, userId, receivedDate } = req.body;
+
+        if (!subject || !content || !sender || !userId || !receivedDate) {
+            return handleError(res, new Error('All fields are required'), 400);
+        }
+
+        const newEmail = await mailModel.saveEmail({
+            subject,
+            content,
+            sender,
+            userId,
+            receivedDate,
+        });
+
+        handleSuccess(res, newEmail, 201);
+    } catch (error) {
+        handleError(res, error);
+    }
+};
+

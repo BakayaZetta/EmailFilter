@@ -1,6 +1,5 @@
 <script setup>
 import { ref } from 'vue';
-import detectish from '@/assets/img/detectish.png';
 
 const currentYear = ref(new Date().getFullYear());
 </script>
@@ -12,8 +11,7 @@ const currentYear = ref(new Date().getFullYear());
         <!-- Logo and description - centered -->
         <div class="flex flex-col items-center mb-3">
           <div class="flex items-center">
-            <img class="h-7 w-auto rounded-full" :src="detectish" alt="Detectish" />
-            <span class="text-black text-lg font-bold ml-2">Detectish</span>
+            <span class="text-black text-lg font-bold ml-2">Bakaya Tech</span>
           </div>
           <p class="text-gray-600 text-xs mt-1 max-w-xl text-center">
             Advanced email phishing detection system powered by machine learning and security technologies.
@@ -44,7 +42,7 @@ const currentYear = ref(new Date().getFullYear());
       <!-- Copyright and GitHub link - centered -->
       <div class="pt-2 border-t border-gray-200 flex flex-col items-center text-sm">
         <p class="text-gray-500 mb-2">
-          &copy; {{ currentYear }} Detectish. All rights reserved.
+          &copy; {{ currentYear }} Bakaya Tech. All rights reserved.
         </p>
         <div>
           <a href="https://github.com/Matth-L/detectish" class="text-gray-500 hover:text-red-500">

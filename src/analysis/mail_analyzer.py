@@ -131,19 +131,20 @@ async def check_and_save_ai(email_obj: email.message.EmailMessage, db: Database,
     )
     return ai_result
 
-async def check_and_save_clamAV(email_obj: email.message.EmailMessage, db: Database, id_mail: int) -> dict:
+async def check_and_save_clamAV(email_obj: email.message.EmailMessage, db: Database, id_mail: int, progress_callback=None):
     '''
-    Analyzes the email attachments using ClamAV and saves the result to the database.
+    Analyzes the email attachments using ClamAV, provides progress updates, and saves the result to the database.
 
     Parameters:
         email_obj (email.message.EmailMessage): The email object.
         db (Database): The database object.
         id_mail (int): The ID of the email in the database.
+        progress_callback (Callable): A callback function to report progress updates.
 
     Returns:
         dict: The ClamAV analysis result.
     '''
-    clamav_result = analyze_attachments(email_obj)
+    clamav_result = await analyze_attachments(email_obj)
     logging.info(f"ClamAV result for mail {id_mail}: {clamav_result}")
 
     for filename, status in clamav_result.items():
@@ -267,6 +268,14 @@ def determine_conclusion(spf_status: SPFStatus, dkim_status: DKIMStatus, dmarc_s
     if text_is_phising(ai_result):
         return 'QUARANTINE'
 
+    # Allow email to pass if AI analysis verdict contains 'legitimate'
+    if 'legitimate' in ai_result.get('verdict', '').lower():
+        return 'PASS'
+
+    # Allow email to pass if any one of SPF, DKIM, or DMARC passes
+    if spf_status == SPFStatus.PASS or dkim_status == DKIMStatus.PASS or dmarc_status == DMARCStatus.PASS:
+        return 'PASS'
+
     return 'PASS'
 
 async def analyze_email(email_obj: email.message.EmailMessage, email_raw, db: Database) -> None:
@@ -319,7 +328,7 @@ async def analyze_email(email_obj: email.message.EmailMessage, email_raw, db: Da
     dkim_task = check_and_save_dkim(email_raw, db, id_mail)
     dmarc_task = check_and_save_dmarc(email_obj, db, id_mail)
     ai_task = check_and_save_ai(email_obj, db, id_mail)
-    clamav_task = check_and_save_clamAV(email_obj, db, id_mail)
+    clamav_task = check_and_save_clamAV(email_obj, db, id_mail, progress_callback=None)
     url_task = check_and_save_URL(email_obj, db, id_mail)
     
     spf_status, dkim_status, dmarc_status, ai_result, clamav_result, url_result = await asyncio.gather(spf_task, dkim_task, dmarc_task, ai_task, clamav_task, url_task)

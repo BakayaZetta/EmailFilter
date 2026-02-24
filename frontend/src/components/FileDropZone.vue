@@ -1,6 +1,7 @@
 <script setup>
 import { ref, watch, onMounted, onUnmounted, nextTick, computed } from 'vue';
 import axios from 'axios';
+import mailService from '@/services/mailService';
 
 const props = defineProps({
   accept: {
@@ -107,29 +108,27 @@ const generateId = () => {
 const uploadFile = async (fileItem) => {
   if (fileItem.uploading || fileItem.uploaded) return;
 
-  const formData = new FormData();
-  formData.append('file', fileItem.file);
-
   try {
     fileItem.uploading = true;
     fileItem.progress = 0;
     fileItem.error = null;
 
-    const response = await axios.post('/analyse/', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      },
-      onUploadProgress: (progressEvent) => {
-        fileItem.progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-      }
-    });
+    const emailData = {
+      subject: fileItem.file.name, // Assuming file name as subject
+      content: await fileItem.file.text(), // Read file content
+      sender: 'unknown@example.com', // Placeholder sender
+      userId: 1, // Placeholder user ID
+      receivedDate: new Date().toISOString(),
+    };
+
+    const response = await mailService.uploadEmail(emailData);
 
     fileItem.uploaded = true;
     fileItem.uploading = false;
 
     emit('upload-success', {
       fileName: fileItem.file.name,
-      response: response.data
+      response,
     });
   } catch (error) {
     console.error('Upload error:', error);
@@ -138,7 +137,7 @@ const uploadFile = async (fileItem) => {
 
     emit('upload-error', {
       fileName: fileItem.file.name,
-      error
+      error,
     });
   }
 };
@@ -359,6 +358,44 @@ const calculateOverallProgress = () => {
 
   return Math.round((totalProgress + completedWeight) / totalItems);
 };
+
+// Loading bar for scanning progress
+const scanning = ref(false);
+const progressPercentage = ref(0);
+
+const startScanning = async (fileItem) => {
+  scanning.value = true;
+  progressPercentage.value = 0;
+
+  const formData = new FormData();
+  formData.append('file', fileItem.file);
+
+  try {
+    await axios.post('/analyse/', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      },
+      onUploadProgress: (progressEvent) => {
+        fileItem.progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+      }
+    });
+
+    // Simulate receiving progress updates from the backend
+    const eventSource = new EventSource(`/progress/${fileItem.file.name}`);
+    eventSource.onmessage = (event) => {
+      const { completed, total } = JSON.parse(event.data);
+      progressPercentage.value = Math.round((completed / total) * 100);
+
+      if (completed === total) {
+        scanning.value = false;
+        eventSource.close();
+      }
+    };
+  } catch (error) {
+    console.error('Scanning error:', error);
+    scanning.value = false;
+  }
+};
 </script>
 
 <template>
@@ -551,6 +588,11 @@ const calculateOverallProgress = () => {
         </div>
       </div>
     </div>
+  </div>
+
+  <!-- Loading bar for scanning progress -->
+  <div v-if="scanning" class="progress-bar">
+    <div class="progress" :style="{ width: `${progressPercentage}%` }"></div>
   </div>
 </template>
 

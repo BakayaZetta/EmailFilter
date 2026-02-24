@@ -67,8 +67,14 @@ async def check_spf(email_obj: EmailMessage) -> SPFStatus:
         if match:
             ip_address = match.group(1)
             break
+    logging.info(f"Extracted sender: {sender_email}")
+    logging.info(f"Extracted domain: {domain}")
+    logging.info(f"Extracted IP address: {ip_address}")
+
     if not ip_address:
+        logging.warning("No IP address found in Received headers.")
         return SPFStatus.NO_IP
+
     try:
         for _ in range(3):
             try:
@@ -79,20 +85,28 @@ async def check_spf(email_obj: EmailMessage) -> SPFStatus:
                     if 'v=spf1' in txt_record:
                         spf_record = txt_record
                         break
+                logging.info(f"SPF record for domain {domain}: {spf_record}")
                 if not spf_record:
+                    logging.warning(f"No SPF record found for domain {domain}.")
                     return SPFStatus.NO_SPF_RECORD
                 break
             except (dns.resolver.NoAnswer, dns.resolver.NXDOMAIN):
+                logging.error(f"Invalid domain or no DNS response for domain {domain}.")
                 return SPFStatus.INVALID_DOMAIN
             except Exception as e:
+                logging.error(f"DNS query error: {e}")
                 await asyncio.sleep(1)
         else:
+            logging.error(f"DNS resolution failed for domain {domain} after retries.")
             return SPFStatus.DNS_ERROR
     except Exception as e:
+        logging.error(f"Unexpected DNS error: {e}")
         return SPFStatus.DNS_ERROR
+
     try:
         result = await asyncio.to_thread(spf.check2, i=ip_address, s=sender_email, h=email_obj.get('X-HELO', 'N/A'))
         spf_status = result[0]
+        logging.info(f"SPF check result: {spf_status}")
         if spf_status == 'pass':
             return SPFStatus.VALID
         elif spf_status == 'fail':

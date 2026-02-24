@@ -1,18 +1,20 @@
 # 🔒 Detectish: Phishing Detection using Artificial Intelligence
 
-French version : [here](./README-fr.md)
+French version : [French README](./README-fr.md)
 
 ## 📖 Table of Contents
 
-- [🌟 Introduction](#-introduction)
-- [🛠️ Features](#️-features)
-- [📸 Detectish: What Does It Look Like?](#detectish-what-does-it-look-like)
-- [🚀 Analysis Performance](#-analysis-performance)
-- [🏗️ Setup and Configuration](#️-setup-and-configuration)
-  - [Prerequisites](#prerequisites)
-  - [Installation Steps](#installation-steps)
-- [👥 Authors](#-authors)
-- [⚠️ Disclaimer](#disclaimer-️)
+- [🔒 Detectish: Phishing Detection using Artificial Intelligence](#-detectish-phishing-detection-using-artificial-intelligence)
+  - [📖 Table of Contents](#-table-of-contents)
+  - [🌟 Introduction](#-introduction)
+  - [🛠️ Features](#️-features)
+  - [📸 Detectish: What Does It Look Like?](#-detectish-what-does-it-look-like)
+  - [🚀 Analysis Performance](#-analysis-performance)
+  - [🏗️ Setup and Configuration](#️-setup-and-configuration)
+    - [Prerequisites](#prerequisites)
+    - [Installation Steps](#installation-steps)
+  - [👥 Authors](#-authors)
+    - [Disclaimer ⚠️](#disclaimer-️)
 
 ## 🌟 Introduction
 
@@ -56,15 +58,11 @@ The blacklist of emails that are automatically quarantined:
 
 The artificial intelligence used reaches an accuracy of nearly 95%. The tests were conducted on a dataset available on [Kaggle](https://www.kaggle.com/datasets/subhajournal/phishingemails).
 
-<div align="center">
-
 - **Confusion Matrix**  
   ![Confusion Matrix](./img/confusion_matrix.png)
 
 - **Confusion Matrix (Percentage)**  
   ![Percentage Confusion Matrix](./img/matrix_percentage_confusion.png)
-
-</div>
 
 > Over 10,000 emails were analyzed, as illustrated by the results above.
 
@@ -118,6 +116,7 @@ VITE_DETECTISH_URL=http://detectish:6969
    ```
 
 2. **Build and start the Docker containers**:
+
    ```bash
    docker-compose up -d
    ```

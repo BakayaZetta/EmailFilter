@@ -63,5 +63,15 @@ export default {
       this.updateMailStatus(mailId, status)
     );
     return Promise.all(promises);
+  },
+
+  /**
+   * Upload an email
+   * @param {Object} emailData - The email data to upload
+   * @returns {Promise} Promise with the uploaded email
+   */
+  async uploadEmail(emailData) {
+    const response = await api.post('/mails/upload', emailData);
+    return response.data;
   }
 }

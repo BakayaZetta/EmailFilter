@@ -1,5 +1,5 @@
 <script setup>
-import detectish from '@/assets/img/detectish.png';
+import bakayaTechLogo from '@/assets/img/bakaya_tech.png';
 import { RouterLink, useRoute, useRouter } from 'vue-router';
 import { onMounted, computed } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
@@ -56,8 +56,8 @@ onMounted(() => {
           <div class="flex flex-1 items-center justify-center md:items-stretch md:justify-start">
             <!-- Logo -->
             <RouterLink to="/" class="flex-shrink-0 flex items-center mr-4">
-              <img class="h-10 w-auto rounded-full" :src="detectish" alt="Detectish" />
-              <span class="hidden md:block text-black text-2xl font-bold ml-2">Detectish</span>
+              <img class="h-10 w-auto rounded-full" :src="bakayaTechLogo" alt="Bakaya Tech" />
+              <span class="hidden md:block text-black text-2xl font-bold ml-2">Bakaya Tech</span>
             </RouterLink>
 
             <div class="md:ml-auto flex items-center">
@@ -67,7 +67,7 @@ onMounted(() => {
                   v-for="link in navigationLinks"
                   :key="link.name"
                   :to="link.path"
-                  :class="[
+                  :class=" [
                     isActive(link.path) ? 'text-red-500' : 'hover:text-red-700',
                     'text-black', 'px-2', 'py-2', 'rounded-md', 'font-medium'
                   ]"

@@ -16,4 +16,7 @@ router.get('/user/:userId/status', mailController.getMailsByUserIdAndStatus);
 // Routes de mise à jour
 router.put('/:id/status', mailController.updateMailStatus);
 
+// Routes pour le téléchargement
+router.post('/upload', mailController.uploadEmail);
+
 module.exports = router;
