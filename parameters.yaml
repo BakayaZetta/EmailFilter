@@ -1,0 +1,87 @@
+# DATABASE CONFIGURATION
+DB_NAME: "EMAILFILTER"
+DB_USER: "emailfilter" 
+DB_PASSWORD: "Y8neaBtT3Y1jFcKAswc+0w=="  # Generate a strong password
+MYSQL_ROOT_PASSWORD: "Hf+J584SlaDbcCuBuROUAw=="  # Generate a strong password
+
+# API KEYS
+MISTRAL_API_KEY: "wTvaDkzGipg2wgAh91zB5cdNdpjgGf20"  # Get from https://console.mistral.ai/
+
+# SECURITY
+JWT_SECRET: "+nL/SkMNS7rIVU+h2Bom96WevZOlDvD/L83eSaOqOW4="  # Generate a random 32+ character string
+
+# STORAGE
+STORAGE_SIZE: "20Gi"
+
+# REPLICAS
+BACKEND_REPLICAS: 2
+FRONTEND_REPLICAS: 2
+
+# IMAGES
+BACKEND_IMAGE: "matthl/detectish-backend:latest"
+FRONTEND_IMAGE: "matthl/detectish-frontend:latest"
+MYSQL_VERSION: "8.0"
+CLAMAV_VERSION: "latest"
+
+# PORTS
+NODE_PORT: 30080
+BACKEND_PORT: 3000
+MYSQL_PORT: 3306
+CLAMAV_PORT: 3310
+
+# RESOURCE REQUESTS (in Mi for memory, m for CPU)
+MYSQL_MEMORY_REQUEST: "512Mi"
+MYSQL_MEMORY_LIMIT: "1Gi"
+MYSQL_CPU_REQUEST: "500m"
+MYSQL_CPU_LIMIT: "1000m"
+
+BACKEND_MEMORY_REQUEST: "256Mi"
+BACKEND_MEMORY_LIMIT: "512Mi"
+BACKEND_CPU_REQUEST: "250m"
+BACKEND_CPU_LIMIT: "500m"
+
+FRONTEND_MEMORY_REQUEST: "128Mi"
+FRONTEND_MEMORY_LIMIT: "256Mi"
+FRONTEND_CPU_REQUEST: "100m"
+FRONTEND_CPU_LIMIT: "200m"
+
+# Domain bakaya.tech
+# Server IP 173.249.35.232
+
+
+
+#1. Database Variables (MySQL)
+#Variable	Description	Example Value
+#DB_NAME	Database name for Detectish	detectish_prod
+#DB_USER	Database username	detectish_app
+#DB_PASSWORD	Database password (strong, random)	MyStr0ng!P@ssw0rd123
+#MYSQL_ROOT_PASSWORD	MySQL root password (strong, random)	R00t!P@ssw0rd456
+#2. API Keys
+#Variable	Description	Example Value
+#MISTRAL_API_KEY	Your Mistral AI API key	sk-abc123xyz789...
+#3. Security Variables
+#Variable	Description	Example Value
+#JWT_SECRET	Secret for JWT tokens (random string, min 32 chars)	a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0
+#4. Deployment Configuration
+#Variable	Description	Example Value
+#STORAGE_SIZE	Size for MySQL persistent storage	20Gi
+#BACKEND_REPLICAS	Number of backend replicas	2
+#FRONTEND_REPLICAS	Number of frontend replicas	2
+#MYSQL_VERSION	MySQL image version	8.0
+#CLAMAV_VERSION	ClamAV image version	latest
+#BACKEND_IMAGE	Backend Docker image	matthl/detectish-backend:latest
+#FRONTEND_IMAGE	Frontend Docker image	matthl/detectish-frontend:latest
+#NODE_PORT	External port for frontend access	30080
+#BACKEND_PORT	Backend service port	3000
+#MYSQL_PORT	MySQL service port	3306
+#CLAMAV_PORT	ClamAV service port	3310
+#5. Resource Limits
+#Variable	Description	Example Value
+#MYSQL_MEMORY_REQUEST	MySQL memory request	512Mi
+#MYSQL_MEMORY_LIMIT	MySQL memory limit	1Gi
+#MYSQL_CPU_REQUEST	MySQL CPU request	500m
+#MYSQL_CPU_LIMIT	MySQL CPU limit	1000m
+#BACKEND_MEMORY_REQUEST	Backend memory request	256Mi
+#BACKEND_MEMORY_LIMIT	Backend memory limit	512Mi
+#FRONTEND_MEMORY_REQUEST	Frontend memory request	128Mi
+#FRONTEND_MEMORY_LIMIT	Frontend memory limit	256Mi
