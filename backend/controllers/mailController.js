@@ -14,6 +14,12 @@ const handleNotFound = (res, message = 'Resource not found') => {
     res.status(404).json({ message });
 };
 
+const handleForbidden = (res, message = 'Forbidden') => {
+    res.status(403).json({ message });
+};
+
+const isAdminUser = (req) => req.userData?.role === 'admin';
+
 /**
  * Récupère tous les mails
  * @async
@@ -22,7 +28,9 @@ const handleNotFound = (res, message = 'Resource not found') => {
  */
 exports.getMails = async (req, res) => {
     try {
-        const mails = await mailModel.getMails();
+        const mails = isAdminUser(req)
+            ? await mailModel.getMails()
+            : await mailModel.getMailsByUserId(req.userData.userId);
         handleSuccess(res, mails);
     } catch (error) {
         handleError(res, error);
@@ -41,6 +49,9 @@ exports.getMailById = async (req, res) => {
         if (!mail) {
             return handleNotFound(res, 'Mail not found');
         }
+        if (!isAdminUser(req) && String(mail.ID_Utilisateur) !== String(req.userData.userId)) {
+            return handleForbidden(res, 'You do not have access to this mail');
+        }
         handleSuccess(res, mail);
     } catch (error) {
         handleError(res, error);
@@ -55,6 +66,9 @@ exports.getMailById = async (req, res) => {
  */
 exports.getMailsByUserId = async (req, res) => {
     try {
+        if (!isAdminUser(req) && String(req.params.userId) !== String(req.userData.userId)) {
+            return handleForbidden(res, 'You do not have access to these mails');
+        }
         const mails = await mailModel.getMailsByUserId(req.params.userId);
         if (!mails || mails.length === 0) {
             return handleNotFound(res, 'No mails found for this user');
@@ -79,6 +93,14 @@ exports.updateMailStatus = async (req, res) => {
         if (!status) {
             return handleError(res, new Error('Status is required'), 400);
         }
+
+        const mail = await mailModel.getMailById(id);
+        if (!mail) {
+            return handleNotFound(res, 'Mail not found');
+        }
+        if (!isAdminUser(req) && String(mail.ID_Utilisateur) !== String(req.userData.userId)) {
+            return handleForbidden(res, 'You do not have access to update this mail');
+        }
         
         await mailModel.updateMailStatus(id, status);
         res.status(204).end();
@@ -96,7 +118,18 @@ exports.updateMailStatus = async (req, res) => {
 exports.getMailsByStatus = async (req, res) => {
     try {
         const statusList = req.query.status ? req.query.status.split(',') : ['QUARANTINE', 'ERROR'];
-        const mails = await mailModel.getMailsByStatus(statusList);
+        const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+        const limit = Math.min(200, Math.max(1, parseInt(req.query.limit, 10) || 50));
+
+        const [mails, total] = isAdminUser(req)
+            ? await Promise.all([
+                mailModel.getMailsByStatusPaginated(statusList, page, limit),
+                mailModel.countMailsByStatus(statusList)
+            ])
+            : await Promise.all([
+                mailModel.getMailsByUserIdAndStatusPaginated(req.userData.userId, statusList, page, limit),
+                mailModel.countMailsByUserIdAndStatus(req.userData.userId, statusList)
+            ]);
         
         // Enrichir les données si nécessaire avec des informations complémentaires
         const enrichedMails = await Promise.all(mails.map(async (mail) => {
@@ -108,7 +141,15 @@ exports.getMailsByStatus = async (req, res) => {
             };
         }));
         
-        handleSuccess(res, enrichedMails);
+        handleSuccess(res, {
+            data: enrichedMails,
+            pagination: {
+                page,
+                limit,
+                total,
+                totalPages: Math.max(1, Math.ceil(total / limit))
+            }
+        });
     } catch (error) {
         handleError(res, error);
     }
@@ -124,6 +165,9 @@ exports.getMailsByUserIdAndStatus = async (req, res) => {
     try {
         const { userId } = req.params;
         const statusList = req.query.status ? req.query.status.split(',') : ['QUARANTINE', 'ERROR'];
+        if (!isAdminUser(req) && String(userId) !== String(req.userData.userId)) {
+            return handleForbidden(res, 'You do not have access to these mails');
+        }
         const mails = await mailModel.getMailsByUserIdAndStatus(userId, statusList);
         handleSuccess(res, mails);
     } catch (error) {
@@ -144,6 +188,9 @@ exports.getMailCompleteById = async (req, res) => {
         if (!mail) {
             return handleNotFound(res, 'Mail not found');
         }
+        if (!isAdminUser(req) && String(mail.user?.id) !== String(req.userData.userId)) {
+            return handleForbidden(res, 'You do not have access to this mail');
+        }
         
         handleSuccess(res, mail);
     } catch (error) {
@@ -161,7 +208,9 @@ exports.uploadEmail = async (req, res) => {
     try {
         const { subject, content, sender, userId, receivedDate } = req.body;
 
-        if (!subject || !content || !sender || !userId || !receivedDate) {
+        const effectiveUserId = isAdminUser(req) && userId ? userId : req.userData.userId;
+
+        if (!subject || !content || !sender || !effectiveUserId || !receivedDate) {
             return handleError(res, new Error('All fields are required'), 400);
         }
 
@@ -169,7 +218,7 @@ exports.uploadEmail = async (req, res) => {
             subject,
             content,
             sender,
-            userId,
+            userId: effectiveUserId,
             receivedDate,
         });
 

@@ -45,15 +45,7 @@ const currentYear = ref(new Date().getFullYear());
           &copy; {{ currentYear }} Bakaya Tech. All rights reserved.
         </p>
         <div>
-          <a href="https://github.com/Matth-L/detectish" class="text-gray-500 hover:text-red-500">
-            <i class="pi pi-github"></i>
-          </a>
-          <!-- <a href="#" class="text-gray-500 hover:text-red-500">
-            <i class="pi pi-twitter"></i>
-          </a>
-          <a href="#" class="text-gray-500 hover:text-red-500">
-            <i class="pi pi-linkedin"></i>
-          </a> -->
+          <!-- Social media icons can be added here if needed -->
         </div>
       </div>
     </div>

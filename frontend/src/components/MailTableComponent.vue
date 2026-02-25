@@ -48,6 +48,10 @@ const props = defineProps({
   showMistralButton: {
     type: Boolean,
     default: true
+  },
+  pagination: {
+    type: Object,
+    default: () => ({ page: 1, limit: 50, total: 0, totalPages: 1 })
   }
 });
 
@@ -63,6 +67,7 @@ const emit = defineEmits([
   'update-mail-status',
   'bulk-update-status',
   'refresh',
+  'page-change',
   'search',
   'reset-search',
 ]);
@@ -383,6 +388,28 @@ onUnmounted(() => {
               </template>
             </tbody>
           </table>
+        </div>
+      </div>
+
+      <div class="mt-3 flex items-center justify-between text-sm">
+        <div class="text-gray-600">
+          Page {{ pagination.page }} / {{ pagination.totalPages }} · {{ pagination.total }} total emails
+        </div>
+        <div class="flex items-center gap-2">
+          <button
+            class="px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 disabled:opacity-50"
+            :disabled="pagination.page <= 1"
+            @click="emit('page-change', pagination.page - 1)"
+          >
+            Previous
+          </button>
+          <button
+            class="px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 disabled:opacity-50"
+            :disabled="pagination.page >= pagination.totalPages"
+            @click="emit('page-change', pagination.page + 1)"
+          >
+            Next
+          </button>
         </div>
       </div>
     </div>

@@ -19,6 +19,47 @@ class Database:
         self.cursor: Optional[mysql.connector.cursor.MySQLCursor] = None
         self.connect()
         self.create_tables()
+
+    @staticmethod
+    def _is_disconnect_error(err: Exception) -> bool:
+        disconnect_error_codes = {2006, 2013, 2055, 4031}
+        errno = getattr(err, 'errno', None)
+        message = str(err).lower()
+        return (
+            errno in disconnect_error_codes
+            or 'lost connection' in message
+            or 'disconnected by the server because of inactivity' in message
+        )
+
+    def _ensure_connection(self) -> None:
+        if self.conn is None:
+            self.connect()
+            return
+
+        try:
+            self.conn.ping(reconnect=True, attempts=1, delay=0)
+        except mysql.connector.Error:
+            self.connect()
+
+        if self.cursor is None and self.conn is not None:
+            self.cursor = self.conn.cursor()
+
+    def _execute(self, query: str, params: tuple = (), retry: bool = True) -> None:
+        self._ensure_connection()
+        try:
+            self.cursor.execute(query, params)
+        except mysql.connector.Error as err:
+            if retry and self._is_disconnect_error(err):
+                logging.warning(f"Database connection dropped, retrying query once: {err}")
+                self.connect()
+                self.cursor.execute(query, params)
+            else:
+                raise
+
+    def _commit(self) -> None:
+        self._ensure_connection()
+        self.conn.commit()
+
     def connect(self) -> None:
         '''
         Connects to the database and creates the database if it does not exist.
@@ -156,8 +197,8 @@ class Database:
             "INSERT INTO Mail (ID_Utilisateur, Sujet, Contenu, Date_Reception, Emetteur, Statut) "
             "VALUES (%s, %s, %s, %s, %s, %s)")
         mail_data = (id_utilisateur, sujet, contenu, date_reception, emetteur, statut)
-        self.cursor.execute(add_mail_query, mail_data)
-        self.conn.commit()
+        self._execute(add_mail_query, mail_data)
+        self._commit()
         return self.cursor.lastrowid
     def add_utilisateur(self, nom: str, prenom: str, email: str, mot_de_passe: str, role: str) -> int:
         '''
@@ -177,8 +218,8 @@ class Database:
             "INSERT INTO Utilisateur (Nom, Prenom, Email, Mot_de_passe, Role) "
             "VALUES (%s, %s, %s, %s, %s)")
         utilisateur_data = (nom, prenom, email, mot_de_passe, role)
-        self.cursor.execute(add_utilisateur_query, utilisateur_data)
-        self.conn.commit()
+        self._execute(add_utilisateur_query, utilisateur_data)
+        self._commit()
         return self.cursor.lastrowid
     def add_analyse(self, id_mail: int, resultat_analyse: str, date_analyse: datetime, type_analyse: str) -> int:
         '''
@@ -197,8 +238,8 @@ class Database:
             "INSERT INTO Analyse (ID_Mail, Resultat_Analyse, Date_Analyse, Type_Analyse) "
             "VALUES (%s, %s, %s, %s)")
         analyse_data = (id_mail, resultat_analyse, date_analyse, type_analyse)
-        self.cursor.execute(add_analyse_query, analyse_data)
-        self.conn.commit()
+        self._execute(add_analyse_query, analyse_data)
+        self._commit()
         return self.cursor.lastrowid
     def get_mail(self, id_mail: int) -> Optional[Dict[str, Any]]:
         '''
@@ -211,7 +252,7 @@ class Database:
             Optional[Dict[str, Any]]: The mail record, or None if not found.
         '''
         get_mail_query = "SELECT * FROM Mail WHERE ID_Mail = %s"
-        self.cursor.execute(get_mail_query, (id_mail,))
+        self._execute(get_mail_query, (id_mail,))
         return self.cursor.fetchone()
     def get_utilisateur(self, id_utilisateur: int) -> Optional[Dict[str, Any]]:
         '''
@@ -224,7 +265,7 @@ class Database:
             Optional[Dict[str, Any]]: The user record, or None if not found.
         '''
         get_utilisateur_query = "SELECT * FROM Utilisateur WHERE ID_Utilisateur = %s"
-        self.cursor.execute(get_utilisateur_query, (id_utilisateur,))
+        self._execute(get_utilisateur_query, (id_utilisateur,))
         return self.cursor.fetchone()
     def get_analyse(self, id_analyse: int) -> Optional[Dict[str, Any]]:
         '''
@@ -237,7 +278,7 @@ class Database:
             Optional[Dict[str, Any]]: The analysis record, or None if not found.
         '''
         get_analyse_query = "SELECT * FROM Analyse WHERE ID_Analyse = %s"
-        self.cursor.execute(get_analyse_query, (id_analyse,))
+        self._execute(get_analyse_query, (id_analyse,))
         return self.cursor.fetchone()
     def update_mail_status(self, id_mail: int, new_status: str) -> None:
         '''
@@ -251,8 +292,8 @@ class Database:
             None
         '''
         update_status_query = "UPDATE Mail SET Statut = %s WHERE ID_Mail = %s"
-        self.cursor.execute(update_status_query, (new_status, id_mail))
-        self.conn.commit()
+        self._execute(update_status_query, (new_status, id_mail))
+        self._commit()
     def user_exists(self, id_utilisateur: int) -> bool:
         '''
         Checks if a user exists in the database.
@@ -264,7 +305,7 @@ class Database:
             bool: True if the user exists, False otherwise.
         '''
         get_user_query = "SELECT * FROM Utilisateur WHERE ID_Utilisateur = %s"
-        self.cursor.execute(get_user_query, (id_utilisateur,))
+        self._execute(get_user_query, (id_utilisateur,))
         return self.cursor.fetchone() is not None
     def user_exists_by_email(self, email: str) -> bool:
         '''
@@ -277,7 +318,7 @@ class Database:
             bool: True if the user exists, False otherwise.
         '''
         get_user_query = "SELECT * FROM Utilisateur WHERE Email = %s"
-        self.cursor.execute(get_user_query, (email,))
+        self._execute(get_user_query, (email,))
         return self.cursor.fetchone() is not None
 
     def add_user_with_email(self, email: str) -> int:
@@ -294,8 +335,8 @@ class Database:
             "INSERT INTO Utilisateur (Nom, Prenom, Email, Mot_de_passe, Role) "
             "VALUES (%s, %s, %s, %s, %s)")
         user_data = ('', '', email, '', 'user')
-        self.cursor.execute(add_user_query, user_data)
-        self.conn.commit()
+        self._execute(add_user_query, user_data)
+        self._commit()
         return self.cursor.lastrowid
 
     def get_user_id_by_email(self, email: str) -> Optional[int]:
@@ -309,7 +350,7 @@ class Database:
             Optional[int]: The user ID if found, None otherwise.
         '''
         get_user_id_query = "SELECT ID_Utilisateur FROM Utilisateur WHERE Email = %s"
-        self.cursor.execute(get_user_id_query, (email,))
+        self._execute(get_user_id_query, (email,))
         result = self.cursor.fetchone()
         return result[0] if result else None
 
@@ -331,8 +372,8 @@ class Database:
             "INSERT INTO Piece_Jointe (ID_Mail, Nom_Fichier, Type_Fichier, Taille_Fichier, Statut_Analyse) "
             "VALUES (%s, %s, %s, %s, %s)")
         piece_jointe_data = (id_mail, nom_fichier, type_fichier, taille_fichier, statut_analyse)
-        self.cursor.execute(add_piece_jointe_query, piece_jointe_data)
-        self.conn.commit()
+        self._execute(add_piece_jointe_query, piece_jointe_data)
+        self._commit()
         return self.cursor.lastrowid
 
     def add_lien(self, id_mail: int, url: str, statut_analyse: str) -> int:
@@ -351,8 +392,8 @@ class Database:
             "INSERT INTO Lien (ID_Mail, URL, Statut_Analyse) "
             "VALUES (%s, %s, %s)")
         lien_data = (id_mail, url, statut_analyse)
-        self.cursor.execute(add_lien_query, lien_data)
-        self.conn.commit()
+        self._execute(add_lien_query, lien_data)
+        self._commit()
         return self.cursor.lastrowid
 
     def is_blacklisted(self, email: str, ip: str, domain: str) -> bool:
@@ -390,7 +431,7 @@ class Database:
         query = f"SELECT * FROM Blacklist WHERE {' OR '.join(conditions)}"
         
         try:
-            self.cursor.execute(query, params)
+            self._execute(query, tuple(params))
             result = self.cursor.fetchone() is not None
             logging.info(f"Blacklist check: {query} with params {params} -> Result: {result}")
             return result

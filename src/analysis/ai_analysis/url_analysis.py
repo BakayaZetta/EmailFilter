@@ -1,8 +1,24 @@
 import re
+import os
 from analysis.ai_analysis.preprocessing_mail import extract_email_text
 from analysis.ai_analysis.ai_analysis import classifier
 import requests
 from urllib.parse import urlparse
+
+
+def _get_trusted_domains() -> list:
+    default_domains = [
+        "paypal.com", "google.com", "apple.com", "microsoft.com", "amazon.com",
+        "facebook.com", "twitter.com", "linkedin.com", "github.com", "netflix.com",
+        "dropbox.com", "adobe.com", "ibm.com", "oraclecloud.com"
+    ]
+
+    env_domains = os.getenv("URL_TRUSTED_DOMAINS", "")
+    if not env_domains.strip():
+        return default_domains
+
+    custom_domains = [domain.strip().lower() for domain in env_domains.split(",") if domain.strip()]
+    return list(dict.fromkeys(default_domains + custom_domains))
 
 def get_urls_from_text(text: str) -> list:
     '''
@@ -26,11 +42,7 @@ def is_trusted_domain(url: str) -> bool:
     
     Retourne True uniquement si les DEUX conditions sont remplies.
     '''
-    trusted_domains = [
-        "paypal.com", "google.com", "apple.com", "microsoft.com", "amazon.com",
-        "facebook.com", "twitter.com", "linkedin.com", "github.com", "netflix.com",
-        "dropbox.com", "adobe.com", "ibm.com"
-    ]
+    trusted_domains = _get_trusted_domains()
 
     try:
         parsed = urlparse(url)

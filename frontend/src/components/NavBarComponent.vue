@@ -56,8 +56,8 @@ onMounted(() => {
           <div class="flex flex-1 items-center justify-center md:items-stretch md:justify-start">
             <!-- Logo -->
             <RouterLink to="/" class="flex-shrink-0 flex items-center mr-4">
-              <img class="h-10 w-auto rounded-full" :src="detectish" alt="Detectish" />
-              <span class="hidden md:block text-black text-2xl font-bold ml-2">Detectish</span>
+              <img class="h-10 w-auto rounded-full" :src="detectish" alt="Bakaya Tech" />
+              <span class="hidden md:block text-black text-2xl font-bold ml-2">Bakaya Tech</span>
             </RouterLink>
 
             <div class="md:ml-auto flex items-center">

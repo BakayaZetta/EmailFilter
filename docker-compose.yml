@@ -25,6 +25,8 @@ services:
       retries: 10
       start_period: 30s
       # start_period is the time to wait before starting health checks
+    environment:
+      - HF_TOKEN=${HF_TOKEN}
 
   backend:
     # image: matthl2002/detectish-backend:latest
@@ -50,6 +52,8 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
+    environment:
+      - HF_TOKEN=${HF_TOKEN}
 
   frontend:
     # image: matthl2002/detectish-frontend:latest
@@ -73,6 +77,8 @@ services:
       retries: 5
       start_period: 180s
       # start_period is the time to wait before starting health checks
+    environment:
+      - HF_TOKEN=${HF_TOKEN}
 
   clamav:
     image: clamav/clamav:latest

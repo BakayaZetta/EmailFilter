@@ -18,16 +18,19 @@ const props = defineProps({
 
 // Catégoriser les analyses par type
 const categorizedAnalyses = computed(() => {
-  if (!props.analyses) return { SPF: [], DKIM: [], DMARC: [], AI: [] };
+  if (!props.analyses) return { SPF: [], DKIM: [], DMARC: [], AI: [], SAFE_OVERRIDE: [] };
 
   const result = {
     SPF: props.analyses.filter(a => a.type === 'SPF'),
     DKIM: props.analyses.filter(a => a.type === 'DKIM'),
     DMARC: props.analyses.filter(a => a.type === 'DMARC'),
-    AI: props.analyses.filter(a => a.type === 'AI')
+    AI: props.analyses.filter(a => a.type === 'AI'),
+    SAFE_OVERRIDE: props.analyses.filter(a => a.type === 'SAFE_OVERRIDE')
   };
   return result;
 });
+
+const hasSafeOverride = computed(() => categorizedAnalyses.value.SAFE_OVERRIDE.length > 0);
 
 // Parseur pour les résultats d'analyse AI
 const parseAIResult = (resultText) => {
@@ -108,7 +111,7 @@ const isEmailSuspicious = computed(() => {
   if (aiAnalyses.length > 0) {
     for (const analysis of aiAnalyses) {
       const aiResult = parseAIResult(analysis.result);
-      if (aiResult && aiResult.phishing_count > aiResult.benign_count) {
+      if (!hasSafeOverride.value && aiResult && aiResult.phishing_count > aiResult.benign_count) {
         aiSuspicious = true;
         break;
       }
@@ -249,7 +252,17 @@ const formatFileSize = (sizeInBytes) => {
         </div>
 
         <!-- Résultats AI -->
-        <div v-if="categorizedAnalyses.AI.length > 0" class="bg-gray-50 p-2 rounded border">
+        <div v-if="hasSafeOverride" class="bg-blue-50 p-2 rounded border border-blue-200">
+          <div class="flex items-center mb-1 text-blue-700">
+            <i class="pi pi-shield mr-1"></i>
+            <span class="font-medium">Safe Override</span>
+          </div>
+          <div class="text-sm text-blue-700">
+            AI analysis is hidden because this email was marked by safe override policy.
+          </div>
+        </div>
+
+        <div v-else-if="categorizedAnalyses.AI.length > 0" class="bg-gray-50 p-2 rounded border">
           <div class="flex items-center mb-1">
             <i class="pi pi-chart-bar mr-1"></i>
             <span class="font-medium">Artificial Intelligence Analysis</span>

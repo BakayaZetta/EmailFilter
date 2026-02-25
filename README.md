@@ -100,6 +100,11 @@ MISTRAL_API_KEY=your_mistral_api_key # Replace with your Mistral API key
 # Security
 JWT_SECRET=your_secure_random_string_here # Replace with a secure random string
 
+# AI analysis thresholds
+AI_PHISHING_CONFIDENCE_THRESHOLD=0.50
+AI_BENIGN_CONFIDENCE_THRESHOLD=0.55
+AI_BENIGN_PERCENTAGE_THRESHOLD=70
+
 # Frontend configuration
 VITE_API_URL=/api
 VITE_BACKEND_URL=http://backend:3000

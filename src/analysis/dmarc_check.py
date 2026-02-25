@@ -51,8 +51,10 @@ async def check_dmarc(email_obj: EmailMessage) -> DMARCStatus:
         DMARCStatus: DMARC status of the email.
     '''
     spf_status = await check_spf(email_obj)
-    dkim_status = await check_dkim(email_obj)
+    dkim_status = await check_dkim(email_obj.as_bytes())
     sender = email_obj.get('Sender', email_obj['From'])
+    if not sender:
+        return DMARCStatus.DMARC_ERROR
     sender_email = extract_email(sender)
     domain = sender_email.split('@')[-1].strip()
     try:

@@ -9,6 +9,11 @@ export function useMailTable() {
   const error = ref(null);
   const expandedMailId = ref(null);
   const selectedMails = ref([]);
+  const currentPage = ref(1);
+  const pageSize = ref(50);
+  const totalItems = ref(0);
+  const totalPages = ref(1);
+  const currentStatusList = ref('');
 
   // Sorting
   const sortColumn = ref('Date_Reception');
@@ -174,11 +179,13 @@ export function useMailTable() {
   };
 
   // Load emails by status
-  const loadMails = async (statusList, keepSearch = false) => {
+  const loadMails = async (statusList, keepSearch = false, page = 1) => {
     loading.value = true;
     error.value = null;
     selectedMails.value = [];
     expandedMailId.value = null;
+    currentStatusList.value = statusList;
+    currentPage.value = page;
 
     // Only reset search if keepSearch parameter is false
     if (!keepSearch) {
@@ -186,7 +193,11 @@ export function useMailTable() {
     }
 
     try {
-      mails.value = await mailService.getMailsByStatus(statusList);
+      const result = await mailService.getMailsByStatus(statusList, currentPage.value, pageSize.value);
+      mails.value = result.items;
+      totalItems.value = result.pagination.total;
+      totalPages.value = result.pagination.totalPages;
+      pageSize.value = result.pagination.limit;
     } catch (err) {
       console.error(`Failed to load mails with status ${statusList}:`, err);
       error.value = `Failed to load emails. Please try again later.`;
@@ -197,7 +208,15 @@ export function useMailTable() {
 
   // Method to refresh data while preserving search criteria
   const refreshWithCurrentFilters = async (statusList) => {
-    await loadMails(statusList, true); // true to keep search criteria
+    await loadMails(statusList, true, currentPage.value); // true to keep search criteria
+  };
+
+  const setPage = async (page) => {
+    const requested = Number(page);
+    if (Number.isNaN(requested) || requested < 1 || requested > totalPages.value || requested === currentPage.value) {
+      return;
+    }
+    await loadMails(currentStatusList.value, true, requested);
   };
 
   // Selection actions
@@ -253,8 +272,7 @@ export function useMailTable() {
     try {
       loading.value = true;
       await mailService.bulkUpdateMailStatus(selectedMails.value, status);
-      // Reload emails with the same status
-      await loadMails(mails.value[0]?.Statut || '');
+      await loadMails(currentStatusList.value, true, currentPage.value);
     } catch (err) {
       console.error(`Failed to update mail status to ${status}:`, err);
       error.value = `Failed to update mail status. Please try again.`;
@@ -266,8 +284,7 @@ export function useMailTable() {
   const updateMailStatus = async (mailId, status) => {
     try {
       await mailService.updateMailStatus(mailId, status);
-      // Reload emails with the same status
-      await loadMails(mails.value[0]?.Statut || '');
+      await loadMails(currentStatusList.value, true, currentPage.value);
     } catch (err) {
       console.error(`Failed to update mail status to ${status}:`, err);
       error.value = `Failed to update mail status. Please try again.`;
@@ -338,6 +355,10 @@ Please review email details manually to understand why it was filtered.`;
     sortedMails,
     allSelected,
     searchQuery,
+    currentPage,
+    pageSize,
+    totalItems,
+    totalPages,
 
     // Methods
     loadMails,
@@ -352,6 +373,7 @@ Please review email details manually to understand why it was filtered.`;
     updateSearchQuery,
     resetSearch,
     refreshWithCurrentFilters,
+    setPage,
 
     // Mistral states and methods
     mistralLoading,

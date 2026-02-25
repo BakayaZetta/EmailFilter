@@ -58,14 +58,15 @@ const getUserByEmail = async (email) => {
 const createUser = async ({ firstName, lastName, email, hashedPassword }) => {
     const [result] = await db.query(
         'INSERT INTO Utilisateur (Prenom, Nom, Email, Mot_de_passe, Role) VALUES (?, ?, ?, ?, ?)',
-        [firstName, lastName, email, hashedPassword, 'admin']
+        [firstName, lastName, email, hashedPassword, 'user']
     );
     
     return {
         id: result.insertId,
         firstName,
         lastName,
-        email
+        email,
+        role: 'user'
     };
 };
 

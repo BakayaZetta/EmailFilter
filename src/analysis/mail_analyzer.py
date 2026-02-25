@@ -198,7 +198,7 @@ async def check_and_save_URL(email_obj: email.message.EmailMessage, db: Database
 
     return url_result
 
-def determine_conclusion(spf_status: SPFStatus, dkim_status: DKIMStatus, dmarc_status: Optional[DMARCStatus], url_result: dict, ai_result: dict, clamav_result: dict, email_obj: email.message.EmailMessage, db: Database) -> str:
+def determine_conclusion(spf_status: SPFStatus, dkim_status: DKIMStatus, dmarc_status: Optional[DMARCStatus], url_result: dict, ai_result: dict, clamav_result: dict, email_obj: email.message.EmailMessage, db: Database) -> tuple[str, bool]:
     '''
     Détermine la conclusion basée sur les statuts SPF, DKIM, DMARC, URL, AI et ClamAV.
 
@@ -211,7 +211,7 @@ def determine_conclusion(spf_status: SPFStatus, dkim_status: DKIMStatus, dmarc_s
         clamav_result (dict): Le résultat de l'analyse ClamAV.
 
     Retourne:
-        str: La conclusion qui peut être 'PASS', 'QUARANTINE' ou 'ERROR'.
+        tuple[str, bool]: (conclusion, safe_override_applied)
     '''
     from analysis.ai_analysis.url_analysis import url_is_phishing
     from analysis.ai_analysis.ai_analysis import text_is_phising
@@ -226,12 +226,13 @@ def determine_conclusion(spf_status: SPFStatus, dkim_status: DKIMStatus, dmarc_s
     # Extraire le domaine si l'adresse email est valide
     sender_domain = sender_email.split('@')[-1] if '@' in sender_email else ''
     sender_ip = ''  # Placeholder for sender IP extraction logic
-    
+
     logging.info(f"Checking blacklist for: Email='{sender_email}', Domain='{sender_domain}'")
-    
+    domain_is_blacklisted = db.is_blacklisted('', '', sender_domain)
+
     if db.is_blacklisted(sender_email, sender_ip, sender_domain):
         logging.info(f"BLACKLISTED: Email sender {sender_email} is in the blacklist")
-        return 'QUARANTINE'
+        return 'QUARANTINE', False
     else:
         logging.info(f"Not blacklisted: {sender_email}")
 
@@ -239,44 +240,59 @@ def determine_conclusion(spf_status: SPFStatus, dkim_status: DKIMStatus, dmarc_s
     if dmarc_status == DMARCStatus.PASS:
         pass
     elif dmarc_status == DMARCStatus.FAIL:
-        return 'QUARANTINE'
+        return 'QUARANTINE', False
     elif dmarc_status in [DMARCStatus.DNS_ERROR, DMARCStatus.DMARC_ERROR]:
-        return 'ERROR'
+        return 'ERROR', False
     else:
 
         # Étape 2: Vérification SPF
         if spf_status == SPFStatus.INVALID:
-            return 'QUARANTINE'
+            return 'QUARANTINE', False
         elif spf_status in [SPFStatus.DNS_ERROR, SPFStatus.SPF_ERROR]:
-            return 'ERROR'
+            return 'ERROR', False
 
         # Étape 3: Vérification DKIM
         if dkim_status == DKIMStatus.INVALID:
-            return 'QUARANTINE'
+            return 'QUARANTINE', False
         elif dkim_status in [DKIMStatus.DNS_ERROR, DKIMStatus.DKIM_ERROR]:
-            return 'ERROR'
+            return 'ERROR', False
 
     # Étape 4: Analyse URL
     if url_is_phishing(url_result):
-        return 'QUARANTINE'
+        return 'QUARANTINE', False
 
     # Étape 5: Analyse des pièces jointes
     if any(status == 'dangerous' for status in clamav_result.values()):
-        return 'QUARANTINE'
+        return 'QUARANTINE', False
+
+    # Safer override: bypass ONLY AI verdict if domain is not blacklisted
+    # and at least one auth check is valid.
+    safe_override = (
+        not domain_is_blacklisted and (
+            spf_status in [SPFStatus.VALID, SPFStatus.PASS]
+            or dkim_status == DKIMStatus.VALID
+            or dmarc_status == DMARCStatus.PASS
+        )
+    )
+    if safe_override:
+        logging.info(
+            "SAFE OVERRIDE applied ((SPF valid OR DKIM valid OR DMARC pass) AND domain not blacklisted). AI verdict bypassed."
+        )
+        return 'PASS', True
 
     # Étape 6: Analyse AI
     if text_is_phising(ai_result):
-        return 'QUARANTINE'
+        return 'QUARANTINE', False
 
     # Allow email to pass if AI analysis verdict contains 'legitimate'
     if 'legitimate' in ai_result.get('verdict', '').lower():
-        return 'PASS'
+        return 'PASS', False
 
     # Allow email to pass if any one of SPF, DKIM, or DMARC passes
     if spf_status == SPFStatus.PASS or dkim_status == DKIMStatus.PASS or dmarc_status == DMARCStatus.PASS:
-        return 'PASS'
+        return 'PASS', False
 
-    return 'PASS'
+    return 'PASS', False
 
 async def analyze_email(email_obj: email.message.EmailMessage, email_raw, db: Database) -> None:
     '''
@@ -333,7 +349,27 @@ async def analyze_email(email_obj: email.message.EmailMessage, email_raw, db: Da
     
     spf_status, dkim_status, dmarc_status, ai_result, clamav_result, url_result = await asyncio.gather(spf_task, dkim_task, dmarc_task, ai_task, clamav_task, url_task)
     
-    conclusion = determine_conclusion(spf_status, dkim_status, dmarc_status, url_result, ai_result, clamav_result, email_obj, db)
+    conclusion, safe_override_applied = determine_conclusion(
+        spf_status,
+        dkim_status,
+        dmarc_status,
+        url_result,
+        ai_result,
+        clamav_result,
+        email_obj,
+        db
+    )
+    if safe_override_applied:
+        db.add_analyse(
+            id_mail=id_mail,
+            resultat_analyse=(
+                "SAFE_OVERRIDE: Applied ((SPF valid OR DKIM valid OR DMARC pass) AND domain not blacklisted). "
+                "AI verdict bypassed."
+            ),
+            date_analyse=datetime.now(),
+            type_analyse='SAFE_OVERRIDE'
+        )
+
     logging.info(f"Conclusion for mail {id_mail}: {conclusion}")
     db.update_mail_status(id_mail, conclusion)
 

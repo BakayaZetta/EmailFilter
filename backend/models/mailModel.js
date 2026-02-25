@@ -68,6 +68,43 @@ const getMailsByStatus = async (statusList) => {
     );
 };
 
+const getMailsByStatusPaginated = async (statusList, page = 1, limit = 50) => {
+    if (!statusList || statusList.length === 0) {
+        return [];
+    }
+
+    const safePage = Math.max(1, Number(page) || 1);
+    const safeLimit = Math.min(200, Math.max(1, Number(limit) || 50));
+    const offset = (safePage - 1) * safeLimit;
+    const placeholders = statusList.map(() => '?').join(', ');
+
+    return executeQuery(
+        `SELECT m.*, u.Email as Destinataire
+         FROM Mail m
+         LEFT JOIN Utilisateur u ON m.ID_Utilisateur = u.ID_Utilisateur
+         WHERE m.Statut IN (${placeholders})
+         ORDER BY m.Date_Reception DESC
+         LIMIT ? OFFSET ?`,
+        [...statusList, safeLimit, offset]
+    );
+};
+
+const countMailsByStatus = async (statusList) => {
+    if (!statusList || statusList.length === 0) {
+        return 0;
+    }
+
+    const placeholders = statusList.map(() => '?').join(', ');
+    const rows = await executeQuery(
+        `SELECT COUNT(*) as total
+         FROM Mail m
+         WHERE m.Statut IN (${placeholders})`,
+        statusList
+    );
+
+    return rows[0]?.total || 0;
+};
+
 /**
  * Récupère les mails par utilisateur et statut
  * @param {number} userId - ID de l'utilisateur
@@ -84,6 +121,42 @@ const getMailsByUserIdAndStatus = async (userId, statusList) => {
         `SELECT * FROM Mail WHERE Statut IN (${placeholders}) AND ID_Utilisateur = ? ORDER BY Date_Reception DESC`, 
         params
     );
+};
+
+const getMailsByUserIdAndStatusPaginated = async (userId, statusList, page = 1, limit = 50) => {
+    if (!statusList || statusList.length === 0) {
+        return [];
+    }
+
+    const safePage = Math.max(1, Number(page) || 1);
+    const safeLimit = Math.min(200, Math.max(1, Number(limit) || 50));
+    const offset = (safePage - 1) * safeLimit;
+    const placeholders = statusList.map(() => '?').join(', ');
+
+    return executeQuery(
+        `SELECT *
+         FROM Mail
+         WHERE Statut IN (${placeholders}) AND ID_Utilisateur = ?
+         ORDER BY Date_Reception DESC
+         LIMIT ? OFFSET ?`,
+        [...statusList, userId, safeLimit, offset]
+    );
+};
+
+const countMailsByUserIdAndStatus = async (userId, statusList) => {
+    if (!statusList || statusList.length === 0) {
+        return 0;
+    }
+
+    const placeholders = statusList.map(() => '?').join(', ');
+    const rows = await executeQuery(
+        `SELECT COUNT(*) as total
+         FROM Mail
+         WHERE Statut IN (${placeholders}) AND ID_Utilisateur = ?`,
+        [...statusList, userId]
+    );
+
+    return rows[0]?.total || 0;
 };
 
 /**
@@ -205,7 +278,11 @@ module.exports = {
     getMailsByUserId,
     updateMailStatus,
     getMailsByStatus,
+    getMailsByStatusPaginated,
+    countMailsByStatus,
     getMailsByUserIdAndStatus,
+    getMailsByUserIdAndStatusPaginated,
+    countMailsByUserIdAndStatus,
     getMailCompleteById,
     getMailsSince,
     saveEmail

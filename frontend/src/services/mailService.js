@@ -6,13 +6,19 @@ export default {
    * @param {string} statusList - Comma-separated list of statuses
    * @returns {Promise} Promise with mail data
    */
-  async getMailsByStatus(statusList) {
+  async getMailsByStatus(statusList, page = 1, limit = 50) {
     const response = await api.get('/mails/status', {
-      params: { status: statusList }
+      params: { status: statusList, page, limit }
     });
 
+    const payload = response.data;
+    const mailRows = Array.isArray(payload) ? payload : (payload.data || []);
+    const pagination = Array.isArray(payload)
+      ? { page: 1, limit: mailRows.length, total: mailRows.length, totalPages: 1 }
+      : (payload.pagination || { page: 1, limit: mailRows.length, total: mailRows.length, totalPages: 1 });
+
     // Normaliser les données pour compatibilité en préservant plus d'informations
-    return response.data.map(mail => {
+    const items = mailRows.map(mail => {
       // Extraire l'email du destinataire si disponible
       const destinataire = mail.recipient || mail.to || mail.Destinataire ||
         (mail.user?.email ? mail.user.email : `User ID: ${mail.ID_Utilisateur || mail.user?.id}`);
@@ -29,6 +35,8 @@ export default {
         originalData: mail
       };
     });
+
+    return { items, pagination };
   },
 
   /**

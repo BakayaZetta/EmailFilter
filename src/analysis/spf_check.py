@@ -1,124 +1,136 @@
-import email
+from email.message import EmailMessage
+from enum import Enum
 import re
-import spf
 import dns.resolver
-import time
 import asyncio
 import logging
-from email import policy
-from email.parser import BytesParser
-from enum import Enum
-from email.message import EmailMessage
+import spf
 
-# Configure logging
+
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+
 class SPFStatus(Enum):
-    """ 
-    Enum class for the SPF status of an email.
-    """
-    VALID = "SPF valid: sender is authorized."
-    INVALID = "SPF invalid: sender is not authorized."
-    SOFT_WARNING = "SPF soft warning: sender is likely not authorized."
-    NEUTRAL = "SPF neutral or unknown."
-    NO_IP = "IP address not found."
-    NO_SPF_RECORD = "No SPF record found for this domain."
-    INVALID_DOMAIN = "Invalid domain or no DNS response."
-    DNS_ERROR = "DNS error."
-    SPF_ERROR = "Error during SPF verification."
+    VALID = "valid"
+    PASS = "valid"
+    INVALID = "invalid"
+    FAIL = "invalid"
+    SOFT_WARNING = "soft_warning"
+    SOFTFAIL = "soft_warning"
+    NEUTRAL = "neutral"
+    NONE = "none"
+    NO_IP = "no_ip"
+    NO_SPF_RECORD = "no_spf_record"
+    INVALID_DOMAIN = "invalid_domain"
+    DNS_ERROR = "dns_error"
+    SPF_ERROR = "spf_error"
 
-    def __str__(self):
-        return self.value
 
-def serialize_spf_status(obj):
-    if isinstance(obj, SPFStatus):
-        return obj.value
-    raise TypeError(f"Type {type(obj)} not serializable")
+def extract_email(sender: str) -> str:
+    """Extract email address from sender string (handles 'Name <email@domain>' format)."""
+    if not sender:
+        return ""
+    match = re.search(r'<(.+?)>', str(sender))
+    if match:
+        return match.group(1)
+    return str(sender).strip()
 
-def extract_email(address: str) -> str:
-    '''
-    Extracts the email address from a From or Sender field.
 
-    Parameters:
-        address (str): The address string to extract from.
+def extract_ip_from_received(header: str) -> str | None:
+    """Extract IP address from Received header (IPv4 and IPv6 formats)."""
+    if not header:
+        return None
 
-    Returns:
-        str: The extracted email address.
-    '''
-    adr = re.search(r'<(.*?)>', address)
-    return adr.group(1) if adr else address
+    ipv6_match = re.search(r'IPv6:([a-fA-F0-9:]+)', header)
+    if ipv6_match:
+        return ipv6_match.group(1)
+
+    patterns = [
+        r'\[(\d+\.\d+\.\d+\.\d+)\]',
+        r'from\s+(\d+\.\d+\.\d+\.\d+)',
+        r'(\d+\.\d+\.\d+\.\d+)',
+        r'\[([0-9a-fA-F:.]+)\]',
+    ]
+
+    for pattern in patterns:
+        match = re.search(pattern, header)
+        if match:
+            return match.group(1)
+
+    return None
+
 
 async def check_spf(email_obj: EmailMessage) -> SPFStatus:
-    '''
-    Checks the SPF status of an email.
-
-    Parameters:
-        email_obj (EmailMessage): The email object.
-
-    Returns:
-        SPFStatus: The SPF status of the email.
-    '''
-    sender = email_obj.get('Sender', email_obj['From'])
+    """Checks the SPF status of an email object."""
+    sender = email_obj.get('Sender') or email_obj.get('From')
     sender_email = extract_email(sender)
-    domain = sender_email.split('@')[-1].strip()
+
+    if not sender_email or '@' not in sender_email:
+        return SPFStatus.INVALID_DOMAIN
+
+    domain = sender_email.split('@')[-1].strip().lower()
+
     ip_address = None
-    for header in email_obj.get_all('Received', []):
-        match = re.search(r'\[([\d\.]+)\]', header)
-        if match:
-            ip_address = match.group(1)
+    received_headers = email_obj.get_all('Received', [])
+    for header in reversed(received_headers):
+        ip_address = extract_ip_from_received(header)
+        if ip_address:
             break
-    logging.info(f"Extracted sender: {sender_email}")
-    logging.info(f"Extracted domain: {domain}")
-    logging.info(f"Extracted IP address: {ip_address}")
 
     if not ip_address:
-        logging.warning("No IP address found in Received headers.")
         return SPFStatus.NO_IP
 
-    try:
-        for _ in range(3):
-            try:
-                answers = await asyncio.to_thread(dns.resolver.resolve, domain, 'TXT')
-                spf_record = None
-                for r in answers:
-                    txt_record = r.to_text()
-                    if 'v=spf1' in txt_record:
-                        spf_record = txt_record
-                        break
-                logging.info(f"SPF record for domain {domain}: {spf_record}")
-                if not spf_record:
-                    logging.warning(f"No SPF record found for domain {domain}.")
-                    return SPFStatus.NO_SPF_RECORD
+    dns_servers = [
+        ['8.8.8.8', '8.8.4.4'],
+        ['1.1.1.1', '1.0.0.1'],
+        ['9.9.9.9'],
+    ]
+
+    spf_record = None
+    for nameservers in dns_servers:
+        try:
+            resolver = dns.resolver.Resolver()
+            resolver.nameservers = nameservers
+            resolver.timeout = 3
+            resolver.lifetime = 5
+
+            answers = await asyncio.to_thread(resolver.resolve, domain, 'TXT')
+            for record in answers:
+                txt = record.to_text().strip('"')
+                if txt.lower().startswith('v=spf1'):
+                    spf_record = txt
+                    break
+
+            if spf_record:
                 break
-            except (dns.resolver.NoAnswer, dns.resolver.NXDOMAIN):
-                logging.error(f"Invalid domain or no DNS response for domain {domain}.")
-                return SPFStatus.INVALID_DOMAIN
-            except Exception as e:
-                logging.error(f"DNS query error: {e}")
-                await asyncio.sleep(1)
-        else:
-            logging.error(f"DNS resolution failed for domain {domain} after retries.")
-            return SPFStatus.DNS_ERROR
-    except Exception as e:
-        logging.error(f"Unexpected DNS error: {e}")
-        return SPFStatus.DNS_ERROR
+
+        except dns.resolver.NXDOMAIN:
+            return SPFStatus.INVALID_DOMAIN
+        except Exception as error:
+            logging.warning(f"DNS lookup with {nameservers} failed: {error}")
+            continue
+
+    if not spf_record:
+        return SPFStatus.NO_SPF_RECORD
 
     try:
-        result = await asyncio.to_thread(spf.check2, i=ip_address, s=sender_email, h=email_obj.get('X-HELO', 'N/A'))
-        spf_status = result[0]
-        logging.info(f"SPF check result: {spf_status}")
-        if spf_status == 'pass':
-            return SPFStatus.VALID
-        elif spf_status == 'fail':
-            return SPFStatus.INVALID
-        elif spf_status == 'softfail':
-            return SPFStatus.SOFT_WARNING
-        elif spf_status == 'neutral':
-            return SPFStatus.NEUTRAL
-        elif spf_status == 'none':
-            return SPFStatus.NO_SPF_RECORD
-        else:
-            return SPFStatus.NEUTRAL
-    except Exception as e:
-        logging.error(f"Error during SPF verification: {e}")
+        helo = email_obj.get('X-HELO') or email_obj.get('HELO') or domain
+        result = await asyncio.to_thread(spf.check2, i=ip_address, s=sender_email, h=helo)
+        spf_result = str(result[0]).lower() if result else ''
+
+        status_map = {
+            'pass': SPFStatus.VALID,
+            'fail': SPFStatus.INVALID,
+            'softfail': SPFStatus.SOFT_WARNING,
+            'neutral': SPFStatus.NEUTRAL,
+            'none': SPFStatus.NO_SPF_RECORD,
+        }
+        return status_map.get(spf_result, SPFStatus.NEUTRAL)
+    except Exception as error:
+        logging.error(f"SPF check error: {error}")
         return SPFStatus.SPF_ERROR
+
+
+async def check_spf_improved(email_obj: EmailMessage) -> SPFStatus:
+    """Backward-compatible alias for improved SPF check."""
+    return await check_spf(email_obj)

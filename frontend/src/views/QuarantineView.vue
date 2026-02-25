@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'vue-router';
 import { useMailTable } from '@/composables/useMailTable';
@@ -36,6 +36,10 @@ const {
   sortDirection,
   sortedMails,
   searchQuery,
+  currentPage,
+  pageSize,
+  totalItems,
+  totalPages,
   loadMails,
   toggleSelectAll,
   toggleSelect,
@@ -50,8 +54,40 @@ const {
   mistralError,
   mistralEmailId,
   askMistral,
-  resetMistral
+  resetMistral,
+  setPage
 } = useMailTable();
+
+const scanInProgress = ref(false);
+const scanProgress = ref(0);
+let scanTimer = null;
+
+const startScanProgress = () => {
+  if (scanTimer) {
+    clearInterval(scanTimer);
+  }
+
+  scanInProgress.value = true;
+  scanProgress.value = 5;
+
+  scanTimer = setInterval(() => {
+    if (scanProgress.value < 95) {
+      scanProgress.value += 3;
+    }
+  }, 900);
+
+  setTimeout(async () => {
+    scanProgress.value = 100;
+    if (scanTimer) {
+      clearInterval(scanTimer);
+      scanTimer = null;
+    }
+    await loadQuarantineMails();
+    setTimeout(() => {
+      scanInProgress.value = false;
+    }, 800);
+  }, 30000);
+};
 
 // Fonctions spécifiques à la vue Quarantine
 const loadQuarantineMails = async () => {
@@ -141,12 +177,8 @@ const handleResetSearch = () => {
 // Fonction pour gérer les uploads réussis
 const handleUploadSuccess = async ({ fileName }) => {
   console.log(`File ${fileName} uploaded successfully`);
-  toast.success(`File ${fileName} uploaded and analyzed successfully!`);
-
-  // Recharger la liste après un délai
-  setTimeout(() => {
-    loadQuarantineMails();
-  }, 2000); // Délai pour traitement backend
+  toast.success(`File ${fileName} uploaded. Scan is running in background...`);
+  startScanProgress();
 };
 
 // Fonction pour gérer les erreurs d'upload
@@ -185,6 +217,13 @@ onMounted(async () => {
     router.push('/login');
   }
 });
+
+onUnmounted(() => {
+  if (scanTimer) {
+    clearInterval(scanTimer);
+    scanTimer = null;
+  }
+});
 </script>
 
 <template>
@@ -208,6 +247,16 @@ onMounted(async () => {
             Click the Upload button to analyze new .eml files for potential threats.
           </p>
 
+          <div v-if="scanInProgress" class="mt-3 rounded-md border border-blue-200 bg-blue-50 px-3 py-2">
+            <div class="flex justify-between text-xs text-blue-700 mb-1">
+              <span>Email scanning in progress</span>
+              <span>{{ scanProgress }}%</span>
+            </div>
+            <div class="h-2 w-full bg-blue-100 rounded">
+              <div class="h-2 bg-blue-500 rounded transition-all duration-500" :style="{ width: `${scanProgress}%` }"></div>
+            </div>
+          </div>
+
           <!-- Modal de drag & drop -->
           <FileDropZone
             :is-open="isUploadModalOpen"
@@ -228,11 +277,13 @@ onMounted(async () => {
           :sort-direction="sortDirection"
           :status-types="['QUARANTINE', 'ERROR']"
           :search-query="searchQuery"
+          :pagination="{ page: currentPage, limit: pageSize, total: totalItems, totalPages }"
           @toggle-select-all="toggleSelectAll"
           @toggle-select="toggleSelect"
           @toggle-expand="toggleExpand"
           @toggle-sort="toggleSort"
           @refresh="loadQuarantineMails"
+          @page-change="setPage"
           @search="handleSearch"
           @reset-search="handleResetSearch"
           @ask-mistral="handleAskMistral"

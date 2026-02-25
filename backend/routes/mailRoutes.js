@@ -1,6 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const mailController = require('../controllers/mailController');
+const auth = require('../middleware/auth');
+
+// Require authentication for all mail routes
+router.use(auth);
 
 // Regroupement des routes par fonctionnalité
 // Routes de base pour les mails

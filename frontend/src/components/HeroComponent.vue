@@ -92,7 +92,7 @@ onMounted(async () => {
               Security Platform
             </span>
             <h1 class="text-4xl lg:text-5xl font-extrabold text-gray-900 mb-4 leading-tight">
-              Protect Your Inbox with <span class="text-red-600">Detectish</span>
+              Protect Your Inbox with <span class="text-red-600">Bakaya Security Platform</span>
             </h1>
             <p class="text-lg text-gray-600 mb-8 max-w-xl">
               Comprehensive email security solution to detect, analyze, and protect against phishing attacks and malicious content.

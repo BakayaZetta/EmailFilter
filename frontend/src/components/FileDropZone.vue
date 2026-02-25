@@ -30,6 +30,7 @@ const addedFiles = computed(() => files.value.filter(f => !f.uploaded && !f.uplo
 const uploadingFiles = computed(() => files.value.filter(f => f.uploading));
 const uploadedFiles = computed(() => files.value.filter(f => f.uploaded));
 const failedFiles = computed(() => files.value.filter(f => f.error));
+const processingFiles = computed(() => files.value.filter(f => f.processing));
 
 // Empêcher le navigateur d'ouvrir les fichiers
 const preventDefaults = (e) => {
@@ -69,6 +70,9 @@ const handleFiles = (fileList) => {
         error: `Only ${props.accept} files are allowed.`,
         uploading: false,
         uploaded: false,
+        processing: false,
+        processed: false,
+        processingProgress: 0,
         progress: 0
       });
       return;
@@ -82,6 +86,9 @@ const handleFiles = (fileList) => {
         error: `File size exceeds ${props.maxSize / (1024 * 1024)}MB.`,
         uploading: false,
         uploaded: false,
+        processing: false,
+        processed: false,
+        processingProgress: 0,
         progress: 0
       });
       return;
@@ -94,9 +101,31 @@ const handleFiles = (fileList) => {
       error: null,
       uploading: false,
       uploaded: false,
+      processing: false,
+      processed: false,
+      processingProgress: 0,
       progress: 0
     });
   });
+};
+
+const startProcessingIndicator = (fileItem) => {
+  fileItem.processing = true;
+  fileItem.processed = false;
+  fileItem.processingProgress = 5;
+
+  const interval = setInterval(() => {
+    if (fileItem.processingProgress < 95) {
+      fileItem.processingProgress += 5;
+    }
+  }, 1200);
+
+  setTimeout(() => {
+    clearInterval(interval);
+    fileItem.processingProgress = 100;
+    fileItem.processing = false;
+    fileItem.processed = true;
+  }, 30000);
 };
 
 // Génère un ID unique pour chaque fichier
@@ -125,6 +154,7 @@ const uploadFile = async (fileItem) => {
 
     fileItem.uploaded = true;
     fileItem.uploading = false;
+    startProcessingIndicator(fileItem);
 
     emit('upload-success', {
       fileName: fileItem.file.name,
@@ -176,6 +206,8 @@ const uploadAllFiles = async () => {
         fileName: fileItem.file.name,
         response: response.data
       });
+
+      startProcessingIndicator(fileItem);
 
       return { success: true, fileItem, response };
     })
@@ -359,43 +391,6 @@ const calculateOverallProgress = () => {
   return Math.round((totalProgress + completedWeight) / totalItems);
 };
 
-// Loading bar for scanning progress
-const scanning = ref(false);
-const progressPercentage = ref(0);
-
-const startScanning = async (fileItem) => {
-  scanning.value = true;
-  progressPercentage.value = 0;
-
-  const formData = new FormData();
-  formData.append('file', fileItem.file);
-
-  try {
-    await axios.post('/analyse/', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      },
-      onUploadProgress: (progressEvent) => {
-        fileItem.progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-      }
-    });
-
-    // Simulate receiving progress updates from the backend
-    const eventSource = new EventSource(`/progress/${fileItem.file.name}`);
-    eventSource.onmessage = (event) => {
-      const { completed, total } = JSON.parse(event.data);
-      progressPercentage.value = Math.round((completed / total) * 100);
-
-      if (completed === total) {
-        scanning.value = false;
-        eventSource.close();
-      }
-    };
-  } catch (error) {
-    console.error('Scanning error:', error);
-    scanning.value = false;
-  }
-};
 </script>
 
 <template>
@@ -497,6 +492,16 @@ const startScanning = async (fileItem) => {
                   <p class="text-xs text-gray-500 mt-0.5">{{ fileItem.progress }}%</p>
                 </div>
 
+                <div v-else-if="fileItem.processing" class="mt-1.5">
+                  <div class="w-full bg-amber-100 rounded-full h-1.5">
+                    <div
+                      class="bg-amber-500 h-1.5 rounded-full transition-all duration-500"
+                      :style="{ width: `${fileItem.processingProgress}%` }"
+                    ></div>
+                  </div>
+                  <p class="text-xs text-amber-700 mt-0.5">Scanning in background... {{ fileItem.processingProgress }}%</p>
+                </div>
+
                 <!-- Success message -->
                 <p v-else-if="fileItem.uploaded" class="text-xs text-green-500 mt-1 flex items-center">
                   <i class="pi pi-check-circle mr-1"></i> Upload complete
@@ -544,6 +549,9 @@ const startScanning = async (fileItem) => {
             <span v-if="uploadedFiles.length > 0">
               <i class="pi pi-check-circle text-green-500 mr-1"></i> {{ uploadedFiles.length }} completed
             </span>
+            <span v-if="processingFiles.length > 0">
+              <i class="pi pi-clock text-amber-500 mr-1"></i> {{ processingFiles.length }} scanning
+            </span>
             <span v-if="failedFiles.length > 0">
               <i class="pi pi-times-circle text-red-500 mr-1"></i> {{ failedFiles.length }} failed
             </span>
@@ -590,10 +598,6 @@ const startScanning = async (fileItem) => {
     </div>
   </div>
 
-  <!-- Loading bar for scanning progress -->
-  <div v-if="scanning" class="progress-bar">
-    <div class="progress" :style="{ width: `${progressPercentage}%` }"></div>
-  </div>
 </template>
 
 <style scoped>

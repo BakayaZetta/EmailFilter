@@ -20,6 +20,10 @@ const {
   sortDirection,
   sortedMails,
   searchQuery,
+  currentPage,
+  pageSize,
+  totalItems,
+  totalPages,
   loadMails,
   toggleSelectAll,
   toggleSelect,
@@ -28,7 +32,8 @@ const {
   bulkUpdateStatus,
   updateMailStatus,
   updateSearchQuery,
-  resetSearch
+  resetSearch,
+  setPage
 } = useMailTable();
 
 // Fonctions spécifiques à la vue History
@@ -115,12 +120,14 @@ onMounted(async () => {
           :sort-direction="sortDirection"
           :status-types="['SAFE', 'DELETED', 'PASS']"
           :search-query="searchQuery"
+          :pagination="{ page: currentPage, limit: pageSize, total: totalItems, totalPages }"
           :show-mistral-button="false"
           @toggle-select-all="toggleSelectAll"
           @toggle-select="toggleSelect"
           @toggle-expand="toggleExpand"
           @toggle-sort="toggleSort"
           @refresh="loadHistoryMails"
+          @page-change="setPage"
           @search="handleSearch"
           @reset-search="handleResetSearch"
         >

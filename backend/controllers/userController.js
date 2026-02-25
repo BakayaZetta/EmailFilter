@@ -88,7 +88,7 @@ exports.register = async (req, res) => {
         
         // Generate JWT token
         const token = jwt.sign(
-            { userId: newUser.id, email: newUser.email },
+            { userId: newUser.id, email: newUser.email, role: newUser.role },
             process.env.JWT_SECRET,
             { expiresIn: '24h' }
         );
@@ -99,7 +99,8 @@ exports.register = async (req, res) => {
                 id: newUser.id,
                 firstName: newUser.firstName,
                 lastName: newUser.lastName,
-                email: newUser.email
+                email: newUser.email,
+                role: newUser.role
             },
             token
         });
@@ -151,7 +152,7 @@ exports.login = async (req, res) => {
         
         // Generate JWT token
         const token = jwt.sign(
-            { userId: user.ID_Utilisateur, email: user.Email },
+            { userId: user.ID_Utilisateur, email: user.Email, role: user.Role },
             process.env.JWT_SECRET,
             { expiresIn: '24h' }
         );
@@ -162,7 +163,8 @@ exports.login = async (req, res) => {
                 id: user.ID_Utilisateur,
                 firstName: user.Prenom,
                 lastName: user.Nom,
-                email: user.Email
+                email: user.Email,
+                role: user.Role
             },
             token
         });
