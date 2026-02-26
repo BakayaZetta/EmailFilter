@@ -1,0 +1,8 @@
+Return-Path: <user@domain-without-spf.com>
+Received: from server.local ([203.0.113.5]) by mx.service.com
+Sender: user@domain-without-spf.com
+From: user@domain-without-spf.com
+To: me@example.com
+Subject: Domain without SPF
+
+Testing domain without SPF.

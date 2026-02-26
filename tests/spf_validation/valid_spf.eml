@@ -1,0 +1,8 @@
+Return-Path: <sender@gmail.com>
+Received: from mail.example.com ([192.168.1.100]) by mx.google.com
+Sender: sender@gmail.com
+From: sender@gmail.com
+To: recipient@example.com
+Subject: Test email with valid SPF
+
+This is a test email.
