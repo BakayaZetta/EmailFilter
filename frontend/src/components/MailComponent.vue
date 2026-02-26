@@ -91,6 +91,7 @@ onMounted(() => {
             :analyses="mailDetails.analyses"
             :links="mailDetails.links"
             :attachments="mailDetails.attachments"
+            :mail-status="mailDetails.status"
           />
         </div>
 

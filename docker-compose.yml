@@ -71,7 +71,7 @@ services:
     restart: unless-stopped
     env_file: .env
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O - http://localhost:80/frontend-health/index.json || exit 1"]
+      test: ["CMD-SHELL", "test -f /usr/share/nginx/html/frontend-health/index.json || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5

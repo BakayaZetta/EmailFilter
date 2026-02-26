@@ -131,18 +131,8 @@ exports.getMailsByStatus = async (req, res) => {
                 mailModel.countMailsByUserIdAndStatus(req.userData.userId, statusList)
             ]);
         
-        // Enrichir les données si nécessaire avec des informations complémentaires
-        const enrichedMails = await Promise.all(mails.map(async (mail) => {
-            // Si vous avez besoin d'enrichir chaque mail avec des informations sur l'utilisateur
-            // Vous pourriez faire une requête supplémentaire ou optimiser avec une jointure dans le model
-            return {
-                ...mail,
-                // Ajouter ici des données supplémentaires si nécessaire
-            };
-        }));
-        
         handleSuccess(res, {
-            data: enrichedMails,
+            data: mails,
             pagination: {
                 page,
                 limit,

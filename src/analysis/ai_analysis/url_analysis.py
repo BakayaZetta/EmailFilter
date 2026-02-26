@@ -2,6 +2,7 @@ import re
 import os
 from analysis.ai_analysis.preprocessing_mail import extract_email_text
 from analysis.ai_analysis.ai_analysis import classifier
+import logging
 import requests
 from urllib.parse import urlparse
 
@@ -98,8 +99,12 @@ def predict_url(urls_list: list) -> dict:
         if is_trusted_domain(url):
             label_dict[url] = "benign"
         else:
-            prediction = classifier(url)
-            label_dict[url] = prediction[0]['label']
+            try:
+                prediction = classifier(url, truncation=True, max_length=512)
+                label_dict[url] = prediction[0]['label']
+            except Exception as error:
+                logging.warning(f"URL classifier failed for URL '{url[:120]}...': {error}")
+                label_dict[url] = "phishing"
     
     return label_dict
 

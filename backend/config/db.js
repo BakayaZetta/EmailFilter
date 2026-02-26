@@ -3,7 +3,7 @@ const path = require('path');
 require('dotenv').config();
 
 // Create a connection pool
-const connection = mysql.createConnection({
+const pool = mysql.createPool({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
@@ -18,4 +18,4 @@ const connection = mysql.createConnection({
     keepAliveInitialDelay: 0,
 });
 
-module.exports = connection.promise();
+module.exports = pool.promise();

@@ -9,7 +9,7 @@ class ClamAVClient:
         self.host = host
         self.port = port
 
-    async def scan(self, data):
+    def scan(self, data):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.connect((self.host, self.port))
             s.sendall(b'zINSTREAM\0')

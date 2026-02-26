@@ -37,9 +37,23 @@ def _get_int_env(name: str, default: int) -> int:
         return default
 
 
+def _get_positive_int_env(name: str, default: int) -> int:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    try:
+        parsed = int(value)
+        return parsed if parsed > 0 else default
+    except ValueError:
+        logging.warning(f"Invalid value for {name}={value}. Using default {default}.")
+        return default
+
+
 PHISHING_CONFIDENCE_THRESHOLD = _get_float_env('AI_PHISHING_CONFIDENCE_THRESHOLD', 0.50)
 BENIGN_CONFIDENCE_THRESHOLD = _get_float_env('AI_BENIGN_CONFIDENCE_THRESHOLD', 0.55)
 BENIGN_PERCENTAGE_THRESHOLD = _get_int_env('AI_BENIGN_PERCENTAGE_THRESHOLD', 70)
+AI_MAX_CHUNKS = _get_positive_int_env('AI_MAX_CHUNKS', 120)
+AI_BATCH_SIZE = _get_positive_int_env('AI_BATCH_SIZE', 16)
 
 tokenizer = AutoTokenizer.from_pretrained("ealvaradob/bert-finetuned-phishing")
 model = AutoModelForSequenceClassification.from_pretrained("ealvaradob/bert-finetuned-phishing")
@@ -58,13 +72,24 @@ def read_split_ai_analysis(email_obj: EmailMessage) -> list[dict]:
     '''
     results = []
     text = preprocessing_mail.extract_email_text(email_obj)
-    groups_to_analyze = preprocessing_mail.split_512_token(text)
-    for sentence in groups_to_analyze:
+    groups_to_analyze = preprocessing_mail.split_512_token(text, max_chunks=AI_MAX_CHUNKS)
+    if len(groups_to_analyze) >= AI_MAX_CHUNKS:
+        logging.info(
+            "AI chunk cap reached (%s). Remaining content skipped for performance.",
+            AI_MAX_CHUNKS,
+        )
+
+    for i in range(0, len(groups_to_analyze), AI_BATCH_SIZE):
+        batch = groups_to_analyze[i:i + AI_BATCH_SIZE]
         try:
-            prediction = classifier(sentence)
-            results.append(prediction)
+            predictions = classifier(batch)
+            for prediction in predictions:
+                if isinstance(prediction, list):
+                    results.extend(prediction)
+                else:
+                    results.append(prediction)
         except RuntimeError as error:
-            logging.warning(f"AI classifier runtime error on chunk: {error}")
+            logging.warning(f"AI classifier runtime error on batch: {error}")
             continue
     return results
 
@@ -73,17 +98,22 @@ def read_from_text(txt):
     Analyzes, but from text directly
     '''
     results = []
-    groups_to_analyze = preprocessing_mail.split_512_token(txt)
-    for sentence in groups_to_analyze:
+    groups_to_analyze = preprocessing_mail.split_512_token(txt, max_chunks=AI_MAX_CHUNKS)
+    for i in range(0, len(groups_to_analyze), AI_BATCH_SIZE):
+        batch = groups_to_analyze[i:i + AI_BATCH_SIZE]
         try:
-            prediction = classifier(sentence)
-            results.append(prediction)
+            predictions = classifier(batch)
+            for prediction in predictions:
+                if isinstance(prediction, list):
+                    results.extend(prediction)
+                else:
+                    results.append(prediction)
         except RuntimeError as error:
-            logging.warning(f"AI classifier runtime error on text chunk: {error}")
+            logging.warning(f"AI classifier runtime error on text batch: {error}")
             continue
     return results
 
-def phishing_statistics(group: list[list[dict]]) -> dict:
+def phishing_statistics(group: list[dict]) -> dict:
     '''
     Calculates statistics for phishing and benign labels from classification results.
 
@@ -101,23 +131,21 @@ def phishing_statistics(group: list[list[dict]]) -> dict:
     weighted_phishing = 0.0
     weighted_benign = 0.0
 
-    for g in group:
-        items = g if isinstance(g, list) else [g]
-        for item in items:
-            label = str(item.get('label', '')).lower()
-            score = float(item.get('score', 0.0))
-            score = max(0.0, min(score, 1.0))
+    for item in group:
+        label = str(item.get('label', '')).lower()
+        score = float(item.get('score', 0.0))
+        score = max(0.0, min(score, 1.0))
 
-            if label == 'phishing':
-                score_sum_phishing += score
-                weighted_phishing += score
-                weighted_benign += (1.0 - score)
-                count_phishing += 1
-            elif label == 'benign':
-                score_sum_benign += score
-                weighted_benign += score
-                weighted_phishing += (1.0 - score)
-                count_benign += 1
+        if label == 'phishing':
+            score_sum_phishing += score
+            weighted_phishing += score
+            weighted_benign += (1.0 - score)
+            count_phishing += 1
+        elif label == 'benign':
+            score_sum_benign += score
+            weighted_benign += score
+            weighted_phishing += (1.0 - score)
+            count_benign += 1
 
     score_avg_phishing = score_sum_phishing / count_phishing if count_phishing > 0 else 0
     score_avg_benign = score_sum_benign / count_benign if count_benign > 0 else 0
@@ -125,6 +153,10 @@ def phishing_statistics(group: list[list[dict]]) -> dict:
     weighted_total = weighted_phishing + weighted_benign
     phishing_confidence = (weighted_phishing / weighted_total) if weighted_total > 0 else 0
     benign_confidence = (weighted_benign / weighted_total) if weighted_total > 0 else 0
+
+    verdict = 'unknown'
+    if total_count > 0:
+        verdict = 'malicious' if phishing_confidence >= PHISHING_CONFIDENCE_THRESHOLD else 'legitimate'
 
     return {
         'phishing_count': count_phishing,
@@ -135,7 +167,8 @@ def phishing_statistics(group: list[list[dict]]) -> dict:
         'phishing_confidence': phishing_confidence,
         'benign_confidence': benign_confidence,
         'weighted_phishing_score': weighted_phishing,
-        'weighted_benign_score': weighted_benign
+        'weighted_benign_score': weighted_benign,
+        'verdict': verdict
     }
 
 async def ai_analysis(email_obj: EmailMessage) -> dict:

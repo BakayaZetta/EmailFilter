@@ -24,6 +24,40 @@ from analysis.ai_analysis.url_analysis import url_analysis
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+def _get_float_env(name: str, default: float) -> float:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    try:
+        parsed = float(value)
+        return max(0.0, min(parsed, 1.0))
+    except ValueError:
+        logging.warning(f"Invalid value for {name}={value}. Using default {default}.")
+        return default
+
+
+def _get_positive_int_env(name: str, default: int) -> int:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    try:
+        parsed = int(value)
+        return parsed if parsed > 0 else default
+    except ValueError:
+        logging.warning(f"Invalid value for {name}={value}. Using default {default}.")
+        return default
+
+
+SAFE_OVERRIDE_MAX_AI_PHISHING_CONFIDENCE = _get_float_env('SAFE_OVERRIDE_MAX_AI_PHISHING_CONFIDENCE', 0.90)
+MAX_STORED_MAIL_CHARS = _get_positive_int_env('MAX_STORED_MAIL_CHARS', 250000)
+
+
+def _truncate_content(content: str, max_chars: int) -> str:
+    if len(content) <= max_chars:
+        return content
+    omitted = len(content) - max_chars
+    return f"{content[:max_chars]}\n\n[TRUNCATED {omitted} CHARS FOR PERFORMANCE]"
+
 def load_raw_email(eml_file_path: str) -> bytes:
     with open(eml_file_path, 'rb') as f:
         return f.read()
@@ -236,7 +270,47 @@ def determine_conclusion(spf_status: SPFStatus, dkim_status: DKIMStatus, dmarc_s
     else:
         logging.info(f"Not blacklisted: {sender_email}")
 
-    # Étape 1: Vérification DMARC
+    # Étape 1: Safe override authentication (prioritaire sur AI)
+    # Règle demandée: si SPF/DKIM/DMARC sont valides et domaine non blacklisté,
+    # l'email est SAFE même si AI indique malveillant.
+    auth_signal_valid = (
+        spf_status in [SPFStatus.VALID, SPFStatus.PASS]
+        or dkim_status == DKIMStatus.VALID
+        or dmarc_status == DMARCStatus.PASS
+    )
+    ai_verdict = str(ai_result.get('verdict', '')).lower() if isinstance(ai_result, dict) else ''
+    ai_phishing_confidence = float(ai_result.get('phishing_confidence', 0.0)) if isinstance(ai_result, dict) else 0.0
+    strong_ai_malicious_signal = ai_verdict == 'malicious' and ai_phishing_confidence >= SAFE_OVERRIDE_MAX_AI_PHISHING_CONFIDENCE
+
+    safe_override = (not domain_is_blacklisted) and auth_signal_valid and not strong_ai_malicious_signal
+    if safe_override:
+        logging.info(
+            "SAFE OVERRIDE applied ((SPF valid OR DKIM valid OR DMARC pass) AND domain not blacklisted). AI verdict overridden."
+        )
+        return 'PASS', True
+
+    if strong_ai_malicious_signal:
+        logging.info(
+            f"SAFE OVERRIDE blocked due to strong AI malicious signal (phishing_confidence={ai_phishing_confidence:.4f} >= {SAFE_OVERRIDE_MAX_AI_PHISHING_CONFIDENCE:.2f})."
+        )
+
+    # Étape 2: Priorité au verdict AI (si pas de safe override auth)
+    if ai_verdict == 'legitimate':
+        logging.info("AI verdict is legitimate -> forcing PASS regardless of remaining conditions.")
+        return 'PASS', False
+    if ai_verdict == 'malicious':
+        logging.info("AI verdict is malicious -> forcing QUARANTINE (no auth safe override matched).")
+        return 'QUARANTINE', False
+
+    # Étape 3: Analyse URL (prioritaire pour rester prudent)
+    if url_is_phishing(url_result):
+        return 'QUARANTINE', False
+
+    # Étape 4: Analyse des pièces jointes (prioritaire pour rester prudent)
+    if any(status == 'dangerous' for status in clamav_result.values()):
+        return 'QUARANTINE', False
+
+    # Étape 5: Vérification DMARC
     if dmarc_status == DMARCStatus.PASS:
         pass
     elif dmarc_status == DMARCStatus.FAIL:
@@ -245,42 +319,19 @@ def determine_conclusion(spf_status: SPFStatus, dkim_status: DKIMStatus, dmarc_s
         return 'ERROR', False
     else:
 
-        # Étape 2: Vérification SPF
+        # Étape 6: Vérification SPF
         if spf_status == SPFStatus.INVALID:
             return 'QUARANTINE', False
         elif spf_status in [SPFStatus.DNS_ERROR, SPFStatus.SPF_ERROR]:
             return 'ERROR', False
 
-        # Étape 3: Vérification DKIM
+        # Étape 7: Vérification DKIM
         if dkim_status == DKIMStatus.INVALID:
             return 'QUARANTINE', False
         elif dkim_status in [DKIMStatus.DNS_ERROR, DKIMStatus.DKIM_ERROR]:
             return 'ERROR', False
 
-    # Étape 4: Analyse URL
-    if url_is_phishing(url_result):
-        return 'QUARANTINE', False
-
-    # Étape 5: Analyse des pièces jointes
-    if any(status == 'dangerous' for status in clamav_result.values()):
-        return 'QUARANTINE', False
-
-    # Safer override: bypass ONLY AI verdict if domain is not blacklisted
-    # and at least one auth check is valid.
-    safe_override = (
-        not domain_is_blacklisted and (
-            spf_status in [SPFStatus.VALID, SPFStatus.PASS]
-            or dkim_status == DKIMStatus.VALID
-            or dmarc_status == DMARCStatus.PASS
-        )
-    )
-    if safe_override:
-        logging.info(
-            "SAFE OVERRIDE applied ((SPF valid OR DKIM valid OR DMARC pass) AND domain not blacklisted). AI verdict bypassed."
-        )
-        return 'PASS', True
-
-    # Étape 6: Analyse AI
+    # Étape 8: Analyse AI
     if text_is_phising(ai_result):
         return 'QUARANTINE', False
 
@@ -307,16 +358,19 @@ async def analyze_email(email_obj: email.message.EmailMessage, email_raw, db: Da
     '''
     id_mail = None  # Initialize id_mail
     try:
+        raw_email_text = email_raw.decode('utf-8', errors='replace') if isinstance(email_raw, (bytes, bytearray)) else str(email_raw)
+        truncated_raw_email_text = _truncate_content(raw_email_text, MAX_STORED_MAIL_CHARS)
+
         # Save all email data
         email_data = {
-            'subject': email_obj['Subject'],
-            'from': email_obj['From'],
-            'to': email_obj['To'],
-            'date': email_obj['Date'],
-            'message_id': email_obj['Message-ID'],
+            'subject': email_obj.get('Subject', ''),
+            'from': email_obj.get('From', ''),
+            'to': email_obj.get('To', ''),
+            'date': email_obj.get('Date', ''),
+            'message_id': email_obj.get('Message-ID', ''),
             'content_type': email_obj.get_content_type(),
             'payload': email_obj.get_payload(),
-            'raw': email_obj.as_string().encode('utf-8', errors='replace').decode('utf-8')
+            'raw': truncated_raw_email_text
         }
     except Exception as e:
         logging.error(f"Error processing email headers for mail {id_mail}: {e}")

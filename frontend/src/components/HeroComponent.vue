@@ -137,7 +137,7 @@ onMounted(async () => {
                   </div>
                   <span class="text-xs text-gray-600">Safe</span>
                 </div>
-                <p class="text-lg font-bold">{{ stats.mailsByStatus?.SAFE || 0 }}</p>
+                <p class="text-lg font-bold">{{ (stats.mailsByStatus?.SAFE || 0) + (stats.mailsByStatus?.PASS || 0) }}</p>
               </div>
             </div>
 

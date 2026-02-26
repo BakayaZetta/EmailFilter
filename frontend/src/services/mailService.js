@@ -8,7 +8,11 @@ export default {
    */
   async getMailsByStatus(statusList, page = 1, limit = 50) {
     const response = await api.get('/mails/status', {
-      params: { status: statusList, page, limit }
+      params: { status: statusList, page, limit, _t: Date.now() },
+      headers: {
+        'Cache-Control': 'no-cache',
+        Pragma: 'no-cache'
+      }
     });
 
     const payload = response.data;

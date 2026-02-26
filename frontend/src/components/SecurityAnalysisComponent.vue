@@ -13,6 +13,10 @@ const props = defineProps({
   attachments: {
     type: Array,
     default: () => []
+  },
+  mailStatus: {
+    type: String,
+    default: ''
   }
 });
 
@@ -90,6 +94,11 @@ const getAnalysisIndicator = (analysis) => {
 
 // Déterminer si un email est globalement suspect en fonction des analyses
 const isEmailSuspicious = computed(() => {
+  const normalizedStatus = (props.mailStatus || '').toUpperCase();
+  if (['PASS', 'SAFE'].includes(normalizedStatus)) {
+    return false;
+  }
+
   // Vérifier les analyses SPF et DKIM
   const hasSPFFailure = categorizedAnalyses.value.SPF.some(a =>
     a.result.toLowerCase().includes('invalid') ||

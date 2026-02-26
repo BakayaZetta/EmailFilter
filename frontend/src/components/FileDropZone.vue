@@ -18,7 +18,7 @@ const props = defineProps({
   }
 });
 
-const emit = defineEmits(['upload-success', 'upload-error', 'close']);
+const emit = defineEmits(['upload-success', 'upload-error', 'scan-finished', 'close']);
 
 const isDragging = ref(false);
 const dropZone = ref(null);
@@ -31,6 +31,7 @@ const uploadingFiles = computed(() => files.value.filter(f => f.uploading));
 const uploadedFiles = computed(() => files.value.filter(f => f.uploaded));
 const failedFiles = computed(() => files.value.filter(f => f.error));
 const processingFiles = computed(() => files.value.filter(f => f.processing));
+const scanPollers = new Map();
 
 // Empêcher le navigateur d'ouvrir les fichiers
 const preventDefaults = (e) => {
@@ -109,23 +110,68 @@ const handleFiles = (fileList) => {
   });
 };
 
-const startProcessingIndicator = (fileItem) => {
+const clearScanPoller = (fileId) => {
+  const poller = scanPollers.get(fileId);
+  if (!poller) {
+    return;
+  }
+
+  clearInterval(poller.progressIntervalId);
+  clearInterval(poller.statusIntervalId);
+  clearTimeout(poller.timeoutId);
+  scanPollers.delete(fileId);
+};
+
+const finishProcessing = (fileItem, status = 'finished') => {
+  clearScanPoller(fileItem.id);
+  fileItem.processingProgress = 100;
+  fileItem.processing = false;
+  fileItem.processed = true;
+
+  emit('scan-finished', {
+    fileName: fileItem.file.name,
+    status
+  });
+};
+
+const startProcessingIndicator = (fileItem, requestId = null) => {
   fileItem.processing = true;
   fileItem.processed = false;
   fileItem.processingProgress = 5;
 
-  const interval = setInterval(() => {
+  const progressIntervalId = setInterval(() => {
     if (fileItem.processingProgress < 95) {
       fileItem.processingProgress += 5;
     }
   }, 1200);
 
-  setTimeout(() => {
-    clearInterval(interval);
-    fileItem.processingProgress = 100;
-    fileItem.processing = false;
-    fileItem.processed = true;
-  }, 30000);
+  const timeoutId = setTimeout(() => {
+    finishProcessing(fileItem, 'timeout');
+  }, 180000);
+
+  let statusIntervalId = null;
+  if (requestId) {
+    statusIntervalId = setInterval(async () => {
+      try {
+        const response = await axios.get(`/analyse/status/${requestId}`);
+        const status = response?.data?.status;
+
+        if (status === 'finished' || status === 'failed') {
+          finishProcessing(fileItem, status);
+        }
+      } catch (error) {
+        if (error?.response?.status !== 404) {
+          console.error(`Scan status polling error for ${fileItem.file.name}:`, error);
+        }
+      }
+    }, 2000);
+  }
+
+  scanPollers.set(fileItem.id, {
+    progressIntervalId,
+    statusIntervalId,
+    timeoutId
+  });
 };
 
 // Génère un ID unique pour chaque fichier
@@ -154,10 +200,12 @@ const uploadFile = async (fileItem) => {
 
     fileItem.uploaded = true;
     fileItem.uploading = false;
-    startProcessingIndicator(fileItem);
+    const requestId = response?.request_id || null;
+    startProcessingIndicator(fileItem, requestId);
 
     emit('upload-success', {
       fileName: fileItem.file.name,
+      requestId,
       response,
     });
   } catch (error) {
@@ -201,13 +249,15 @@ const uploadAllFiles = async () => {
     .then(response => {
       fileItem.uploaded = true;
       fileItem.uploading = false;
+      const requestId = response?.data?.request_id || null;
 
       emit('upload-success', {
         fileName: fileItem.file.name,
+        requestId,
         response: response.data
       });
 
-      startProcessingIndicator(fileItem);
+      startProcessingIndicator(fileItem, requestId);
 
       return { success: true, fileItem, response };
     })
@@ -236,6 +286,7 @@ const uploadAllFiles = async () => {
 
 // Supprimer un fichier de la liste
 const removeFile = (fileItem) => {
+  clearScanPoller(fileItem.id);
   const index = files.value.findIndex(f => f.id === fileItem.id);
   if (index !== -1) {
     files.value.splice(index, 1);
@@ -244,6 +295,7 @@ const removeFile = (fileItem) => {
 
 // Effacer tous les fichiers
 const clearAllFiles = () => {
+  files.value.forEach(fileItem => clearScanPoller(fileItem.id));
   files.value = [];
 };
 
@@ -361,6 +413,7 @@ const cleanupDragAndDropListeners = () => {
 
 // Nettoyage des event listeners
 onUnmounted(() => {
+  files.value.forEach(fileItem => clearScanPoller(fileItem.id));
   document.removeEventListener('keydown', handleEscape);
   document.removeEventListener('mousedown', handleOutsideClick);
   cleanupDragAndDropListeners();
@@ -584,7 +637,7 @@ const calculateOverallProgress = () => {
             @click="closeModal"
             class="px-3 py-1.5 border border-gray-300 rounded-md text-gray-700 text-sm hover:bg-gray-50"
           >
-            Cancel
+            Close
           </button>
           <button
             @click="uploadAllFiles"

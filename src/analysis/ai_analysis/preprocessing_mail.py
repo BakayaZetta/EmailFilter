@@ -1,7 +1,7 @@
 import email
 import html2text
 import re
-from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
+from transformers import AutoTokenizer
 import nltk
 import chardet
 import codecs
@@ -12,6 +12,8 @@ from email.message import EmailMessage
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 nltk.download('punkt_tab')
+
+TOKENIZER = AutoTokenizer.from_pretrained("ealvaradob/bert-finetuned-phishing")
 
 
 def detect_encoding(file_path: str) -> str:
@@ -134,7 +136,7 @@ def extract_email_attachments(email_obj: EmailMessage) -> list:
     return attachments
 
 
-def split_512_token(text: str) -> list[list[str]]:
+def split_512_token(text: str, max_chunks: int | None = None) -> list[str]:
     '''
     Split text into chunks that will NEVER exceed 512 tokens when processed by the model.
 
@@ -142,37 +144,38 @@ def split_512_token(text: str) -> list[list[str]]:
         text (str): The text to be split.
 
     Returns:
-        list[list[str]]: A list of text chunks, each chunk is a list of strings.
+        list[str]: A list of text chunks.
     '''
-    tokenizer = AutoTokenizer.from_pretrained("ealvaradob/bert-finetuned-phishing")
-    
+
     # First, handle empty text
     if not text.strip():
         return []
-    
+
     # Tokenize entire text while keeping track of word positions
-    tokens = tokenizer.tokenize(text)
-    
+    tokens = TOKENIZER.tokenize(text)
+
     # Split into chunks of 510 tokens (leaving room for [CLS] and [SEP])
     chunk_size = 510
     chunks = [tokens[i:i+chunk_size] for i in range(0, len(tokens), chunk_size)]
+    if max_chunks is not None and max_chunks > 0:
+        chunks = chunks[:max_chunks]
     
     # Convert token chunks back to text
-    text_chunks = [tokenizer.convert_tokens_to_string(chunk) for chunk in chunks]
+    text_chunks = [TOKENIZER.convert_tokens_to_string(chunk) for chunk in chunks]
     
     # Final safety check: verify encoded length
     validated_chunks = []
     for chunk in text_chunks:
-        encoded = tokenizer.encode(chunk, add_special_tokens=True)
+        encoded = TOKENIZER.encode(chunk, add_special_tokens=True)
         if len(encoded) > 512:
             # If somehow still too long, truncate using official method
-            encoded = tokenizer.encode(
+            encoded = TOKENIZER.encode(
                 chunk,
                 add_special_tokens=True,
                 max_length=512,
                 truncation=True
             )
-            chunk = tokenizer.decode(encoded, skip_special_tokens=True)
-        validated_chunks.append([chunk])
+            chunk = TOKENIZER.decode(encoded, skip_special_tokens=True)
+        validated_chunks.append(chunk)
     
     return validated_chunks

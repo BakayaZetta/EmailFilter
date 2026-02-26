@@ -21,7 +21,7 @@ const executeQuery = async (query, params = []) => {
  * @returns {Promise<Array>} Liste des mails
  */
 const getMails = async () => {
-    return executeQuery('SELECT * FROM Mail ORDER BY Date_Reception DESC');
+    return executeQuery('SELECT ID_Mail, Sujet, Emetteur, ID_Utilisateur, Date_Reception, Statut FROM Mail ORDER BY Date_Reception DESC');
 };
 
 /**
@@ -41,7 +41,7 @@ const getMailById = async (id) => {
  */
 const getMailsByUserId = async (userId) => {
     return executeQuery(
-        'SELECT * FROM Mail WHERE ID_Utilisateur = ? ORDER BY Date_Reception DESC',
+        'SELECT ID_Mail, Sujet, Emetteur, ID_Utilisateur, Date_Reception, Statut FROM Mail WHERE ID_Utilisateur = ? ORDER BY Date_Reception DESC',
         [userId]
     );
 };
@@ -59,7 +59,7 @@ const getMailsByStatus = async (statusList) => {
     
     // Ajouter une jointure pour récupérer l'email de l'utilisateur
     return executeQuery(
-        `SELECT m.*, u.Email as Destinataire
+        `SELECT ${MAIL_LIST_COLUMNS}, u.Email as Destinataire
          FROM Mail m
          LEFT JOIN Utilisateur u ON m.ID_Utilisateur = u.ID_Utilisateur
          WHERE m.Statut IN (${placeholders}) 
@@ -79,7 +79,7 @@ const getMailsByStatusPaginated = async (statusList, page = 1, limit = 50) => {
     const placeholders = statusList.map(() => '?').join(', ');
 
     return executeQuery(
-        `SELECT m.*, u.Email as Destinataire
+        `SELECT ${MAIL_LIST_COLUMNS}, u.Email as Destinataire
          FROM Mail m
          LEFT JOIN Utilisateur u ON m.ID_Utilisateur = u.ID_Utilisateur
          WHERE m.Statut IN (${placeholders})
@@ -118,7 +118,10 @@ const getMailsByUserIdAndStatus = async (userId, statusList) => {
     const placeholders = statusList.map(() => '?').join(', ');
     const params = [...statusList, userId];
     return executeQuery(
-        `SELECT * FROM Mail WHERE Statut IN (${placeholders}) AND ID_Utilisateur = ? ORDER BY Date_Reception DESC`, 
+        `SELECT ID_Mail, Sujet, Emetteur, ID_Utilisateur, Date_Reception, Statut
+         FROM Mail
+         WHERE Statut IN (${placeholders}) AND ID_Utilisateur = ?
+         ORDER BY Date_Reception DESC`, 
         params
     );
 };
@@ -134,7 +137,7 @@ const getMailsByUserIdAndStatusPaginated = async (userId, statusList, page = 1, 
     const placeholders = statusList.map(() => '?').join(', ');
 
     return executeQuery(
-        `SELECT *
+        `SELECT ID_Mail, Sujet, Emetteur, ID_Utilisateur, Date_Reception, Statut
          FROM Mail
          WHERE Statut IN (${placeholders}) AND ID_Utilisateur = ?
          ORDER BY Date_Reception DESC
@@ -241,7 +244,7 @@ const getMailsSince = async (startDate) => {
   const sqlDate = startDate.toISOString().split('T')[0];
   
   return executeQuery(
-    `SELECT * FROM Mail 
+        `SELECT ID_Mail, Sujet, Emetteur, ID_Utilisateur, Date_Reception, Statut FROM Mail 
      WHERE Date_Reception >= ? 
      ORDER BY Date_Reception DESC`,
     [sqlDate]
@@ -287,3 +290,12 @@ module.exports = {
     getMailsSince,
     saveEmail
 };
+
+const MAIL_LIST_COLUMNS = `
+    m.ID_Mail,
+    m.Sujet,
+    m.Emetteur,
+    m.ID_Utilisateur,
+    m.Date_Reception,
+    m.Statut
+`;

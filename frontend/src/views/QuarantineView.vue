@@ -61,32 +61,36 @@ const {
 const scanInProgress = ref(false);
 const scanProgress = ref(0);
 let scanTimer = null;
+const activeScans = ref(0);
 
 const startScanProgress = () => {
   if (scanTimer) {
-    clearInterval(scanTimer);
+    return;
   }
 
   scanInProgress.value = true;
-  scanProgress.value = 5;
+  scanProgress.value = Math.max(5, scanProgress.value);
 
   scanTimer = setInterval(() => {
     if (scanProgress.value < 95) {
       scanProgress.value += 3;
     }
   }, 900);
+};
 
-  setTimeout(async () => {
-    scanProgress.value = 100;
-    if (scanTimer) {
-      clearInterval(scanTimer);
-      scanTimer = null;
-    }
-    await loadQuarantineMails();
-    setTimeout(() => {
-      scanInProgress.value = false;
-    }, 800);
-  }, 30000);
+const stopScanProgress = async () => {
+  if (scanTimer) {
+    clearInterval(scanTimer);
+    scanTimer = null;
+  }
+
+  scanProgress.value = 100;
+  await loadQuarantineMails();
+
+  setTimeout(() => {
+    scanInProgress.value = false;
+    scanProgress.value = 0;
+  }, 800);
 };
 
 // Fonctions spécifiques à la vue Quarantine
@@ -175,10 +179,28 @@ const handleResetSearch = () => {
 };
 
 // Fonction pour gérer les uploads réussis
-const handleUploadSuccess = async ({ fileName }) => {
+const handleUploadSuccess = async ({ fileName, requestId }) => {
   console.log(`File ${fileName} uploaded successfully`);
   toast.success(`File ${fileName} uploaded. Scan is running in background...`);
-  startScanProgress();
+
+  if (requestId) {
+    activeScans.value += 1;
+    startScanProgress();
+  }
+};
+
+const handleScanFinished = async ({ fileName, status }) => {
+  if (activeScans.value > 0) {
+    activeScans.value -= 1;
+  }
+
+  if (status === 'failed') {
+    toast.error(`Scan failed for ${fileName}.`);
+  }
+
+  if (activeScans.value === 0 && scanInProgress.value) {
+    await stopScanProgress();
+  }
 };
 
 // Fonction pour gérer les erreurs d'upload
@@ -263,6 +285,7 @@ onUnmounted(() => {
             :max-size="1000 * 1024 * 1024"
             @upload-success="handleUploadSuccess"
             @upload-error="handleUploadError"
+            @scan-finished="handleScanFinished"
             @close="closeUploadModal"
           /> <!-- 1GB -->
         </div>
