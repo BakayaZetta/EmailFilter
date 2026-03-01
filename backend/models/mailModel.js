@@ -251,6 +251,17 @@ const getMailsSince = async (startDate) => {
   );
 };
 
+const getMailsSinceByUserId = async (startDate, userId) => {
+    const sqlDate = startDate.toISOString().split('T')[0];
+
+    return executeQuery(
+        `SELECT ID_Mail, Sujet, Emetteur, ID_Utilisateur, Date_Reception, Statut FROM Mail
+         WHERE Date_Reception >= ? AND ID_Utilisateur = ?
+         ORDER BY Date_Reception DESC`,
+        [sqlDate, userId]
+    );
+};
+
 /**
  * Saves a new email to the database
  * @param {Object} emailData - The email data to save
@@ -288,6 +299,7 @@ module.exports = {
     countMailsByUserIdAndStatus,
     getMailCompleteById,
     getMailsSince,
+    getMailsSinceByUserId,
     saveEmail
 };
 

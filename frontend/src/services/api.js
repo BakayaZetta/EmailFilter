@@ -22,8 +22,11 @@ api.interceptors.request.use(config => {
 api.interceptors.response.use(
   response => response,
   error => {
+    const requestUrl = error.config?.url || '';
+    const isAuthEndpoint = requestUrl.includes('/auth/');
+
     // Gestion des erreurs globales (ex: 401 Unauthorized, etc.)
-    if (error.response?.status === 401) {
+    if (error.response?.status === 401 && !isAuthEndpoint) {
       // Ne pas rediriger vers login si on est déjà sur la page login
       // Vérifier si l'URL actuelle contient "/login"
       const isLoginPage = window.location.pathname.includes('/login');

@@ -10,10 +10,12 @@ services:
         condition: service_healthy
       clamav:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     networks:
       - detectish-network
     ports:
-      - "6969:6969"
+      - "127.0.0.1:6969:6969"
     restart: unless-stopped
     volumes:
       - ./phishing_email_example:/app/phishing_email_example
@@ -27,6 +29,25 @@ services:
       # start_period is the time to wait before starting health checks
     environment:
       - HF_TOKEN=${HF_TOKEN}
+      - SCANNER_WORKERS=${SCANNER_WORKERS:-3}
+      - RABBITMQ_ENABLED=${RABBITMQ_ENABLED:-true}
+      - RABBITMQ_URL=${RABBITMQ_URL:-amqp://guest:guest@rabbitmq:5672/%2F}
+      - SCAN_QUEUE_NAME=${SCAN_QUEUE_NAME:-scan_jobs}
+
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: rabbitmq
+    networks:
+      - detectish-network
+    ports:
+      - "127.0.0.1:5672:5672"
+      - "127.0.0.1:15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
 
   backend:
     # image: matthl2002/detectish-backend:latest
@@ -44,7 +65,7 @@ services:
     networks:
       - detectish-network
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     restart: unless-stopped
     env_file: .env
     healthcheck:

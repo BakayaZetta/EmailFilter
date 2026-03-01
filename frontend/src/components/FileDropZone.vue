@@ -2,6 +2,7 @@
 import { ref, watch, onMounted, onUnmounted, nextTick, computed } from 'vue';
 import axios from 'axios';
 import mailService from '@/services/mailService';
+import { useAuthStore } from '@/stores/authStore';
 
 const props = defineProps({
   accept: {
@@ -10,7 +11,7 @@ const props = defineProps({
   },
   maxSize: {
     type: Number,
-    default: 1000 * 1024 * 1024 // 1GB par défaut
+    default: 25 * 1024 * 1024 // 25MB par défaut
   },
   isOpen: {
     type: Boolean,
@@ -19,6 +20,7 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['upload-success', 'upload-error', 'scan-finished', 'close']);
+const authStore = useAuthStore();
 
 const isDragging = ref(false);
 const dropZone = ref(null);
@@ -32,6 +34,33 @@ const uploadedFiles = computed(() => files.value.filter(f => f.uploaded));
 const failedFiles = computed(() => files.value.filter(f => f.error));
 const processingFiles = computed(() => files.value.filter(f => f.processing));
 const scanPollers = new Map();
+
+const getScannerAuthHeaders = () => {
+  const token = sessionStorage.getItem('token');
+  if (!token) {
+    return {};
+  }
+
+  return {
+    Authorization: `Bearer ${token}`
+  };
+};
+
+const getCurrentUserIdentity = () => {
+  const storeUser = authStore.user || {};
+  let sessionUser = {};
+
+  try {
+    sessionUser = JSON.parse(sessionStorage.getItem('user') || '{}');
+  } catch {
+    sessionUser = {};
+  }
+
+  return {
+    userId: storeUser.id ?? sessionUser.id ?? null,
+    userEmail: storeUser.email ?? sessionUser.email ?? null,
+  };
+};
 
 // Empêcher le navigateur d'ouvrir les fichiers
 const preventDefaults = (e) => {
@@ -153,14 +182,30 @@ const startProcessingIndicator = (fileItem, requestId = null) => {
   if (requestId) {
     statusIntervalId = setInterval(async () => {
       try {
-        const response = await axios.get(`/analyse/status/${requestId}`);
+        const response = await axios.get(`/analyse/status/${requestId}`, {
+          headers: getScannerAuthHeaders()
+        });
         const status = response?.data?.status;
 
         if (status === 'finished' || status === 'failed') {
           finishProcessing(fileItem, status);
         }
       } catch (error) {
-        if (error?.response?.status !== 404) {
+        const statusCode = error?.response?.status;
+
+        if (statusCode === 401 || statusCode === 403) {
+          fileItem.error = 'You no longer have access to this scan status. Please re-upload the email.';
+          finishProcessing(fileItem, 'failed');
+          return;
+        }
+
+        if (statusCode === 404) {
+          fileItem.error = 'Scan request no longer exists. Please re-upload the email.';
+          finishProcessing(fileItem, 'failed');
+          return;
+        }
+
+        if (statusCode !== 404) {
           console.error(`Scan status polling error for ${fileItem.file.name}:`, error);
         }
       }
@@ -224,6 +269,8 @@ const uploadFile = async (fileItem) => {
 const uploadAllFiles = async () => {
   const filesToUpload = files.value.filter(f => !f.uploaded && !f.uploading && !f.error);
 
+  const { userId: loggedInUserId, userEmail: loggedInUserEmail } = getCurrentUserIdentity();
+
   if (filesToUpload.length === 0) return;
 
   // Marquer tous les fichiers comme "uploading" avant de commencer
@@ -238,9 +285,17 @@ const uploadAllFiles = async () => {
     const formData = new FormData();
     formData.append('file', fileItem.file);
 
+    if (loggedInUserId) {
+      formData.append('user_id', String(loggedInUserId));
+    }
+    if (loggedInUserEmail) {
+      formData.append('user_email', String(loggedInUserEmail));
+    }
+
     return axios.post('/analyse/', formData, {
       headers: {
-        'Content-Type': 'multipart/form-data'
+        'Content-Type': 'multipart/form-data',
+        ...getScannerAuthHeaders()
       },
       onUploadProgress: (progressEvent) => {
         fileItem.progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
@@ -334,6 +389,8 @@ const handleOutsideClick = (e) => {
 
 // Initialisation des event listeners - Modifications pour corriger le drag & drop
 onMounted(() => {
+  authStore.initialize();
+
   // Observer les changements dans isOpen pour attacher les event listeners
   // seulement quand la modal est visible
   watch(() => props.isOpen, (isOpen) => {

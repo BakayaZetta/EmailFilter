@@ -5,6 +5,7 @@ import logging
 from typing import Optional
 from email.utils import parseaddr
 import json
+import time
 # Adjust the import paths dynamically based on the script's execution context
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'analysis', 'ai_analysis'))
@@ -50,6 +51,7 @@ def _get_positive_int_env(name: str, default: int) -> int:
 
 SAFE_OVERRIDE_MAX_AI_PHISHING_CONFIDENCE = _get_float_env('SAFE_OVERRIDE_MAX_AI_PHISHING_CONFIDENCE', 0.90)
 MAX_STORED_MAIL_CHARS = _get_positive_int_env('MAX_STORED_MAIL_CHARS', 250000)
+ANALYSIS_TIMEOUT_SECONDS = _get_positive_int_env('ANALYSIS_TIMEOUT_SECONDS', 180)
 
 
 def _truncate_content(content: str, max_chars: int) -> str:
@@ -88,8 +90,11 @@ async def check_and_save_spf(email_obj: email.message.EmailMessage, db: Database
     Returns:
         SPFStatus: The SPF status of the email.
     '''
+    start_time = time.monotonic()
     spf_status = await check_spf(email_obj)
+    elapsed = time.monotonic() - start_time
     logging.info(f"SPF Status for mail {id_mail}: {spf_status.value}")
+    logging.info(f"SPF analysis duration for mail {id_mail}: {elapsed:.2f}s")
     db.add_analyse(
         id_mail=id_mail,
         resultat_analyse=f"SPF: {spf_status.value}",
@@ -110,8 +115,11 @@ async def check_and_save_dkim(email_raw, db: Database, id_mail: int) -> DKIMStat
     Returns:
         DKIMStatus: The DKIM status of the email.
     '''
+    start_time = time.monotonic()
     dkim_status = await check_dkim(email_raw)
+    elapsed = time.monotonic() - start_time
     logging.info(f"DKIM Status for mail {id_mail}: {dkim_status.value}")
+    logging.info(f"DKIM analysis duration for mail {id_mail}: {elapsed:.2f}s")
     db.add_analyse(
         id_mail=id_mail,
         resultat_analyse=f"DKIM: {dkim_status.value}",
@@ -132,9 +140,12 @@ async def check_and_save_dmarc(email_obj: email.message.EmailMessage, db: Databa
     Returns:
         Optional[DMARCStatus]: The DMARC status of the email.
     '''
+    start_time = time.monotonic()
     dmarc_status = await check_dmarc(email_obj)
+    elapsed = time.monotonic() - start_time
     if dmarc_status is not None:
         logging.info(f"DMARC Status for mail {id_mail}: {dmarc_status.value}")
+        logging.info(f"DMARC analysis duration for mail {id_mail}: {elapsed:.2f}s")
         db.add_analyse(
             id_mail=id_mail,
             resultat_analyse=f"DMARC: {dmarc_status.value}",
@@ -155,8 +166,11 @@ async def check_and_save_ai(email_obj: email.message.EmailMessage, db: Database,
     Returns:
         dict: The AI analysis result.
     '''
+    start_time = time.monotonic()
     ai_result = await ai_analysis(email_obj)
+    elapsed = time.monotonic() - start_time
     logging.info(f"AI Phishing result for mail {id_mail}: {ai_result}")
+    logging.info(f"AI analysis duration for mail {id_mail}: {elapsed:.2f}s")
     db.add_analyse(
         id_mail=id_mail,
         resultat_analyse=f"AI_PHISHING: {ai_result}",
@@ -178,8 +192,11 @@ async def check_and_save_clamAV(email_obj: email.message.EmailMessage, db: Datab
     Returns:
         dict: The ClamAV analysis result.
     '''
+    start_time = time.monotonic()
     clamav_result = await analyze_attachments(email_obj)
+    elapsed = time.monotonic() - start_time
     logging.info(f"ClamAV result for mail {id_mail}: {clamav_result}")
+    logging.info(f"ClamAV analysis duration for mail {id_mail}: {elapsed:.2f}s")
 
     for filename, status in clamav_result.items():
         db.add_piece_jointe(
@@ -212,8 +229,42 @@ async def check_and_save_URL(email_obj: email.message.EmailMessage, db: Database
     Returns:
         dict: The URL analysis result.
     '''
-    url_result = url_analysis(email_obj)
+    start_time = time.monotonic()
+    raw_url_analysis = url_analysis(email_obj)
+
+    if isinstance(raw_url_analysis, tuple) and len(raw_url_analysis) == 2:
+        url_result, url_summary = raw_url_analysis
+    elif isinstance(raw_url_analysis, dict):
+        url_result = raw_url_analysis
+        url_summary = {
+            "total_urls": len(url_result),
+            "unique_urls": len(url_result),
+            "analyzed_urls": len(url_result),
+            "skipped_urls": 0,
+            "head_checks_used": 0,
+            "phishing_count": sum(1 for value in url_result.values() if value == 'phishing'),
+            "benign_count": sum(1 for value in url_result.values() if value == 'benign'),
+        }
+    else:
+        logging.warning(
+            "Unexpected URL analysis output for mail %s: %s. Falling back to empty result.",
+            id_mail,
+            type(raw_url_analysis).__name__,
+        )
+        url_result = {}
+        url_summary = {
+            "total_urls": 0,
+            "unique_urls": 0,
+            "analyzed_urls": 0,
+            "skipped_urls": 0,
+            "head_checks_used": 0,
+            "phishing_count": 0,
+            "benign_count": 0,
+        }
+
+    elapsed = time.monotonic() - start_time
     logging.info(f"URL analysis result for mail {id_mail}: {url_result}")
+    logging.info(f"URL analysis duration for mail {id_mail}: {elapsed:.2f}s")
 
     for url, status in url_result.items():
         db.add_lien(
@@ -225,7 +276,13 @@ async def check_and_save_URL(email_obj: email.message.EmailMessage, db: Database
     overall_status = 'benign' if all(status == 'benign' for status in url_result.values()) else 'dangerous'
     db.add_analyse(
         id_mail=id_mail,
-        resultat_analyse=f"URL: {overall_status}",
+        resultat_analyse=(
+            f"URL: {overall_status} "
+            f"(analyzed={url_summary.get('analyzed_urls', 0)}, "
+            f"skipped={url_summary.get('skipped_urls', 0)}, "
+            f"unique={url_summary.get('unique_urls', 0)}, "
+            f"phishing={url_summary.get('phishing_count', 0)})"
+        ),
         date_analyse=datetime.now(),
         type_analyse='URL'
     )
@@ -345,7 +402,13 @@ def determine_conclusion(spf_status: SPFStatus, dkim_status: DKIMStatus, dmarc_s
 
     return 'PASS', False
 
-async def analyze_email(email_obj: email.message.EmailMessage, email_raw, db: Database) -> None:
+async def analyze_email(
+    email_obj: email.message.EmailMessage,
+    email_raw,
+    db: Database,
+    requested_user_id: Optional[int] = None,
+    requested_user_email: Optional[str] = None
+) -> bool:
     '''
     Analyzes an email for SPF, DKIM, DMARC, URL, AI, and ClamAV status and saves the results to the database.
 
@@ -357,6 +420,7 @@ async def analyze_email(email_obj: email.message.EmailMessage, email_raw, db: Da
         None
     '''
     id_mail = None  # Initialize id_mail
+    analysis_start = time.monotonic()
     try:
         raw_email_text = email_raw.decode('utf-8', errors='replace') if isinstance(email_raw, (bytes, bytearray)) else str(email_raw)
         truncated_raw_email_text = _truncate_content(raw_email_text, MAX_STORED_MAIL_CHARS)
@@ -374,16 +438,31 @@ async def analyze_email(email_obj: email.message.EmailMessage, email_raw, db: Da
         }
     except Exception as e:
         logging.error(f"Error processing email headers for mail {id_mail}: {e}")
-        return
+        return False
 
-    # Extract recipient email
-    recipient_email = parseaddr(email_data['to'])[1]
+    user_id = None
 
-    # Check if the user exists in the Utilisateur table by email
-    if db.user_exists_by_email(recipient_email):
-        user_id = db.get_user_id_by_email(recipient_email)
-    else:
-        user_id = db.add_user_with_email(recipient_email)
+    if requested_user_id and db.user_exists(requested_user_id):
+        user_id = requested_user_id
+    elif requested_user_email:
+        normalized_requested_email = requested_user_email.strip().lower()
+        if normalized_requested_email:
+            if db.user_exists_by_email(normalized_requested_email):
+                user_id = db.get_user_id_by_email(normalized_requested_email)
+            else:
+                user_id = db.add_user_with_email(normalized_requested_email)
+
+    if user_id is None:
+        recipient_email = parseaddr(email_data['to'])[1].strip().lower()
+        if recipient_email:
+            if db.user_exists_by_email(recipient_email):
+                user_id = db.get_user_id_by_email(recipient_email)
+            else:
+                user_id = db.add_user_with_email(recipient_email)
+
+    if user_id is None:
+        logging.error("Unable to resolve an owner user for analyzed email")
+        return False
 
     id_mail = db.add_mail(
         id_utilisateur=user_id,  # Use the ensured user ID
@@ -394,38 +473,69 @@ async def analyze_email(email_obj: email.message.EmailMessage, email_raw, db: Da
         statut='Analyse_pending'
     )
     
-    spf_task = check_and_save_spf(email_obj, db, id_mail)
-    dkim_task = check_and_save_dkim(email_raw, db, id_mail)
-    dmarc_task = check_and_save_dmarc(email_obj, db, id_mail)
-    ai_task = check_and_save_ai(email_obj, db, id_mail)
-    clamav_task = check_and_save_clamAV(email_obj, db, id_mail, progress_callback=None)
-    url_task = check_and_save_URL(email_obj, db, id_mail)
-    
-    spf_status, dkim_status, dmarc_status, ai_result, clamav_result, url_result = await asyncio.gather(spf_task, dkim_task, dmarc_task, ai_task, clamav_task, url_task)
-    
-    conclusion, safe_override_applied = determine_conclusion(
-        spf_status,
-        dkim_status,
-        dmarc_status,
-        url_result,
-        ai_result,
-        clamav_result,
-        email_obj,
-        db
-    )
-    if safe_override_applied:
-        db.add_analyse(
-            id_mail=id_mail,
-            resultat_analyse=(
-                "SAFE_OVERRIDE: Applied ((SPF valid OR DKIM valid OR DMARC pass) AND domain not blacklisted). "
-                "AI verdict bypassed."
-            ),
-            date_analyse=datetime.now(),
-            type_analyse='SAFE_OVERRIDE'
+    try:
+        spf_task = check_and_save_spf(email_obj, db, id_mail)
+        dkim_task = check_and_save_dkim(email_raw, db, id_mail)
+        dmarc_task = check_and_save_dmarc(email_obj, db, id_mail)
+        ai_task = check_and_save_ai(email_obj, db, id_mail)
+        clamav_task = check_and_save_clamAV(email_obj, db, id_mail, progress_callback=None)
+        url_task = check_and_save_URL(email_obj, db, id_mail)
+
+        spf_status, dkim_status, dmarc_status, ai_result, clamav_result, url_result = await asyncio.wait_for(
+            asyncio.gather(spf_task, dkim_task, dmarc_task, ai_task, clamav_task, url_task),
+            timeout=ANALYSIS_TIMEOUT_SECONDS
         )
 
-    logging.info(f"Conclusion for mail {id_mail}: {conclusion}")
-    db.update_mail_status(id_mail, conclusion)
+        conclusion, safe_override_applied = determine_conclusion(
+            spf_status,
+            dkim_status,
+            dmarc_status,
+            url_result,
+            ai_result,
+            clamav_result,
+            email_obj,
+            db
+        )
+        if safe_override_applied:
+            db.add_analyse(
+                id_mail=id_mail,
+                resultat_analyse=(
+                    "SAFE_OVERRIDE: Applied ((SPF valid OR DKIM valid OR DMARC pass) AND domain not blacklisted). "
+                    "AI verdict bypassed."
+                ),
+                date_analyse=datetime.now(),
+                type_analyse='SAFE_OVERRIDE'
+            )
+
+        logging.info(f"Conclusion for mail {id_mail}: {conclusion}")
+        db.update_mail_status(id_mail, conclusion)
+        total_elapsed = time.monotonic() - analysis_start
+        logging.info(f"Total analysis duration for mail {id_mail}: {total_elapsed:.2f}s")
+        return True
+    except asyncio.TimeoutError:
+        logging.error(f"Analysis timed out after {ANALYSIS_TIMEOUT_SECONDS}s for mail {id_mail}")
+        db.add_analyse(
+            id_mail=id_mail,
+            resultat_analyse=f"TIMEOUT: Analysis exceeded {ANALYSIS_TIMEOUT_SECONDS}s",
+            date_analyse=datetime.now(),
+            type_analyse='TIMEOUT'
+        )
+        db.update_mail_status(id_mail, 'ERROR')
+        total_elapsed = time.monotonic() - analysis_start
+        logging.info(f"Total analysis duration for mail {id_mail}: {total_elapsed:.2f}s")
+        return False
+    except Exception as error:
+        logging.exception(f"Analysis failed for mail {id_mail}: {error}")
+        db.add_analyse(
+            id_mail=id_mail,
+            resultat_analyse=f"ERROR: {error}",
+            date_analyse=datetime.now(),
+            type_analyse='ERROR'
+        )
+        db.update_mail_status(id_mail, 'ERROR')
+        total_elapsed = time.monotonic() - analysis_start
+        logging.info(f"Total analysis duration for mail {id_mail}: {total_elapsed:.2f}s")
+        return False
 
 if __name__ == "__main__":
     db = Database()

@@ -10,11 +10,11 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 load_dotenv()
 class Database:
     def __init__(self):
-        self.db_name: str = os.getenv('DB_NAME')
-        self.db_user: str = os.getenv('DB_USER')
-        self.db_password: str = os.getenv('DB_PASSWORD')
-        self.db_host: str = os.getenv('DB_HOST')
-        self.db_port: str = os.getenv('DB_PORT')
+        self.db_name: str = os.getenv('DB_NAME') or os.getenv('MYSQL_DATABASE') or 'EMAILFILTER'
+        self.db_user: str = os.getenv('DB_USER') or os.getenv('MYSQL_USER')
+        self.db_password: str = os.getenv('DB_PASSWORD') or os.getenv('MYSQL_PASSWORD')
+        self.db_host: str = os.getenv('DB_HOST') or 'mysql'
+        self.db_port: int = int(os.getenv('DB_PORT') or 3306)
         self.conn: Optional[mysql.connector.connection.MySQLConnection] = None
         self.cursor: Optional[mysql.connector.cursor.MySQLCursor] = None
         self.connect()
@@ -44,6 +44,19 @@ class Database:
         if self.cursor is None and self.conn is not None:
             self.cursor = self.conn.cursor()
 
+        try:
+            current_db = getattr(self.conn, 'database', None)
+            if current_db != self.db_name:
+                self.conn.database = self.db_name
+                if self.cursor is not None:
+                    self.cursor.execute(f"USE {self.db_name}")
+            elif self.cursor is None and self.conn is not None:
+                self.cursor = self.conn.cursor()
+                # Cursor created after reconnect, ensure schema context once.
+                self.cursor.execute(f"USE {self.db_name}")
+        except mysql.connector.Error:
+            self.connect()
+
     def _execute(self, query: str, params: tuple = (), retry: bool = True) -> None:
         self._ensure_connection()
         try:
@@ -71,6 +84,9 @@ class Database:
             None
         '''
         try:
+            if not self.db_user:
+                raise mysql.connector.Error("DB_USER or MYSQL_USER is not configured")
+
             self.conn = mysql.connector.connect(
                 user=self.db_user,
                 password=self.db_password,
@@ -80,6 +96,7 @@ class Database:
             self.cursor = self.conn.cursor()
             self.cursor.execute(f"CREATE DATABASE IF NOT EXISTS {self.db_name}")
             self.conn.database = self.db_name
+            self.cursor.execute(f"USE {self.db_name}")
         except mysql.connector.Error as err:
             if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
                 logging.error("Something is wrong with your user name or password")
@@ -87,6 +104,24 @@ class Database:
                 logging.error("Database does not exist")
             else:
                 logging.error(err)
+
+    def close(self) -> None:
+        try:
+            if self.cursor is not None:
+                self.cursor.close()
+        except mysql.connector.Error:
+            pass
+        finally:
+            self.cursor = None
+
+        try:
+            if self.conn is not None and self.conn.is_connected():
+                self.conn.close()
+        except mysql.connector.Error:
+            pass
+        finally:
+            self.conn = None
+
     def create_tables(self) -> None:
         '''
         Creates the necessary tables in the database.

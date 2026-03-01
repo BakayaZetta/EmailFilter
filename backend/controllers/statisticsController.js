@@ -1,5 +1,7 @@
 const mailModel = require('../models/mailModel');
 const db = require('../config/db');
+const ADMIN_ROLES = new Set(['admin', 'super_admin', 'superadmin']);
+const isAdminUser = (req) => ADMIN_ROLES.has((req.userData?.role || '').toLowerCase());
 
 // Fonctions d'aide pour une gestion standardisée des réponses
 const handleSuccess = (res, data, status = 200) => {
@@ -29,7 +31,9 @@ exports.getStatistics = async (req, res) => {
     const startDate = getStartDateByPeriod(period);
     
     // Récupérer les emails pour la période donnée
-    const mails = await mailModel.getMailsSince(startDate);
+    const mails = isAdminUser(req)
+      ? await mailModel.getMailsSince(startDate)
+      : await mailModel.getMailsSinceByUserId(startDate, req.userData.userId);
     
     // Calculer les statistiques
     const statistics = {
@@ -60,7 +64,7 @@ exports.getHistoricalData = async (req, res) => {
     const startDate = getStartDateByPeriod(period);
     
     // Récupérer les mails groupés par jour
-    let mailsOverTime = await getMailsOverTime(startDate, period);
+    let mailsOverTime = await getMailsOverTime(startDate, period, req.userData.userId, isAdminUser(req));
     
     // Si le format n'est pas comme prévu, le corriger
     if (Array.isArray(mailsOverTime) && mailsOverTime.length > 0) {
@@ -216,7 +220,7 @@ function calculateDetectRatio(mails) {
  * @param {string} period - Période ('week', 'month', 'year', 'all')
  * @returns {Promise<Array>} Données de mails dans le temps
  */
-async function getMailsOverTime(startDate, period) {
+async function getMailsOverTime(startDate, period, userId, isAdmin) {
   try {
     // Format SQL pour la date en fonction de la période
     let dateFormat;
@@ -241,6 +245,8 @@ async function getMailsOverTime(startDate, period) {
     const sqlDate = startDate.toISOString().split('T')[0];
     
     // Requête SQL pour obtenir le nombre de mails par jour/mois et par statut
+    const whereClause = isAdmin ? 'WHERE Date_Reception >= ?' : 'WHERE Date_Reception >= ? AND ID_Utilisateur = ?';
+
     const query = `
       SELECT 
         DATE_FORMAT(Date_Reception, ?) as date,
@@ -251,13 +257,16 @@ async function getMailsOverTime(startDate, period) {
         SUM(CASE WHEN Statut = 'DELETED' THEN 1 ELSE 0 END) as deleted,
         SUM(CASE WHEN Statut = 'PASS' THEN 1 ELSE 0 END) as pass
       FROM Mail
-      WHERE Date_Reception >= ?
+      ${whereClause}
       GROUP BY DATE_FORMAT(Date_Reception, ?)
       ORDER BY date ASC
     `;
     
     // Exécuter la requête avec les paramètres
-    const result = await db.query(query, [dateFormat, sqlDate, dateFormat]);
+    const params = isAdmin
+      ? [dateFormat, sqlDate, dateFormat]
+      : [dateFormat, sqlDate, userId, dateFormat];
+    const result = await db.query(query, params);
     
     // Si aucun résultat, retourner un tableau vide
     if (!result || !result.length) return [];

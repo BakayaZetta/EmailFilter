@@ -7,6 +7,22 @@ import requests
 from urllib.parse import urlparse
 
 
+def _get_positive_int_env(name: str, default: int) -> int:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    try:
+        parsed = int(value)
+        return parsed if parsed > 0 else default
+    except ValueError:
+        logging.warning(f"Invalid value for {name}={value}. Using default {default}.")
+        return default
+
+
+URL_ANALYSIS_MAX_URLS = _get_positive_int_env("URL_ANALYSIS_MAX_URLS", 40)
+URL_ANALYSIS_MAX_HEAD_CHECKS = _get_positive_int_env("URL_ANALYSIS_MAX_HEAD_CHECKS", 10)
+
+
 def _get_trusted_domains() -> list:
     default_domains = [
         "paypal.com", "google.com", "apple.com", "microsoft.com", "amazon.com",
@@ -36,7 +52,19 @@ def get_urls_from_text(text: str) -> list:
     urls = [url for url in urls if not url.startswith("http://images") and "tracking" not in url]
     return urls
 
-def is_trusted_domain(url: str) -> bool:
+
+def _dedupe_urls(urls: list[str]) -> list[str]:
+    seen = set()
+    deduped = []
+    for url in urls:
+        normalized = url.strip()
+        if not normalized or normalized in seen:
+            continue
+        seen.add(normalized)
+        deduped.append(normalized)
+    return deduped
+
+def is_trusted_domain(url: str, head_checks_state: dict) -> bool:
     '''
     1. https valide
     2. appartient au trusted domain
@@ -54,18 +82,35 @@ def is_trusted_domain(url: str) -> bool:
     if parsed.scheme.lower() != "https":
         return False
 
+    initial_domain = (parsed.hostname or '').lower().lstrip('www.')
+    if not initial_domain:
+        return False
+
+    candidate_for_trust = any(
+        initial_domain == domain or
+        initial_domain.endswith(f".{domain}")
+        for domain in trusted_domains
+    )
+    if not candidate_for_trust:
+        return False
+
+    if head_checks_state.get("used", 0) >= URL_ANALYSIS_MAX_HEAD_CHECKS:
+        return False
+
+    head_checks_state["used"] = head_checks_state.get("used", 0) + 1
+
     try:
         response = requests.head(
             url,
-            timeout=5,
+            timeout=3,
             allow_redirects=True,
-            verify=True,  # Verification SSL obligatoire
+            verify=True,
             headers={'User-Agent': 'SecurityCheckBot/1.0'}
         )
     except requests.exceptions.SSLError:
-        return False  # Certificat invalide/expiré
+        return False
     except requests.exceptions.RequestException:
-        return False  # Erreur réseau ou autre
+        return False
 
     # 2. Vérification appartenance aux domaines de confiance
     final_domain = urlparse(response.url).hostname
@@ -81,7 +126,7 @@ def is_trusted_domain(url: str) -> bool:
 )
 
 
-def predict_url(urls_list: list) -> dict:
+def predict_url(urls_list: list) -> tuple[dict, dict]:
     '''
     Prédit l'étiquette d'une URL en utilisant un modèle pré-entraîné.
 
@@ -92,11 +137,15 @@ def predict_url(urls_list: list) -> dict:
         dict: Un dictionnaire avec les URLs comme clés et leurs étiquettes prédites comme valeurs.
     '''
     label_dict = {}
+    unique_urls = _dedupe_urls(urls_list)
+    urls_to_analyze = unique_urls[:URL_ANALYSIS_MAX_URLS]
+    skipped_urls = max(0, len(unique_urls) - len(urls_to_analyze))
+    head_checks_state = {"used": 0}
 
-    for url in urls_list:
+    for url in urls_to_analyze:
         if url == "":
             continue
-        if is_trusted_domain(url):
+        if is_trusted_domain(url, head_checks_state):
             label_dict[url] = "benign"
         else:
             try:
@@ -106,7 +155,25 @@ def predict_url(urls_list: list) -> dict:
                 logging.warning(f"URL classifier failed for URL '{url[:120]}...': {error}")
                 label_dict[url] = "phishing"
     
-    return label_dict
+    summary = {
+        "total_urls": len(urls_list),
+        "unique_urls": len(unique_urls),
+        "analyzed_urls": len(urls_to_analyze),
+        "skipped_urls": skipped_urls,
+        "head_checks_used": head_checks_state.get("used", 0),
+        "phishing_count": sum(1 for value in label_dict.values() if value == "phishing"),
+        "benign_count": sum(1 for value in label_dict.values() if value == "benign"),
+    }
+
+    if skipped_urls > 0:
+        logging.info(
+            "URL analysis capped: analyzed=%s skipped=%s unique=%s",
+            len(urls_to_analyze),
+            skipped_urls,
+            len(unique_urls),
+        )
+
+    return label_dict, summary
 
 
 def url_analysis(email_obj):

@@ -336,7 +336,9 @@ onUnmounted(() => {
 
                   <!-- Status -->
                   <td class="px-2 py-2 text-center">
-                    <div :class="['w-3 h-3 rounded-full mx-auto', getStatusClass(mail.Statut)]" :title="mail.Statut">
+                    <div class="flex items-center justify-center gap-1" :title="mail.Statut">
+                      <div :class="['w-3 h-3 rounded-full', getStatusClass(mail.Statut)]"></div>
+                      <span class="text-[10px] uppercase text-gray-600">{{ mail.Statut }}</span>
                     </div>
                   </td>
 

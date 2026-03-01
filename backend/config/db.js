@@ -1,14 +1,20 @@
 const mysql = require('mysql2');
 const path = require('path');
-require('dotenv').config();
+require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
+
+const dbHost = process.env.DB_HOST || 'localhost';
+const dbUser = process.env.DB_USER || process.env.MYSQL_USER;
+const dbPassword = process.env.DB_PASSWORD || process.env.MYSQL_PASSWORD;
+const dbName = process.env.DB_NAME || process.env.MYSQL_DATABASE;
+const dbPort = Number(process.env.DB_PORT || 3306);
 
 // Create a connection pool
 const pool = mysql.createPool({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    port: process.env.DB_PORT,
+    host: dbHost,
+    user: dbUser,
+    password: dbPassword,
+    database: dbName,
+    port: dbPort,
     waitForConnections: true,
     connectionLimit: 10,
     maxIdle: 10, // The maximum number of connections waiting in the queue

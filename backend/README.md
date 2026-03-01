@@ -105,3 +105,17 @@ node app.js
 # npm install -g nodemon
 # nodemon app.js
 ```
+
+### One-time Blacklist Ownership Backfill
+
+If your existing `Blacklist` rows were created before multi-tenant ownership was introduced, run this migration once:
+
+```bash
+npm run migrate:blacklist-owner
+```
+
+Optional (recommended for strict targeting): set `BLACKLIST_OWNER_ADMIN_EMAIL` in your environment before running migration to force assignment to a specific admin account.
+
+```bash
+BLACKLIST_OWNER_ADMIN_EMAIL=admin@example.com npm run migrate:blacklist-owner
+```

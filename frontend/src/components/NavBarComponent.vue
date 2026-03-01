@@ -19,6 +19,10 @@ const authenticatedLinks = [
   { name: 'Settings', path: '/settings' },
 ];
 
+const adminOnlyLinks = [
+  { name: 'Admin Portal', path: '/admin' },
+];
+
 // Links for non-authenticated users
 const guestLinks = [
   { name: 'Login', path: '/login' },
@@ -27,7 +31,14 @@ const guestLinks = [
 
 // Computed property to get the appropriate links based on auth status
 const navigationLinks = computed(() => {
-  return authStore.isLoggedIn ? authenticatedLinks : guestLinks;
+  if (!authStore.isLoggedIn) {
+    return guestLinks;
+  }
+
+  const role = String(authStore.user?.role || '').toLowerCase();
+  const isAdmin = role === 'admin' || role === 'super_admin' || role === 'superadmin';
+
+  return isAdmin ? [...authenticatedLinks, ...adminOnlyLinks] : authenticatedLinks;
 });
 
 const isActive = (routePath) => {

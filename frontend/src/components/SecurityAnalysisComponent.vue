@@ -22,19 +22,39 @@ const props = defineProps({
 
 // Catégoriser les analyses par type
 const categorizedAnalyses = computed(() => {
-  if (!props.analyses) return { SPF: [], DKIM: [], DMARC: [], AI: [], SAFE_OVERRIDE: [] };
+  if (!props.analyses) return { SPF: [], DKIM: [], DMARC: [], AI: [], SAFE_OVERRIDE: [], TIMEOUT: [], ERROR: [] };
 
   const result = {
     SPF: props.analyses.filter(a => a.type === 'SPF'),
     DKIM: props.analyses.filter(a => a.type === 'DKIM'),
     DMARC: props.analyses.filter(a => a.type === 'DMARC'),
     AI: props.analyses.filter(a => a.type === 'AI'),
-    SAFE_OVERRIDE: props.analyses.filter(a => a.type === 'SAFE_OVERRIDE')
+    SAFE_OVERRIDE: props.analyses.filter(a => a.type === 'SAFE_OVERRIDE'),
+    TIMEOUT: props.analyses.filter(a => a.type === 'TIMEOUT'),
+    ERROR: props.analyses.filter(a => a.type === 'ERROR')
   };
   return result;
 });
 
 const hasSafeOverride = computed(() => categorizedAnalyses.value.SAFE_OVERRIDE.length > 0);
+const normalizedMailStatus = computed(() => (props.mailStatus || '').toUpperCase());
+const hasScanError = computed(() => normalizedMailStatus.value === 'ERROR');
+const isScanPending = computed(() => normalizedMailStatus.value === 'ANALYSE_PENDING');
+const isQuarantined = computed(() => normalizedMailStatus.value === 'QUARANTINE');
+
+const latestFailureAnalysis = computed(() => {
+  const failureAnalyses = [...(props.analyses || [])]
+    .filter(a => a?.type === 'TIMEOUT' || a?.type === 'ERROR')
+    .sort((left, right) => new Date(right.date || 0) - new Date(left.date || 0));
+
+  return failureAnalyses[0] || null;
+});
+
+const scanFailureReason = computed(() => {
+  const rawReason = latestFailureAnalysis.value?.result || '';
+  if (!rawReason) return '';
+  return rawReason.replace(/^TIMEOUT:\s*/i, '').replace(/^ERROR:\s*/i, '').trim();
+});
 
 // Parseur pour les résultats d'analyse AI
 const parseAIResult = (resultText) => {
@@ -94,9 +114,12 @@ const getAnalysisIndicator = (analysis) => {
 
 // Déterminer si un email est globalement suspect en fonction des analyses
 const isEmailSuspicious = computed(() => {
-  const normalizedStatus = (props.mailStatus || '').toUpperCase();
-  if (['PASS', 'SAFE'].includes(normalizedStatus)) {
+  if (['PASS', 'SAFE'].includes(normalizedMailStatus.value)) {
     return false;
+  }
+
+  if (['ERROR', 'ANALYSE_PENDING', 'QUARANTINE'].includes(normalizedMailStatus.value)) {
+    return true;
   }
 
   // Vérifier les analyses SPF et DKIM
@@ -140,6 +163,43 @@ const isEmailSuspicious = computed(() => {
   );
 
   return hasSPFFailure || hasDKIMFailure || aiSuspicious || hasSuspiciousLinks || hasSuspiciousAttachments;
+});
+
+const globalStatusMessage = computed(() => {
+  if (hasScanError.value) {
+    return scanFailureReason.value
+      ? `Scan failed: ${scanFailureReason.value}`
+      : 'Scan failed: analysis error detected. Rescan is recommended.';
+  }
+  if (isScanPending.value) {
+    return 'Scan is still in progress. Results may be incomplete.';
+  }
+  if (isQuarantined.value) {
+    return 'This email is quarantined due to suspicious or unsafe indicators.';
+  }
+  return isEmailSuspicious.value
+    ? 'This email shows suspicious signs'
+    : 'This email appears secure';
+});
+
+const globalStatusClass = computed(() => {
+  if (hasScanError.value) {
+    return 'bg-orange-500';
+  }
+  if (isScanPending.value) {
+    return 'bg-blue-500';
+  }
+  return isEmailSuspicious.value ? 'bg-red-500' : 'bg-green-500';
+});
+
+const globalStatusIcon = computed(() => {
+  if (hasScanError.value) {
+    return 'pi-exclamation-triangle';
+  }
+  if (isScanPending.value) {
+    return 'pi-spin pi-spinner';
+  }
+  return isEmailSuspicious.value ? 'pi-shield' : 'pi-check-circle';
 });
 
 // Obtenir la classe de couleur pour le statut d'analyse
@@ -195,11 +255,21 @@ const formatFileSize = (sizeInBytes) => {
     <div
       :class="[
         'mb-3 p-2 rounded-lg text-white font-medium flex items-center',
-        isEmailSuspicious ? 'bg-red-500' : 'bg-green-500'
+        globalStatusClass
       ]"
     >
-      <i :class="`pi ${isEmailSuspicious ? 'pi-shield' : 'pi-check-circle'} mr-2`"></i>
-      <span>{{ isEmailSuspicious ? 'This email shows suspicious signs' : 'This email appears secure' }}</span>
+      <i :class="`pi ${globalStatusIcon} mr-2`"></i>
+      <span>{{ globalStatusMessage }}</span>
+    </div>
+
+    <div v-if="hasScanError" class="mb-3 rounded border border-orange-200 bg-orange-50 p-2 text-sm text-orange-800">
+      <div class="font-medium">This scan ended with an error.</div>
+      <div v-if="scanFailureReason" class="mt-1">Reason: {{ scanFailureReason }}</div>
+      <div class="mt-1">Please rescan this email to get a complete security verdict.</div>
+    </div>
+
+    <div v-if="isScanPending" class="mb-3 rounded border border-blue-200 bg-blue-50 p-2 text-sm text-blue-800">
+      Analysis is pending. Refresh after a short while to view the final result.
     </div>
 
     <!-- Section des analyses -->
