@@ -9,12 +9,43 @@ const mailRoutes = require('./routes/mailRoutes');
 const analysisRoutes = require('./routes/analysisRoutes');
 const statisticsRoutes = require('./routes/statisticsRoutes');
 const filterRulesRoutes = require('./routes/filterRulesRoutes'); // Nouvelle ligne
+const adminRoutes = require('./routes/adminRoutes');
 const requestLogger = require('./middleware/logger');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
+const parseAllowedOrigins = () => {
+  const rawOrigins = process.env.CORS_ALLOWED_ORIGINS || '';
+  const parsed = rawOrigins
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+  if (parsed.length > 0) {
+    return parsed;
+  }
+
+  return ['http://localhost', 'http://localhost:80', 'http://localhost:3000'];
+};
+
+const allowedOrigins = parseAllowedOrigins();
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error('CORS policy violation'));
+  },
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(requestLogger);
@@ -24,6 +55,7 @@ app.use('/api/mails', mailRoutes); // Changed from '/api' to '/api/mails'
 app.use('/api', analysisRoutes);
 app.use('/api/statistics', statisticsRoutes);
 app.use('/api', filterRulesRoutes); // Nouvelle ligne
+app.use('/api/admin', adminRoutes);
 
 // Health check endpoint
 app.get('/backend-health', (req, res) => {
@@ -58,16 +90,6 @@ process.on('uncaughtException', (error) => {
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
-
-// Verfy the access to the environment variables
-console.log("------------------");
-console.log(process.env.DB_HOST);
-console.log(process.env.DB_USER);
-console.log(process.env.DB_PASSWORD);
-console.log(process.env.DB_NAME);
-console.log(process.env.DB_PORT);
-console.log(process.env.PORT);
-console.log("------------------");
 
 // Export the app
 module.exports = app;

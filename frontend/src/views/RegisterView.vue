@@ -178,7 +178,7 @@ const handleSubmit = async () => {
     authStore.login(data.user, data.token);
 
     // Notification de succès
-    toast.success("Account created successfully! Welcome to Detectish!");
+    toast.success("Account created successfully! Welcome to Bakaya Tech!");
 
     // Redirect to /
     router.push('/');

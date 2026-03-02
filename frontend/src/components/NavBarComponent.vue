@@ -1,5 +1,5 @@
 <script setup>
-import detectish from '@/assets/img/detectish.png';
+import bakayaTechLogo from '@/assets/img/bakaya_tech.png';
 import { RouterLink, useRoute, useRouter } from 'vue-router';
 import { onMounted, computed } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
@@ -19,6 +19,10 @@ const authenticatedLinks = [
   { name: 'Settings', path: '/settings' },
 ];
 
+const adminOnlyLinks = [
+  { name: 'Admin Portal', path: '/admin' },
+];
+
 // Links for non-authenticated users
 const guestLinks = [
   { name: 'Login', path: '/login' },
@@ -27,7 +31,14 @@ const guestLinks = [
 
 // Computed property to get the appropriate links based on auth status
 const navigationLinks = computed(() => {
-  return authStore.isLoggedIn ? authenticatedLinks : guestLinks;
+  if (!authStore.isLoggedIn) {
+    return guestLinks;
+  }
+
+  const role = String(authStore.user?.role || '').toLowerCase();
+  const isAdmin = role === 'admin' || role === 'super_admin' || role === 'superadmin';
+
+  return isAdmin ? [...authenticatedLinks, ...adminOnlyLinks] : authenticatedLinks;
 });
 
 const isActive = (routePath) => {
@@ -56,7 +67,7 @@ onMounted(() => {
           <div class="flex flex-1 items-center justify-center md:items-stretch md:justify-start">
             <!-- Logo -->
             <RouterLink to="/" class="flex-shrink-0 flex items-center mr-4">
-              <img class="h-10 w-auto rounded-full" :src="detectish" alt="Bakaya Tech" />
+              <img class="h-10 w-auto rounded-full" :src="bakayaTechLogo" alt="Bakaya Tech" />
               <span class="hidden md:block text-black text-2xl font-bold ml-2">Bakaya Tech</span>
             </RouterLink>
 
