@@ -2,7 +2,7 @@ services:
   detectish:
     # image: matthl2002/detectish:latest
     build:
-      context: ..
+      context: .
       dockerfile: Dockerfile
     container_name: detectish
     depends_on:
@@ -31,7 +31,7 @@ services:
   backend:
     # image: matthl2002/detectish-backend:latest
     build:
-      context: ../backend
+      context: ./backend
       dockerfile: Dockerfile
     container_name: detectish-backend
     depends_on:
@@ -58,7 +58,7 @@ services:
   frontend:
     # image: matthl2002/detectish-frontend:latest
     build:
-      context: ../frontend
+      context: ./frontend
       dockerfile: Dockerfile
     container_name: detectish-frontend
     depends_on:
