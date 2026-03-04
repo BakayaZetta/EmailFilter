@@ -345,7 +345,13 @@ def determine_conclusion(spf_status: SPFStatus, dkim_status: DKIMStatus, dmarc_s
 
     return 'PASS', False
 
-async def analyze_email(email_obj: email.message.EmailMessage, email_raw, db: Database) -> None:
+async def analyze_email(
+    email_obj: email.message.EmailMessage,
+    email_raw,
+    db: Database,
+    requested_user_id: Optional[int] = None,
+    requested_user_email: Optional[str] = None
+) -> None:
     '''
     Analyzes an email for SPF, DKIM, DMARC, URL, AI, and ClamAV status and saves the results to the database.
 
@@ -376,14 +382,29 @@ async def analyze_email(email_obj: email.message.EmailMessage, email_raw, db: Da
         logging.error(f"Error processing email headers for mail {id_mail}: {e}")
         return
 
-    # Extract recipient email
-    recipient_email = parseaddr(email_data['to'])[1]
+    user_id = None
 
-    # Check if the user exists in the Utilisateur table by email
-    if db.user_exists_by_email(recipient_email):
-        user_id = db.get_user_id_by_email(recipient_email)
-    else:
-        user_id = db.add_user_with_email(recipient_email)
+    if requested_user_id and db.user_exists(requested_user_id):
+        user_id = requested_user_id
+    elif requested_user_email:
+        normalized_requested_email = requested_user_email.strip().lower()
+        if normalized_requested_email:
+            if db.user_exists_by_email(normalized_requested_email):
+                user_id = db.get_user_id_by_email(normalized_requested_email)
+            else:
+                user_id = db.add_user_with_email(normalized_requested_email)
+
+    if user_id is None:
+        recipient_email = parseaddr(email_data['to'])[1].strip().lower()
+        if recipient_email:
+            if db.user_exists_by_email(recipient_email):
+                user_id = db.get_user_id_by_email(recipient_email)
+            else:
+                user_id = db.add_user_with_email(recipient_email)
+
+    if user_id is None:
+        logging.error("Unable to resolve an owner user for analyzed email")
+        return
 
     id_mail = db.add_mail(
         id_utilisateur=user_id,  # Use the ensured user ID
