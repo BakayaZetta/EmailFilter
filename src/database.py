@@ -10,7 +10,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 load_dotenv()
 class Database:
     def __init__(self):
-        self.db_name: str = os.getenv('DB_NAME')
+        self.db_name: str = os.getenv('DB_NAME') or os.getenv('MYSQL_DATABASE')
         self.db_user: str = os.getenv('DB_USER')
         self.db_password: str = os.getenv('DB_PASSWORD')
         self.db_host: str = os.getenv('DB_HOST')
@@ -71,15 +71,35 @@ class Database:
             None
         '''
         try:
-            self.conn = mysql.connector.connect(
+            if self.conn is not None:
+                try:
+                    self.conn.close()
+                except Exception:
+                    pass
+
+            # Bootstrap connection: create the schema if missing.
+            bootstrap_conn = mysql.connector.connect(
                 user=self.db_user,
                 password=self.db_password,
                 host=self.db_host,
                 port=self.db_port
             )
+            bootstrap_cursor = bootstrap_conn.cursor()
+            if not self.db_name:
+                raise ValueError("DB_NAME (or MYSQL_DATABASE) must be configured")
+            bootstrap_cursor.execute(f"CREATE DATABASE IF NOT EXISTS `{self.db_name}`")
+            bootstrap_cursor.close()
+            bootstrap_conn.close()
+
+            # Main connection: always connect with an active database selected.
+            self.conn = mysql.connector.connect(
+                user=self.db_user,
+                password=self.db_password,
+                host=self.db_host,
+                port=self.db_port,
+                database=self.db_name,
+            )
             self.cursor = self.conn.cursor()
-            self.cursor.execute(f"CREATE DATABASE IF NOT EXISTS {self.db_name}")
-            self.conn.database = self.db_name
         except mysql.connector.Error as err:
             if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
                 logging.error("Something is wrong with your user name or password")
@@ -87,6 +107,8 @@ class Database:
                 logging.error("Database does not exist")
             else:
                 logging.error(err)
+        except ValueError as err:
+            logging.error(err)
     def create_tables(self) -> None:
         '''
         Creates the necessary tables in the database.
