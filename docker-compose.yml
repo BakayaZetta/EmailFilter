@@ -1,0 +1,119 @@
+services:
+  detectish:
+    # image: matthl2002/detectish:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: detectish
+    depends_on:
+      mysql:
+        condition: service_healthy
+      clamav:
+        condition: service_healthy
+    networks:
+      - detectish-network
+    ports:
+      - "6969:6969"
+    restart: unless-stopped
+    volumes:
+      - ./phishing_email_example:/app/phishing_email_example
+    env_file: .env
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:6969/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+      # start_period is the time to wait before starting health checks
+    environment:
+      - HF_TOKEN=${HF_TOKEN}
+
+  backend:
+    # image: matthl2002/detectish-backend:latest
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: detectish-backend
+    depends_on:
+      mysql:
+        condition: service_healthy
+      clamav:
+        condition: service_healthy
+      detectish:
+        condition: service_healthy
+    networks:
+      - detectish-network
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    env_file: .env
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:3000/backend-health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    environment:
+      - HF_TOKEN=${HF_TOKEN}
+
+  frontend:
+    # image: matthl2002/detectish-frontend:latest
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: detectish-frontend
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - detectish-network
+    ports:
+      - "80:80"
+    restart: unless-stopped
+    env_file: .env
+    healthcheck:
+      test: ["CMD-SHELL", "test -f /usr/share/nginx/html/frontend-health/index.json || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 180s
+      # start_period is the time to wait before starting health checks
+    environment:
+      - HF_TOKEN=${HF_TOKEN}
+
+  clamav:
+    image: clamav/clamav:latest
+    container_name: clamav
+    ports:
+      - "3310:3310"
+    networks:
+      - detectish-network
+    healthcheck:
+      test: ["CMD-SHELL", "echo 'PING' | nc -w 5 localhost 3310"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+
+  mysql:
+    image: mysql:lts
+    container_name: mysql
+    env_file: .env
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - detectish-network
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  mysql-data:
+
+networks:
+  detectish-network:
+    driver: bridge
