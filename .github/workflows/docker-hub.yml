@@ -31,7 +31,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v3
         with:
-          images: matthl2002/detectish
+          images: ${{ secrets.DOCKER_USERNAME }}/detectish
 
       - name: DETECTISH - Build and push Docker docker image
         id: push
@@ -42,13 +42,13 @@ jobs:
           push: true
           tags: |
             ${{ steps.meta.outputs.tags }}
-            ${{ github.ref == 'refs/heads/main' && 'matthl2002/detectish' || '' }}
+            ${{ github.ref == 'refs/heads/main' && format('{0}/detectish', secrets.DOCKER_USERNAME) || '' }}
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: DETECTISH - Generate artifact attestation
         uses: actions/attest-build-provenance@v1
         with:
-          subject-name: docker.io/matthl2002/detectish
+          subject-name: docker.io/${{ secrets.DOCKER_USERNAME }}/detectish
           subject-digest: ${{ steps.push.outputs.digest }}
           push-to-registry: true
 
@@ -74,7 +74,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v3
         with:
-          images: matthl2002/detectish-frontend
+          images: ${{ secrets.DOCKER_USERNAME }}/detectish-frontend
 
       - name: DETECTISH-FRONTEND - Build and push Docker docker image
         id: push
@@ -85,13 +85,13 @@ jobs:
           push: true
           tags: |
             ${{ steps.meta.outputs.tags }}
-            ${{ github.ref == 'refs/heads/main' && 'matthl2002/detectish-frontend' || '' }}
+            ${{ github.ref == 'refs/heads/main' && format('{0}/detectish-frontend', secrets.DOCKER_USERNAME) || '' }}
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: DETECTISH-FRONTEND - Generate artifact attestation
         uses: actions/attest-build-provenance@v1
         with:
-          subject-name: docker.io/matthl2002/detectish-frontend
+          subject-name: docker.io/${{ secrets.DOCKER_USERNAME }}/detectish-frontend
           subject-digest: ${{ steps.push.outputs.digest }}
           push-to-registry: true
 
@@ -117,7 +117,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v3
         with:
-          images: matthl2002/detectish-backend
+          images: ${{ secrets.DOCKER_USERNAME }}/detectish-backend
 
       - name: DETECTISH-BACKEND - Build and push Docker docker image
         id: push
@@ -128,12 +128,12 @@ jobs:
           push: true
           tags: |
             ${{ steps.meta.outputs.tags }}
-            ${{ github.ref == 'refs/heads/main' && 'matthl2002/detectish-backend' || '' }}
+            ${{ github.ref == 'refs/heads/main' && format('{0}/detectish-backend', secrets.DOCKER_USERNAME) || '' }}
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: DETECTISH-BACKEND - Generate artifact attestation
         uses: actions/attest-build-provenance@v1
         with:
-          subject-name: docker.io/matthl2002/detectish-backend
+          subject-name: docker.io/${{ secrets.DOCKER_USERNAME }}/detectish-backend
           subject-digest: ${{ steps.push.outputs.digest }}
           push-to-registry: true
