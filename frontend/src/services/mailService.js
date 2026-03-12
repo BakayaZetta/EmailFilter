@@ -23,9 +23,7 @@ export default {
 
     // Normaliser les données pour compatibilité en préservant plus d'informations
     const items = mailRows.map(mail => {
-      // Extraire l'email du destinataire si disponible
-      const destinataire = mail.recipient || mail.to || mail.Destinataire ||
-        (mail.user?.email ? mail.user.email : `User ID: ${mail.ID_Utilisateur || mail.user?.id}`);
+      const destinataire = mail.recipient || mail.to || mail.Destinataire || '';
 
       return {
         ID_Mail: mail.id || mail.ID_Mail,
@@ -35,7 +33,6 @@ export default {
         Sujet: mail.subject || mail.Sujet,
         Date_Reception: mail.receivedDate || mail.Date_Reception,
         Statut: mail.status || mail.Statut,
-        // Conserver l'objet complet original également
         originalData: mail
       };
     });

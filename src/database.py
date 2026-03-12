@@ -141,6 +141,7 @@ class Database:
                 "  Contenu LONGTEXT,"
                 "  Date_Reception DATETIME,"
                 "  Emetteur VARCHAR(255),"
+                "  Destinataire VARCHAR(255),"
                 "  Statut VARCHAR(255),"
                 "  FOREIGN KEY (ID_Utilisateur) REFERENCES Utilisateur(ID_Utilisateur)"
                 ")"
@@ -208,7 +209,17 @@ class Database:
                     logging.error(err.msg)
             else:
                 logging.info("OK")
-    def add_mail(self, id_utilisateur: int, sujet: str, contenu: str, emetteur:str,date_reception: datetime, statut: str) -> int:
+
+        try:
+            self.cursor.execute("ALTER TABLE Mail ADD COLUMN Destinataire VARCHAR(255)")
+            self._commit()
+            logging.info("Added Destinataire column to Mail table.")
+        except mysql.connector.Error as err:
+            if err.errno == errorcode.ER_DUP_FIELDNAME:
+                logging.info("Destinataire column already exists.")
+            else:
+                logging.error(f"Failed to ensure Destinataire column exists: {err.msg}")
+    def add_mail(self, id_utilisateur: int, sujet: str, contenu: str, emetteur: str, destinataire: str, date_reception: datetime, statut: str) -> int:
         '''
         Adds a mail record to the database.
 
@@ -223,9 +234,9 @@ class Database:
             int: The ID of the inserted mail record.
         '''
         add_mail_query = (
-            "INSERT INTO Mail (ID_Utilisateur, Sujet, Contenu, Date_Reception, Emetteur, Statut) "
-            "VALUES (%s, %s, %s, %s, %s, %s)")
-        mail_data = (id_utilisateur, sujet, contenu, date_reception, emetteur, statut)
+            "INSERT INTO Mail (ID_Utilisateur, Sujet, Contenu, Date_Reception, Emetteur, Destinataire, Statut) "
+            "VALUES (%s, %s, %s, %s, %s, %s, %s)")
+        mail_data = (id_utilisateur, sujet, contenu, date_reception, emetteur, destinataire, statut)
         self._execute(add_mail_query, mail_data)
         self._commit()
         return self.cursor.lastrowid

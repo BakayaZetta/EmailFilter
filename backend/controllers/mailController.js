@@ -196,11 +196,11 @@ exports.getMailCompleteById = async (req, res) => {
  */
 exports.uploadEmail = async (req, res) => {
     try {
-        const { subject, content, sender, userId, receivedDate } = req.body;
+        const { subject, content, sender, recipient, userId, receivedDate } = req.body;
 
         const effectiveUserId = isAdminUser(req) && userId ? userId : req.userData.userId;
 
-        if (!subject || !content || !sender || !effectiveUserId || !receivedDate) {
+        if (!subject || !content || !sender || !recipient || !effectiveUserId || !receivedDate) {
             return handleError(res, new Error('All fields are required'), 400);
         }
 
@@ -208,6 +208,7 @@ exports.uploadEmail = async (req, res) => {
             subject,
             content,
             sender,
+            recipient,
             userId: effectiveUserId,
             receivedDate,
         });

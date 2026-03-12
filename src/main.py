@@ -19,7 +19,7 @@ Usage:
 
 from database import Database 
 from analysis.mail_analyzer import load_email, analyze_email, load_raw_email
-from fastapi import FastAPI, UploadFile, Body
+from fastapi import FastAPI, UploadFile, Body, Form
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Dict, Any
@@ -70,7 +70,7 @@ MAX_EMAIL_SIZE_BYTES = MAX_EMAIL_SIZE_MB * 1024 * 1024
 SCANNER_WORKERS = _get_positive_int_env("SCANNER_WORKERS", 1)
 analysis_executor = ThreadPoolExecutor(max_workers=SCANNER_WORKERS)
 
-def process_email(request_id: str, filename: str, email_content: bytes):
+def process_email(request_id: str, filename: str, email_content: bytes, owner_user_id: int | None = None):
     """
     Processes an uploaded email file asynchronously.
 
@@ -96,7 +96,7 @@ def process_email(request_id: str, filename: str, email_content: bytes):
         email_raw = load_raw_email(temp_file_path)
 
         import asyncio
-        asyncio.run(analyze_email(email_obj, email_raw, db))
+        asyncio.run(analyze_email(email_obj, email_raw, db, owner_user_id=owner_user_id))
 
         analysis_jobs[request_id] = {
             "status": "finished",
@@ -117,7 +117,7 @@ def process_email(request_id: str, filename: str, email_content: bytes):
             os.remove(temp_file_path)
 
 @app.post("/analyse/")
-async def analyse_email(file: UploadFile):
+async def analyse_email(file: UploadFile, user_id: int | None = Form(default=None)):
     """
     Endpoint to analyze an email file.
 
@@ -151,7 +151,7 @@ async def analyse_email(file: UploadFile):
         "updated_at": datetime.utcnow().isoformat()
     }
 
-    analysis_executor.submit(process_email, request_id, file.filename, email_content)
+    analysis_executor.submit(process_email, request_id, file.filename, email_content, user_id)
     return JSONResponse(content={"message": "Processing...", "request_id": request_id}, status_code=202)
 
 

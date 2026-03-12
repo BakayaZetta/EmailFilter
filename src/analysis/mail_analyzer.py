@@ -345,7 +345,12 @@ def determine_conclusion(spf_status: SPFStatus, dkim_status: DKIMStatus, dmarc_s
 
     return 'PASS', False
 
-async def analyze_email(email_obj: email.message.EmailMessage, email_raw, db: Database) -> None:
+async def analyze_email(
+    email_obj: email.message.EmailMessage,
+    email_raw,
+    db: Database,
+    owner_user_id: Optional[int] = None,
+) -> None:
     '''
     Analyzes an email for SPF, DKIM, DMARC, URL, AI, and ClamAV status and saves the results to the database.
 
@@ -376,21 +381,26 @@ async def analyze_email(email_obj: email.message.EmailMessage, email_raw, db: Da
         logging.error(f"Error processing email headers for mail {id_mail}: {e}")
         return
 
-    # Extract recipient email
     recipient_email = parseaddr(email_data['to'])[1]
 
-    # Check if the user exists in the Utilisateur table by email
-    if db.user_exists_by_email(recipient_email):
-        user_id = db.get_user_id_by_email(recipient_email)
+    if owner_user_id is not None and db.user_exists(owner_user_id):
+        user_id = owner_user_id
+    elif recipient_email:
+        if db.user_exists_by_email(recipient_email):
+            user_id = db.get_user_id_by_email(recipient_email)
+        else:
+            user_id = db.add_user_with_email(recipient_email)
     else:
-        user_id = db.add_user_with_email(recipient_email)
+        logging.error("Unable to determine a mail owner for subject '%s'.", email_data['subject'])
+        return
 
     id_mail = db.add_mail(
-        id_utilisateur=user_id,  # Use the ensured user ID
+        id_utilisateur=user_id,
         sujet=email_data['subject'],
         contenu=email_data['raw'],
-        date_reception=datetime.now(),
         emetteur=email_data['from'],
+        destinataire=email_data['to'],
+        date_reception=datetime.now(),
         statut='Analyse_pending'
     )
     

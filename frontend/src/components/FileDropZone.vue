@@ -2,6 +2,7 @@
 import { ref, watch, onMounted, onUnmounted, nextTick, computed } from 'vue';
 import axios from 'axios';
 import mailService from '@/services/mailService';
+import { useAuthStore } from '@/stores/authStore';
 
 const props = defineProps({
   accept: {
@@ -19,6 +20,7 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['upload-success', 'upload-error', 'scan-finished', 'close']);
+const authStore = useAuthStore();
 
 const isDragging = ref(false);
 const dropZone = ref(null);
@@ -179,6 +181,20 @@ const generateId = () => {
   return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
 };
 
+const getLoggedInUserId = () => authStore.user?.id || null;
+
+const extractHeaderValue = async (file, headerName) => {
+  const content = await file.text();
+  const escapedHeaderName = headerName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const match = content.match(new RegExp(`^${escapedHeaderName}:\\s*(.+(?:\\r?\\n[ \\t].+)*)`, 'im'));
+
+  if (!match) {
+    return '';
+  }
+
+  return match[1].replace(/\r?\n[ \t]+/g, ' ').trim();
+};
+
 // Upload d'un fichier spécifique
 const uploadFile = async (fileItem) => {
   if (fileItem.uploading || fileItem.uploaded) return;
@@ -188,11 +204,16 @@ const uploadFile = async (fileItem) => {
     fileItem.progress = 0;
     fileItem.error = null;
 
+    const userId = getLoggedInUserId();
+    const sender = await extractHeaderValue(fileItem.file, 'From');
+    const recipient = await extractHeaderValue(fileItem.file, 'To');
+
     const emailData = {
-      subject: fileItem.file.name, // Assuming file name as subject
-      content: await fileItem.file.text(), // Read file content
-      sender: 'unknown@example.com', // Placeholder sender
-      userId: 1, // Placeholder user ID
+      subject: await extractHeaderValue(fileItem.file, 'Subject') || fileItem.file.name,
+      content: await fileItem.file.text(),
+      sender,
+      recipient,
+      userId,
       receivedDate: new Date().toISOString(),
     };
 
@@ -237,6 +258,10 @@ const uploadAllFiles = async () => {
   const uploadPromises = filesToUpload.map(fileItem => {
     const formData = new FormData();
     formData.append('file', fileItem.file);
+    const userId = getLoggedInUserId();
+    if (userId) {
+      formData.append('user_id', String(userId));
+    }
 
     return axios.post('/analyse/', formData, {
       headers: {

@@ -21,7 +21,7 @@ const executeQuery = async (query, params = []) => {
  * @returns {Promise<Array>} Liste des mails
  */
 const getMails = async () => {
-    return executeQuery('SELECT ID_Mail, Sujet, Emetteur, ID_Utilisateur, Date_Reception, Statut FROM Mail ORDER BY Date_Reception DESC');
+    return executeQuery('SELECT ID_Mail, Sujet, Emetteur, Destinataire, ID_Utilisateur, Date_Reception, Statut FROM Mail ORDER BY Date_Reception DESC');
 };
 
 /**
@@ -41,7 +41,7 @@ const getMailById = async (id) => {
  */
 const getMailsByUserId = async (userId) => {
     return executeQuery(
-        'SELECT ID_Mail, Sujet, Emetteur, ID_Utilisateur, Date_Reception, Statut FROM Mail WHERE ID_Utilisateur = ? ORDER BY Date_Reception DESC',
+        'SELECT ID_Mail, Sujet, Emetteur, Destinataire, ID_Utilisateur, Date_Reception, Statut FROM Mail WHERE ID_Utilisateur = ? ORDER BY Date_Reception DESC',
         [userId]
     );
 };
@@ -57,11 +57,9 @@ const getMailsByStatus = async (statusList) => {
     }
     const placeholders = statusList.map(() => '?').join(', ');
     
-    // Ajouter une jointure pour récupérer l'email de l'utilisateur
     return executeQuery(
-        `SELECT ${MAIL_LIST_COLUMNS}, u.Email as Destinataire
+        `SELECT ${MAIL_LIST_COLUMNS}
          FROM Mail m
-         LEFT JOIN Utilisateur u ON m.ID_Utilisateur = u.ID_Utilisateur
          WHERE m.Statut IN (${placeholders}) 
          ORDER BY m.Date_Reception DESC`, 
         statusList
@@ -79,9 +77,8 @@ const getMailsByStatusPaginated = async (statusList, page = 1, limit = 50) => {
     const placeholders = statusList.map(() => '?').join(', ');
 
     return executeQuery(
-        `SELECT ${MAIL_LIST_COLUMNS}, u.Email as Destinataire
+        `SELECT ${MAIL_LIST_COLUMNS}
          FROM Mail m
-         LEFT JOIN Utilisateur u ON m.ID_Utilisateur = u.ID_Utilisateur
          WHERE m.Statut IN (${placeholders})
          ORDER BY m.Date_Reception DESC
          LIMIT ? OFFSET ?`,
@@ -118,7 +115,7 @@ const getMailsByUserIdAndStatus = async (userId, statusList) => {
     const placeholders = statusList.map(() => '?').join(', ');
     const params = [...statusList, userId];
     return executeQuery(
-        `SELECT ID_Mail, Sujet, Emetteur, ID_Utilisateur, Date_Reception, Statut
+        `SELECT ID_Mail, Sujet, Emetteur, Destinataire, ID_Utilisateur, Date_Reception, Statut
          FROM Mail
          WHERE Statut IN (${placeholders}) AND ID_Utilisateur = ?
          ORDER BY Date_Reception DESC`, 
@@ -137,7 +134,7 @@ const getMailsByUserIdAndStatusPaginated = async (userId, statusList, page = 1, 
     const placeholders = statusList.map(() => '?').join(', ');
 
     return executeQuery(
-        `SELECT ID_Mail, Sujet, Emetteur, ID_Utilisateur, Date_Reception, Statut
+        `SELECT ID_Mail, Sujet, Emetteur, Destinataire, ID_Utilisateur, Date_Reception, Statut
          FROM Mail
          WHERE Statut IN (${placeholders}) AND ID_Utilisateur = ?
          ORDER BY Date_Reception DESC
@@ -209,6 +206,7 @@ const getMailCompleteById = async (id) => {
         content: mail.Contenu,
         receivedDate: mail.Date_Reception,
         sender: mail.Emetteur,
+        recipient: mail.Destinataire,
         status: mail.Statut,
         user: {
             id: mail.ID_Utilisateur,
@@ -244,7 +242,7 @@ const getMailsSince = async (startDate) => {
   const sqlDate = startDate.toISOString().split('T')[0];
   
   return executeQuery(
-        `SELECT ID_Mail, Sujet, Emetteur, ID_Utilisateur, Date_Reception, Statut FROM Mail 
+      `SELECT ID_Mail, Sujet, Emetteur, Destinataire, ID_Utilisateur, Date_Reception, Statut FROM Mail 
      WHERE Date_Reception >= ? 
      ORDER BY Date_Reception DESC`,
     [sqlDate]
@@ -257,12 +255,12 @@ const getMailsSince = async (startDate) => {
  * @returns {Promise<Object>} The saved email
  */
 const saveEmail = async (emailData) => {
-    const { subject, content, sender, userId, receivedDate } = emailData;
+    const { subject, content, sender, recipient, userId, receivedDate } = emailData;
 
     const result = await executeQuery(
-        `INSERT INTO Mail (Sujet, Contenu, Emetteur, ID_Utilisateur, Date_Reception)
-         VALUES (?, ?, ?, ?, ?)`,
-        [subject, content, sender, userId, receivedDate]
+        `INSERT INTO Mail (Sujet, Contenu, Emetteur, Destinataire, ID_Utilisateur, Date_Reception)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [subject, content, sender, recipient, userId, receivedDate]
     );
 
     return {
@@ -270,6 +268,7 @@ const saveEmail = async (emailData) => {
         subject,
         content,
         sender,
+        recipient,
         userId,
         receivedDate,
     };
@@ -295,6 +294,7 @@ const MAIL_LIST_COLUMNS = `
     m.ID_Mail,
     m.Sujet,
     m.Emetteur,
+    m.Destinataire,
     m.ID_Utilisateur,
     m.Date_Reception,
     m.Statut
