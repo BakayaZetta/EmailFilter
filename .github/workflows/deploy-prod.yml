@@ -32,21 +32,6 @@ jobs:
           timeout 5 bash -c "cat < /dev/null > /dev/tcp/$VPS_HOST/22"
           echo "SSH target secrets and port reachability look valid"
 
-      - name: Prepare SSH key file
-        env:
-          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
-        run: |
-          set -euo pipefail
-          test -n "$VPS_SSH_KEY"
-          KEY_PATH="$RUNNER_TEMP/vps_deploy_key"
-          # Normalize: strip CR, convert escaped \n to real newlines, trim surrounding quotes
-          printf '%s' "$VPS_SSH_KEY" | tr -d '\r' | sed 's/\\n/\n/g; 1s/^"//; $s/"$//' > "$KEY_PATH"
-          chmod 600 "$KEY_PATH"
-          # Verify the key is parseable before proceeding
-          ssh-keygen -y -f "$KEY_PATH" > /dev/null
-          echo "SSH key validated successfully"
-          echo "SSH_KEY_PATH=$KEY_PATH" >> "$GITHUB_ENV"
-
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
