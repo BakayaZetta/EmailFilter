@@ -25,6 +25,32 @@ const getMails = async () => {
 };
 
 /**
+ * Récupère les scans en file d'attente
+ * @param {number} limit - Nombre maximum de lignes
+ * @returns {Promise<Array>} Liste des scans en attente
+ */
+const getQueuedMails = async (limit = 100) => {
+    const safeLimit = Math.min(500, Math.max(1, Number(limit) || 100));
+
+    return executeQuery(
+        `SELECT
+            ID_Mail,
+            Sujet,
+            Emetteur,
+            Destinataire,
+            ID_Utilisateur,
+            Date_Reception,
+            Statut,
+            TIMESTAMPDIFF(MINUTE, Date_Reception, NOW()) AS queued_minutes
+         FROM Mail
+         WHERE Statut = 'Analyse_pending'
+         ORDER BY Date_Reception DESC
+         LIMIT ?`,
+        [safeLimit]
+    );
+};
+
+/**
  * Récupère un mail par son ID
  * @param {number} id - ID du mail
  * @returns {Promise<Object>} Le mail trouvé ou null
@@ -276,6 +302,7 @@ const saveEmail = async (emailData) => {
 
 module.exports = {
     getMails,
+    getQueuedMails,
     getMailById,
     getMailsByUserId,
     updateMailStatus,

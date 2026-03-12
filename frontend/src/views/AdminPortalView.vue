@@ -12,11 +12,14 @@ const toast = useToast();
 const users = ref([]);
 const logs = ref([]);
 const scans = ref([]);
+const queuedScans = ref([]);
 const loading = ref(false);
 const creatingUser = ref(false);
 const selectedUserProfile = ref(null);
 const selectedUserId = ref(null);
 const profileLoading = ref(false);
+
+const staleThresholdMinutes = 30;
 
 const newUserForm = ref({
   firstName: '',
@@ -36,20 +39,32 @@ const isAdmin = computed(() => {
 const fetchAdminData = async () => {
   loading.value = true;
   try {
-    const [usersData, logsData, scansData] = await Promise.all([
+    const [usersData, logsData, scansData, queuedScansData] = await Promise.all([
       adminService.getUsers(),
       adminService.getLogs(200),
-      adminService.getScans()
+      adminService.getScans(),
+      adminService.getQueuedScans(200)
     ]);
 
     users.value = usersData;
     logs.value = logsData;
     scans.value = scansData;
+    queuedScans.value = queuedScansData;
   } catch (error) {
     toast.error(error.response?.data?.message || 'Failed to load admin portal data');
   } finally {
     loading.value = false;
   }
+};
+
+const formatQueuedDuration = (minutes) => {
+  const total = Number(minutes || 0);
+  if (!Number.isFinite(total) || total <= 0) return 'just now';
+  if (total < 60) return `${total} min`;
+
+  const hours = Math.floor(total / 60);
+  const mins = total % 60;
+  return mins ? `${hours}h ${mins}m` : `${hours}h`;
 };
 
 const updateRole = async (user, role) => {
@@ -240,6 +255,56 @@ onMounted(async () => {
                     </td>
                   </tr>
                 </template>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+          <div class="flex justify-between items-center mb-3">
+            <h2 class="text-lg font-semibold">Queued Scan Jobs</h2>
+            <span class="text-xs px-2 py-1 rounded-full border border-amber-300 bg-amber-50 text-amber-700">
+              {{ queuedScans.length }} pending
+            </span>
+          </div>
+          <div class="overflow-x-auto max-h-80 border border-gray-200 rounded-lg">
+            <table class="min-w-full text-sm">
+              <thead>
+                <tr class="text-left border-b bg-gray-50">
+                  <th class="py-2 px-3 font-medium">Mail ID</th>
+                  <th class="py-2 px-3 font-medium">Subject</th>
+                  <th class="py-2 px-3 font-medium">Sender</th>
+                  <th class="py-2 px-3 font-medium">User ID</th>
+                  <th class="py-2 px-3 font-medium">Queued For</th>
+                  <th class="py-2 px-3 font-medium">Received</th>
+                  <th class="py-2 px-3 font-medium">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-if="queuedScans.length === 0">
+                  <td colspan="7" class="py-4 px-3 text-center text-gray-500">No queued jobs at the moment.</td>
+                </tr>
+                <tr v-for="scan in queuedScans" :key="`queued-${scan.ID_Mail}`" class="border-b">
+                  <td class="py-2 px-3">{{ scan.ID_Mail }}</td>
+                  <td class="py-2 px-3">{{ scan.Sujet }}</td>
+                  <td class="py-2 px-3">{{ scan.Emetteur || 'N/A' }}</td>
+                  <td class="py-2 px-3">{{ scan.ID_Utilisateur }}</td>
+                  <td class="py-2 px-3">
+                    <span
+                      :class="Number(scan.queued_minutes || 0) >= staleThresholdMinutes
+                        ? 'text-red-600 font-semibold'
+                        : 'text-gray-700'"
+                    >
+                      {{ formatQueuedDuration(scan.queued_minutes) }}
+                    </span>
+                  </td>
+                  <td class="py-2 px-3">{{ scan.Date_Reception }}</td>
+                  <td class="py-2 px-3">
+                    <span class="text-xs px-2 py-1 rounded-full border border-amber-300 bg-amber-50 text-amber-700">
+                      {{ scan.Statut }}
+                    </span>
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>

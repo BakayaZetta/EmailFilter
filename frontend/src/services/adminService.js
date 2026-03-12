@@ -34,5 +34,10 @@ export default {
   async getScans() {
     const response = await api.get('/admin/scans');
     return response.data;
+  },
+
+  async getQueuedScans(limit = 100) {
+    const response = await api.get('/admin/scans/queued', { params: { limit } });
+    return response.data;
   }
 };

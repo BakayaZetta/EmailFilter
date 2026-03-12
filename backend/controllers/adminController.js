@@ -150,3 +150,13 @@ exports.getScans = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+exports.getQueuedScans = async (req, res) => {
+  try {
+    const limit = Number(req.query.limit || 100);
+    const queued = await mailModel.getQueuedMails(limit);
+    res.status(200).json(queued);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
