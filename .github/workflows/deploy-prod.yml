@@ -9,7 +9,7 @@ jobs:
   deploy:
     name: Deploy to VPS
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main'
     environment:
       name: production
       url: https://bakaya.tech
@@ -33,7 +33,6 @@ jobs:
 
       - name: Verify Production Health
         run: |
-          curl -f https://bakaya.tech/backend-health || exit 1
+          curl --retry 5 --retry-all-errors --retry-delay 5 -f https://bakaya.tech/backend-health
           echo "✅ Production deployment verified"
         timeout-minutes: 2
-        max-attempts: 5
