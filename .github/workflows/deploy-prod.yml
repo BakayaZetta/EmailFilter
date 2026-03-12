@@ -40,48 +40,23 @@ jobs:
           set -euo pipefail
 
           KEY_PATH="$RUNNER_TEMP/vps_deploy_key"
-          RAW_PATH="$RUNNER_TEMP/vps_key_raw"
-          ESCAPED_PATH="$RUNNER_TEMP/vps_key_escaped"
-          B64_PATH="$RUNNER_TEMP/vps_key_b64"
 
           # Preferred path: explicit base64 secret to avoid multiline paste issues.
-          if [ -n "${VPS_SSH_KEY_B64:-}" ] && printf '%s' "$VPS_SSH_KEY_B64" | tr -d '\r\n ' | base64 -d > "$B64_PATH" 2>/dev/null; then
-            if ssh-keygen -y -f "$B64_PATH" >/dev/null 2>&1; then
-              cp "$B64_PATH" "$KEY_PATH"
-              chmod 600 "$KEY_PATH"
-              echo "SSH_KEY_PATH=$KEY_PATH" >> "$GITHUB_ENV"
-              echo "SSH private key parsed successfully from VPS_SSH_KEY_B64"
-              exit 0
-            fi
+          if [ -n "${VPS_SSH_KEY_B64:-}" ]; then
+            printf '%s' "$VPS_SSH_KEY_B64" | tr -d '\r\n ' | base64 -d > "$KEY_PATH"
+            chmod 600 "$KEY_PATH"
+            echo "SSH_KEY_PATH=$KEY_PATH" >> "$GITHUB_ENV"
+            echo "Prepared SSH key from VPS_SSH_KEY_B64"
+            exit 0
           fi
 
           test -n "$VPS_SSH_KEY"
 
-          # Candidate 1: secret as-is (CR removed, surrounding quotes trimmed)
-          printf '%s' "$VPS_SSH_KEY" | tr -d '\r' | sed '1s/^"//; $s/"$//' > "$RAW_PATH"
-
-          # Candidate 2: convert escaped newlines
-          printf '%s' "$VPS_SSH_KEY" | tr -d '\r' | sed 's/\\n/\n/g; 1s/^"//; $s/"$//' > "$ESCAPED_PATH"
-
-          # Candidate 3: base64-decoded raw secret value
-          if printf '%s' "$VPS_SSH_KEY" | tr -d '\r\n ' | base64 -d > "$B64_PATH" 2>/dev/null; then
-            true
-          else
-            : > "$B64_PATH"
-          fi
-
-          for candidate in "$RAW_PATH" "$ESCAPED_PATH" "$B64_PATH"; do
-            if [ -s "$candidate" ] && ssh-keygen -y -f "$candidate" >/dev/null 2>&1; then
-              cp "$candidate" "$KEY_PATH"
-              chmod 600 "$KEY_PATH"
-              echo "SSH_KEY_PATH=$KEY_PATH" >> "$GITHUB_ENV"
-              echo "SSH private key parsed successfully"
-              exit 0
-            fi
-          done
-
-          echo "VPS_SSH_KEY is not a valid private key. Prefer setting VPS_SSH_KEY_B64 to base64(private_key_file)." >&2
-          exit 1
+          # Fallback: normalize multiline and escaped-newline forms.
+          printf '%s' "$VPS_SSH_KEY" | tr -d '\r' | sed 's/\\n/\n/g; 1s/^"//; $s/"$//' > "$KEY_PATH"
+          chmod 600 "$KEY_PATH"
+          echo "SSH_KEY_PATH=$KEY_PATH" >> "$GITHUB_ENV"
+          echo "Prepared SSH key from VPS_SSH_KEY"
 
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
