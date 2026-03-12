@@ -37,11 +37,38 @@ jobs:
           VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
         run: |
           set -euo pipefail
-          # Support both real newlines and escaped \n in GitHub secrets.
-          printf '%s' "$VPS_SSH_KEY" | sed 's/\\n/\n/g' > "$RUNNER_TEMP/vps_deploy_key"
-          chmod 600 "$RUNNER_TEMP/vps_deploy_key"
-          ssh-keygen -y -f "$RUNNER_TEMP/vps_deploy_key" >/dev/null
-          echo "SSH_KEY_PATH=$RUNNER_TEMP/vps_deploy_key" >> "$GITHUB_ENV"
+          test -n "$VPS_SSH_KEY"
+
+          KEY_PATH="$RUNNER_TEMP/vps_deploy_key"
+          RAW_PATH="$RUNNER_TEMP/vps_key_raw"
+          ESCAPED_PATH="$RUNNER_TEMP/vps_key_escaped"
+          B64_PATH="$RUNNER_TEMP/vps_key_b64"
+
+          # Candidate 1: secret as-is (with CR stripped)
+          printf '%s' "$VPS_SSH_KEY" | tr -d '\r' > "$RAW_PATH"
+
+          # Candidate 2: convert escaped newlines
+          printf '%s' "$VPS_SSH_KEY" | sed 's/\\n/\n/g' | tr -d '\r' > "$ESCAPED_PATH"
+
+          # Candidate 3: base64-decoded
+          if printf '%s' "$VPS_SSH_KEY" | tr -d '\r\n' | base64 -d > "$B64_PATH" 2>/dev/null; then
+            true
+          else
+            : > "$B64_PATH"
+          fi
+
+          for candidate in "$RAW_PATH" "$ESCAPED_PATH" "$B64_PATH"; do
+            if [ -s "$candidate" ] && ssh-keygen -y -f "$candidate" >/dev/null 2>&1; then
+              cp "$candidate" "$KEY_PATH"
+              chmod 600 "$KEY_PATH"
+              echo "SSH_KEY_PATH=$KEY_PATH" >> "$GITHUB_ENV"
+              echo "SSH private key parsed successfully"
+              exit 0
+            fi
+          done
+
+          echo "VPS_SSH_KEY is not a valid private key in raw, escaped-newline, or base64 form" >&2
+          exit 1
 
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
