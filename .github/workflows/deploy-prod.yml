@@ -32,12 +32,20 @@ jobs:
           timeout 5 bash -c "cat < /dev/null > /dev/tcp/$VPS_HOST/22"
           echo "SSH target secrets and port reachability look valid"
 
+      - name: Prepare SSH key file
+        run: |
+          printf '%s' "$KEY_CONTENT" | tr -d '\r' > "${{ runner.temp }}/deploy_key"
+          chmod 600 "${{ runner.temp }}/deploy_key"
+          ssh-keygen -l -f "${{ runner.temp }}/deploy_key"
+        env:
+          KEY_CONTENT: ${{ secrets.VPS_SSH_KEY }}
+
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
+          key_path: ${{ runner.temp }}/deploy_key
           debug: true
           script_stop: true
           command_timeout: 30m
