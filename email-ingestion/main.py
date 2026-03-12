@@ -12,6 +12,7 @@ address to access the full report — registration completes the account.
 """
 
 import imaplib
+import socket
 import smtplib
 import ssl
 import email
@@ -50,6 +51,7 @@ DB_PASS           = os.environ.get('DB_PASSWORD', '')
 DB_NAME           = os.environ.get('DB_NAME', 'EMAILFILTER')
 POLL_INTERVAL     = int(os.environ.get('EMAIL_POLL_INTERVAL', '60'))
 STATUS_TIMEOUT    = int(os.environ.get('STATUS_TIMEOUT_SECONDS', '300'))
+IDLE_TIMEOUT      = int(os.environ.get('EMAIL_IDLE_TIMEOUT_SECONDS', '1740'))
 
 VERDICT_LABELS = {
     'PASS':       '✅  SAFE — No threats detected',
@@ -64,7 +66,7 @@ def db_connect():
     return mysql.connector.connect(
         host=DB_HOST, port=DB_PORT,
         user=DB_USER, password=DB_PASS,
-        database=DB_NAME, autocommit=False
+        database=DB_NAME, autocommit=True
     )
 
 
@@ -107,6 +109,23 @@ def get_mail_analysis(conn, id_mail: int):
     analyses = cur.fetchall()
     cur.close()
     return mail_row, analyses
+
+
+def get_mail_analysis_with_retry(conn, id_mail: int, attempts: int = 5, delay_seconds: float = 1.0):
+    """Fetch summary/details with a short retry window to avoid racing scanner writes."""
+    for attempt in range(1, attempts + 1):
+        mail_row, analyses = get_mail_analysis(conn, id_mail)
+        if mail_row and analyses:
+            return mail_row, analyses
+        logger.warning(
+            "Mail summary not ready for id_mail=%s (attempt %s/%s). Retrying in %.1fs",
+            id_mail,
+            attempt,
+            attempts,
+            delay_seconds,
+        )
+        time.sleep(delay_seconds)
+    return get_mail_analysis(conn, id_mail)
 
 
 # ── Email extraction ──────────────────────────────────────────────────────────
@@ -285,7 +304,11 @@ def process_message(imap, uid: bytes, conn):
     id_mail = submit_and_wait(email_bytes, filename, user_id)
 
     if id_mail:
-        mail_row, analyses = get_mail_analysis(conn, id_mail)
+        mail_row, analyses = get_mail_analysis_with_retry(conn, id_mail)
+        if not mail_row:
+            logger.warning("Mail row still unavailable for id_mail=%s after retries", id_mail)
+        if not analyses:
+            logger.warning("Analysis rows still unavailable for id_mail=%s after retries", id_mail)
     else:
         mail_row, analyses = None, []
         logger.warning("No id_mail returned for %s; sending partial reply", sender_email)
@@ -297,41 +320,77 @@ def process_message(imap, uid: bytes, conn):
     logger.info("Done — uid=%s id_mail=%s", uid, id_mail)
 
 
-# ── Polling loop ──────────────────────────────────────────────────────────────
+# ── IMAP watch loop ───────────────────────────────────────────────────────────
 
-def poll_once(conn):
+def imap_supports_idle(imap) -> bool:
+    return 'IDLE' in {cap.decode() if isinstance(cap, bytes) else cap for cap in imap.capabilities}
+
+
+def connect_imap():
     ctx = ssl.create_default_context()
-    try:
-        imap = imaplib.IMAP4_SSL(IMAP_HOST, IMAP_PORT, ssl_context=ctx)
-        imap.login(SCAN_EMAIL, SCAN_EMAIL_PASS)
-    except Exception as exc:
-        logger.error("IMAP connect/login failed: %s", exc)
-        return
+    imap = imaplib.IMAP4_SSL(IMAP_HOST, IMAP_PORT, ssl_context=ctx)
+    imap.login(SCAN_EMAIL, SCAN_EMAIL_PASS)
+    imap.select('INBOX')
+    return imap
 
-    try:
-        imap.select('INBOX')
-        _, data = imap.uid('search', None, 'UNSEEN')
-        uids = data[0].split() if data[0] else []
-        logger.info("Found %d unseen message(s)", len(uids))
 
-        for uid in uids:
-            try:
-                process_message(imap, uid, conn)
-            except Exception as exc:
-                logger.exception("Error processing uid=%s: %s", uid, exc)
+def process_unseen_messages(imap, conn):
+    _, data = imap.uid('search', None, 'UNSEEN')
+    uids = data[0].split() if data[0] else []
+    logger.info("Found %d unseen message(s)", len(uids))
+
+    for uid in uids:
+        try:
+            process_message(imap, uid, conn)
+        except Exception as exc:
+            logger.exception("Error processing uid=%s: %s", uid, exc)
+
+
+def wait_for_mail_event(imap) -> bool:
+    if not imap_supports_idle(imap):
+        time.sleep(POLL_INTERVAL)
+        return False
+
+    tag = imap._new_tag()
+    tag_text = tag.decode() if isinstance(tag, bytes) else tag
+    imap.send(f"{tag_text} IDLE\r\n".encode())
+
+    ready = imap.readline().decode(errors='replace').strip()
+    if not ready.startswith('+'):
+        logger.warning("IMAP IDLE not acknowledged, falling back to interval check: %s", ready)
+        time.sleep(POLL_INTERVAL)
+        return False
+
+    logger.info("Waiting for inbox changes via IMAP IDLE (timeout=%ss)", IDLE_TIMEOUT)
+    notified = False
+    try:
+        imap.sock.settimeout(IDLE_TIMEOUT)
+        line = imap.readline().decode(errors='replace').strip()
+        if line:
+            notified = 'EXISTS' in line or 'RECENT' in line
+            logger.info("IMAP IDLE wake-up: %s", line)
+    except socket.timeout:
+        logger.info("IMAP IDLE heartbeat timeout reached; re-checking inbox")
     finally:
         try:
-            imap.logout()
-        except Exception:
-            pass
+            imap.send(b"DONE\r\n")
+            while True:
+                line = imap.readline().decode(errors='replace').strip()
+                if line.startswith(tag_text):
+                    break
+        finally:
+            imap.sock.settimeout(None)
+
+    return notified
 
 
 def main():
     logger.info(
-        "Email ingestion service started. Polling %s every %ds",
+        "Email ingestion service started. Watching %s via IMAP IDLE with %ds fallback heartbeat",
         SCAN_EMAIL, POLL_INTERVAL
     )
     conn = db_connect()
+    imap = None
 
     while True:
         try:
@@ -345,11 +404,24 @@ def main():
                 continue
 
         try:
-            poll_once(conn)
-        except Exception as exc:
-            logger.exception("Unexpected error in poll_once: %s", exc)
+            if imap is None:
+                imap = connect_imap()
+                logger.info("Connected to IMAP inbox for %s", SCAN_EMAIL)
 
-        time.sleep(POLL_INTERVAL)
+            process_unseen_messages(imap, conn)
+            wait_for_mail_event(imap)
+        except (imaplib.IMAP4.error, OSError) as exc:
+            logger.error("IMAP connection error: %s", exc)
+            if imap is not None:
+                try:
+                    imap.logout()
+                except Exception:
+                    pass
+                imap = None
+            time.sleep(5)
+        except Exception as exc:
+            logger.exception("Unexpected error in email watch loop: %s", exc)
+            time.sleep(5)
 
 
 if __name__ == '__main__':
