@@ -32,7 +32,8 @@ jobs:
           timeout 5 bash -c "cat < /dev/null > /dev/tcp/$VPS_HOST/22"
           echo "SSH target secrets and port reachability look valid"
 
-      - name: Prepare SSH key file
+      - name: Prepare SSH key
+        id: prepare_ssh_key
         run: |
           python3 - <<'PY'
           import os
@@ -47,6 +48,11 @@ jobs:
           PY
           chmod 600 "${{ runner.temp }}/deploy_key"
           ssh-keygen -l -f "${{ runner.temp }}/deploy_key"
+          {
+            echo 'ssh_key<<EOF'
+            cat "${{ runner.temp }}/deploy_key"
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
         env:
           KEY_CONTENT: ${{ secrets.VPS_SSH_KEY }}
 
@@ -55,7 +61,7 @@ jobs:
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
-          key_path: ${{ runner.temp }}/deploy_key
+          key: ${{ steps.prepare_ssh_key.outputs.ssh_key }}
           debug: true
           script_stop: true
           command_timeout: 30m
