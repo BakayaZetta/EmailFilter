@@ -34,7 +34,17 @@ jobs:
 
       - name: Prepare SSH key file
         run: |
-          printf '%s' "$KEY_CONTENT" | tr -d '\r' > "${{ runner.temp }}/deploy_key"
+          python3 - <<'PY'
+          import os
+
+          key = os.environ["KEY_CONTENT"].strip().replace("\r", "")
+          # Support secrets pasted as a single line with literal \n escapes.
+          if "\\n" in key and "\n" not in key:
+            key = key.replace("\\n", "\n")
+
+          with open(os.environ["RUNNER_TEMP"] + "/deploy_key", "w", encoding="utf-8") as f:
+            f.write(key + "\n")
+          PY
           chmod 600 "${{ runner.temp }}/deploy_key"
           ssh-keygen -l -f "${{ runner.temp }}/deploy_key"
         env:
