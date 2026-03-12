@@ -1,5 +1,5 @@
 <script setup>
-import { computed, nextTick, onMounted, ref } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useToast } from 'vue-toastification';
 import { useAuthStore } from '@/stores/authStore';
@@ -19,6 +19,7 @@ const clearingQueued = ref(false);
 const selectedUserProfile = ref(null);
 const selectedUserId = ref(null);
 const profileLoading = ref(false);
+const pollIntervalId = ref(null);
 
 const staleThresholdMinutes = 30;
 
@@ -99,6 +100,36 @@ const fetchAdminData = async () => {
   }
 };
 
+const fetchQueuedScansOnly = async () => {
+  try {
+    const queuedPayload = await adminService.getQueuedScans(200);
+    queuedDbScans.value = Array.isArray(queuedPayload?.dbQueued) ? queuedPayload.dbQueued : [];
+    queuedLiveScans.value = Array.isArray(queuedPayload?.liveQueued) ? queuedPayload.liveQueued : [];
+  } catch (error) {
+    // Silently fail to avoid toast spam during polling
+    console.error('Failed to poll queued scans:', error);
+  }
+};
+
+const startQueuedScansPolling = () => {
+  if (pollIntervalId.value) {
+    clearInterval(pollIntervalId.value);
+  }
+  // Poll every 2 seconds only if there are queued jobs
+  pollIntervalId.value = setInterval(async () => {
+    if (queuedCount.value > 0) {
+      await fetchQueuedScansOnly();
+    }
+  }, 2000);
+};
+
+const stopQueuedScansPolling = () => {
+  if (pollIntervalId.value) {
+    clearInterval(pollIntervalId.value);
+    pollIntervalId.value = null;
+  }
+};
+
 const clearPendingJobs = async () => {
   if (!confirm('Clear all DB pending jobs (Analyse_pending)? This will mark them as ERROR.')) {
     return;
@@ -108,7 +139,7 @@ const clearPendingJobs = async () => {
   try {
     const result = await adminService.clearQueuedScans();
     toast.success(`Cleared ${result?.clearedCount || 0} pending job(s)`);
-    await fetchAdminData();
+    await fetchQueuedScansOnly();
   } catch (error) {
     toast.error(error.response?.data?.message || 'Failed to clear pending jobs');
   } finally {
@@ -205,6 +236,11 @@ onMounted(async () => {
   }
 
   await fetchAdminData();
+  startQueuedScansPolling();
+});
+
+onUnmounted(() => {
+  stopQueuedScansPolling();
 });
 </script>
 
@@ -331,7 +367,13 @@ onMounted(async () => {
 
         <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
           <div class="flex justify-between items-center mb-3">
-            <h2 class="text-lg font-semibold">Queued Scan Jobs</h2>
+            <div class="flex items-center gap-2">
+              <h2 class="text-lg font-semibold">Queued Scan Jobs</h2>
+              <div v-if="queuedCount > 0" class="flex items-center gap-1 text-xs px-2 py-1 rounded-full border border-green-300 bg-green-50 text-green-700">
+                <span class="inline-block w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                Live
+              </div>
+            </div>
             <div class="flex items-center gap-2">
               <span class="text-xs px-2 py-1 rounded-full border border-amber-300 bg-amber-50 text-amber-700">
                 {{ queuedCount }} pending
