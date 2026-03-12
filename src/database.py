@@ -10,15 +10,18 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 load_dotenv()
 class Database:
     def __init__(self):
-        self.db_name: str = os.getenv('DB_NAME') or os.getenv('MYSQL_DATABASE')
-        self.db_user: str = os.getenv('DB_USER')
-        self.db_password: str = os.getenv('DB_PASSWORD')
-        self.db_host: str = os.getenv('DB_HOST')
-        self.db_port: str = os.getenv('DB_PORT')
+        self.db_name: str = os.getenv('DB_NAME') or os.getenv('MYSQL_DATABASE') or 'detectish_db'
+        self.db_user: str = os.getenv('DB_USER') or os.getenv('MYSQL_USER') or 'root'
+        self.db_password: str = os.getenv('DB_PASSWORD') or os.getenv('MYSQL_PASSWORD') or os.getenv('MYSQL_ROOT_PASSWORD') or ''
+        self.db_host: str = os.getenv('DB_HOST') or 'mysql'
+        self.db_port: str = os.getenv('DB_PORT') or os.getenv('MYSQL_PORT') or '3306'
         self.conn: Optional[mysql.connector.connection.MySQLConnection] = None
         self.cursor: Optional[mysql.connector.cursor.MySQLCursor] = None
         self.connect()
-        self.create_tables()
+        if self.cursor is not None:
+            self.create_tables()
+        else:
+            logging.warning("Database connection not ready during startup; continuing without table bootstrap.")
 
     @staticmethod
     def _is_disconnect_error(err: Exception) -> bool:
@@ -190,6 +193,10 @@ class Database:
             "  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
             ")"
         )
+        if self.cursor is None:
+            logging.warning("Skipping table creation because database cursor is unavailable.")
+            return
+
         for table_name, table_description in tables.items():
             try:
                 logging.info(f"Creating table {table_name}: ")
