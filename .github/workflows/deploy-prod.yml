@@ -35,36 +35,24 @@ jobs:
       - name: Prepare SSH key file
         env:
           VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
-          VPS_SSH_KEY_B64: ${{ secrets.VPS_SSH_KEY_B64 }}
         run: |
           set -euo pipefail
-
-          KEY_PATH="$RUNNER_TEMP/vps_deploy_key"
-
-          # Preferred path: explicit base64 secret to avoid multiline paste issues.
-          if [ -n "${VPS_SSH_KEY_B64:-}" ]; then
-            printf '%s' "$VPS_SSH_KEY_B64" | tr -d '\r\n ' | base64 -d > "$KEY_PATH"
-            chmod 600 "$KEY_PATH"
-            echo "SSH_KEY_PATH=$KEY_PATH" >> "$GITHUB_ENV"
-            echo "Prepared SSH key from VPS_SSH_KEY_B64"
-            exit 0
-          fi
-
           test -n "$VPS_SSH_KEY"
-
-          # Fallback: normalize multiline and escaped-newline forms.
+          KEY_PATH="$RUNNER_TEMP/vps_deploy_key"
+          # Normalize: strip CR, convert escaped \n to real newlines, trim surrounding quotes
           printf '%s' "$VPS_SSH_KEY" | tr -d '\r' | sed 's/\\n/\n/g; 1s/^"//; $s/"$//' > "$KEY_PATH"
           chmod 600 "$KEY_PATH"
+          # Verify the key is parseable before proceeding
+          ssh-keygen -y -f "$KEY_PATH" > /dev/null
+          echo "SSH key validated successfully"
           echo "SSH_KEY_PATH=$KEY_PATH" >> "$GITHUB_ENV"
-          echo "Prepared SSH key from VPS_SSH_KEY"
 
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
-          key_path: ${{ env.SSH_KEY_PATH }}
-          passphrase: ${{ secrets.VPS_SSH_PASSPHRASE }}
+          key: ${{ secrets.VPS_SSH_KEY }}
           debug: true
           script_stop: true
           command_timeout: 30m
