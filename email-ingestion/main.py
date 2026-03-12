@@ -19,6 +19,8 @@ import email
 import email.policy
 from email.parser import BytesParser
 from email.utils import parseaddr
+from email.mime.multipart import MIMEMultipart
+from email.mime.image import MIMEImage
 from email.mime.text import MIMEText
 import time
 import logging
@@ -53,10 +55,17 @@ POLL_INTERVAL     = int(os.environ.get('EMAIL_POLL_INTERVAL', '60'))
 STATUS_TIMEOUT    = int(os.environ.get('STATUS_TIMEOUT_SECONDS', '300'))
 IDLE_TIMEOUT      = int(os.environ.get('EMAIL_IDLE_TIMEOUT_SECONDS', '1740'))
 
+_LOGO_PATH = os.path.join(os.path.dirname(__file__), 'bakaya_tech.png')
+try:
+    with open(_LOGO_PATH, 'rb') as _f:
+        LOGO_BYTES = _f.read()
+except FileNotFoundError:
+    LOGO_BYTES = None
+
 VERDICT_LABELS = {
-    'PASS':       '✅  SAFE — No threats detected',
-    'QUARANTINE': '⚠️  SUSPICIOUS / Potential spam or phishing',
-    'ERROR':      '❓  INCONCLUSIVE — Analysis could not be fully completed',
+    'PASS':       ('✅', 'SAFE', 'No threats detected',       '#f0fdf4', '#15803d', '#86efac'),
+    'QUARANTINE': ('⚠️', 'SUSPICIOUS', 'Potential spam or phishing', '#fffbeb', '#92400e', '#fcd34d'),
+    'ERROR':      ('❓', 'INCONCLUSIVE', 'Analysis could not be fully completed', '#f8fafc', '#475569', '#94a3b8'),
 }
 
 
@@ -210,37 +219,200 @@ def submit_and_wait(email_bytes: bytes, filename: str, user_id: int):
 
 # ── Reply formatting ──────────────────────────────────────────────────────────
 
-def build_reply_body(sender_email: str, mail_row, analyses, user_was_new: bool) -> str:
-    statut  = (mail_row or {}).get('Statut', 'ERROR')
-    verdict = VERDICT_LABELS.get(statut, f'❓  {statut}')
+_ANALYSIS_ICONS = {
+    'pass':        ('✅', '#15803d'),
+    'valid':       ('✅', '#15803d'),
+    'safe':        ('✅', '#15803d'),
+    'benign':      ('✅', '#15803d'),
+    'fail':        ('❌', '#dc2626'),
+    'invalid':     ('❌', '#dc2626'),
+    'phishing':    ('❌', '#dc2626'),
+    'malware':     ('❌', '#dc2626'),
+    'quarantine':  ('⚠️',  '#b45309'),
+    'warning':     ('⚠️',  '#b45309'),
+    'suspicious':  ('⚠️',  '#b45309'),
+    'soft':        ('⚠️',  '#b45309'),
+    'error':       ('❓', '#475569'),
+    'inconclusive':('❓', '#475569'),
+}
 
-    lines = [f"  • {a['Type_Analyse']:<14}  {a['Resultat_Analyse']}" for a in analyses]
+
+def _analysis_indicator(result_text: str):
+    lower = result_text.lower()
+    for keyword, (icon, color) in _ANALYSIS_ICONS.items():
+        if keyword in lower:
+            return icon, color
+    return ('ℹ️', '#475569')
+
+
+def build_reply_body(sender_email: str, mail_row, analyses, user_was_new: bool) -> str:
+    """Build an HTML email body that matches the Bakaya Security Center UI."""
+    statut = (mail_row or {}).get('Statut', 'ERROR')
+    v = VERDICT_LABELS.get(statut, ('❓', statut, '', '#f8fafc', '#475569', '#94a3b8'))
+    v_emoji, v_label, v_sub, v_bg, v_color, v_accent = v
+
+    # ── analysis rows ──
+    if analyses:
+        rows_html = ''
+        for i, a in enumerate(analyses):
+            icon, color = _analysis_indicator(a['Resultat_Analyse'])
+            bg = '#ffffff' if i % 2 == 0 else '#f8fafc'
+            rows_html += (
+                f'<tr style="background:{bg};">'  
+                f'<td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;color:#374151;font-weight:600;font-size:13px;width:140px;white-space:nowrap;">'
+                f'{a["Type_Analyse"]}</td>'
+                f'<td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;color:{color};font-size:13px;">'
+                f'{icon} {a["Resultat_Analyse"]}</td>'
+                f'</tr>'
+            )
+    else:
+        rows_html = ('<tr><td colspan="2" style="padding:14px;color:#94a3b8;font-style:italic;">'
+                     'No analysis details available.</td></tr>')
+
+    # ── account section ──
+    if user_was_new:
+        account_html = (
+            f'<p style="margin:0 0 6px;color:#374151;font-size:14px;font-weight:600;">'
+            f'An account has been prepared for you.</p>'
+            f'<p style="margin:0 0 14px;color:#6b7280;font-size:13px;">'
+            f'Use <strong>{sender_email}</strong> to create your password and access your scan history.</p>'
+        )
+        btn_label = 'Create Your Account →'
+        btn_href  = f'{APP_URL}/register'
+    else:
+        account_html = (
+            f'<p style="margin:0 0 14px;color:#6b7280;font-size:13px;">'
+            f'Log in to view the full interactive report for <strong>{sender_email}</strong>.</p>'
+        )
+        btn_label = 'View Full Report →'
+        btn_href  = APP_URL
+
+    # ── logo image tag ──
+    logo_img = (
+        '<img src="cid:bakaya-logo" alt="Bakaya Tech" '
+        'height="48" width="48" style="border-radius:50%;vertical-align:middle;" />'
+        if LOGO_BYTES
+        else ''
+    )
+
+    html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Email Scan Results — Bakaya Security Center</title>
+</head>
+<body style="margin:0;padding:0;font-family:Arial,Helvetica,sans-serif;background:#f1f5f9;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;">
+  <tr><td align="center" style="padding:40px 16px;">
+    <table width="580" cellpadding="0" cellspacing="0"
+           style="background:#ffffff;border-radius:12px;overflow:hidden;
+                  box-shadow:0 4px 24px rgba(0,0,0,0.10);max-width:580px;">
+
+      <!-- ── Header ── -->
+      <tr>
+        <td style="background:#1e293b;padding:24px 32px;">
+          <table width="100%" cellpadding="0" cellspacing="0"><tr>
+            <td style="vertical-align:middle;">
+              {logo_img}
+              <span style="color:#ffffff;font-size:20px;font-weight:700;
+                           vertical-align:middle;margin-left:12px;">
+                Bakaya Security Center
+              </span>
+            </td>
+            <td align="right" style="vertical-align:middle;">
+              <span style="color:#94a3b8;font-size:12px;">Email Security Report</span>
+            </td>
+          </tr></table>
+        </td>
+      </tr>
+
+      <!-- ── Verdict banner ── -->
+      <tr>
+        <td style="background:{v_bg};padding:28px 32px;text-align:center;
+                   border-bottom:3px solid {v_accent};">
+          <div style="font-size:32px;margin-bottom:6px;">{v_emoji}</div>
+          <div style="color:{v_color};font-size:22px;font-weight:800;
+                       letter-spacing:0.5px;">{v_label}</div>
+          <div style="color:{v_color};font-size:13px;margin-top:4px;
+                       opacity:0.75;">{v_sub}</div>
+        </td>
+      </tr>
+
+      <!-- ── Analysis details ── -->
+      <tr>
+        <td style="padding:28px 32px 8px;">
+          <h3 style="margin:0 0 12px;color:#1e293b;font-size:13px;font-weight:700;
+                     text-transform:uppercase;letter-spacing:0.8px;">
+            Analysis Details
+          </h3>
+          <table width="100%" cellpadding="0" cellspacing="0"
+                 style="border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;">
+            {rows_html}
+          </table>
+        </td>
+      </tr>
+
+      <!-- ── CTA ── -->
+      <tr>
+        <td style="padding:24px 32px 32px;">
+          <div style="background:#f8fafc;border-radius:8px;padding:24px;
+                      text-align:center;border:1px solid #e2e8f0;">
+            {account_html}
+            <a href="{btn_href}"
+               style="display:inline-block;padding:12px 28px;background:#dc2626;
+                      color:#ffffff;text-decoration:none;border-radius:6px;
+                      font-weight:700;font-size:14px;letter-spacing:0.3px;">
+              {btn_label}
+            </a>
+          </div>
+        </td>
+      </tr>
+
+      <!-- ── Footer ── -->
+      <tr>
+        <td style="background:#f1f5f9;padding:18px 32px;
+                   border-top:1px solid #e2e8f0;text-align:center;">
+          <p style="margin:0;color:#94a3b8;font-size:11px;line-height:1.6;">
+            This is an automated message from <strong>Bakaya Security Center</strong>.<br />
+            Do not reply to this email. &nbsp;|&nbsp;
+            <a href="{APP_URL}" style="color:#94a3b8;text-decoration:underline;">bakaya.tech</a>
+          </p>
+        </td>
+      </tr>
+
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>"""
+    return html
+
+
+def build_plain_body(sender_email: str, mail_row, analyses, user_was_new: bool) -> str:
+    """Plain-text fallback for email clients that don't render HTML."""
+    statut  = (mail_row or {}).get('Statut', 'ERROR')
+    v = VERDICT_LABELS.get(statut, ('❓', statut, '', '', '', ''))
+    verdict_line = f"{v[0]}  {v[1]} — {v[2]}"
+
+    lines = [f"  • {a['Type_Analyse']:<16}  {a['Resultat_Analyse']}" for a in analyses]
     analysis_block = '\n'.join(lines) or '  (no details available)'
 
     if user_was_new:
         account_section = (
             f"An account has been prepared for you.\n"
-            f"\n"
-            f"  → Create your password: {APP_URL}/register\n"
-            f"  → Use this email address: {sender_email}\n"
-            f"\n"
-            f"Once registered you can view this and all future scan results\n"
-            f"in your personal dashboard."
+            f"  Create your password: {APP_URL}/register\n"
+            f"  Use this email address: {sender_email}"
         )
     else:
-        account_section = (
-            f"Log in to view the full interactive report including all scans\n"
-            f"submitted from {sender_email}:\n"
-            f"\n"
-            f"  → {APP_URL}"
-        )
+        account_section = f"View your full report: {APP_URL}"
 
     return (
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-        f" DETECTISH — Email Scan Result\n"
+        f" BAKAYA SECURITY CENTER — Email Scan Result\n"
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         f"\n"
-        f"VERDICT:  {verdict}\n"
+        f"VERDICT:  {verdict_line}\n"
         f"\n"
         f"ANALYSIS DETAILS:\n"
         f"{analysis_block}\n"
@@ -252,23 +424,41 @@ def build_reply_body(sender_email: str, mail_row, analyses, user_was_new: bool) 
         f"{account_section}\n"
         f"\n"
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"This is an automated message from Detectish.\n"
+        f"This is an automated message from Bakaya Security Center.\n"
         f"Do not reply to this email.\n"
     )
 
 
-def send_reply(to_addr: str, original_subject: str, body: str):
-    subject = f"[Detectish Scan] {original_subject}"
-    msg = MIMEText(body, 'plain', 'utf-8')
-    msg['From']    = SCAN_EMAIL
-    msg['To']      = to_addr
-    msg['Subject'] = subject
+def send_reply(to_addr: str, original_subject: str, mail_row, analyses, user_was_new: bool):
+    subject = f"Bakaya Security Center - Your Email Scan Results"
+
+    html_body  = build_reply_body(to_addr, mail_row, analyses, user_was_new)
+    plain_body = build_plain_body(to_addr, mail_row, analyses, user_was_new)
+
+    # Outer container: 'related' allows inline CID attachments
+    outer = MIMEMultipart('related')
+    outer['From']    = SCAN_EMAIL
+    outer['To']      = to_addr
+    outer['Subject'] = subject
+
+    # Inner alternative: plain + html
+    alt = MIMEMultipart('alternative')
+    alt.attach(MIMEText(plain_body, 'plain', 'utf-8'))
+    alt.attach(MIMEText(html_body,  'html',  'utf-8'))
+    outer.attach(alt)
+
+    # Inline logo
+    if LOGO_BYTES:
+        img = MIMEImage(LOGO_BYTES, _subtype='png', name='bakaya_tech.png')
+        img.add_header('Content-ID', '<bakaya-logo>')
+        img.add_header('Content-Disposition', 'inline', filename='bakaya_tech.png')
+        outer.attach(img)
 
     ctx = ssl.create_default_context()
     try:
         with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, context=ctx) as smtp:
             smtp.login(SCAN_EMAIL, SCAN_EMAIL_PASS)
-            smtp.sendmail(SCAN_EMAIL, [to_addr], msg.as_bytes())
+            smtp.sendmail(SCAN_EMAIL, [to_addr], outer.as_bytes())
         logger.info("Reply sent to %s", to_addr)
     except Exception as exc:
         logger.error("Failed to send reply to %s: %s", to_addr, exc)
@@ -313,8 +503,7 @@ def process_message(imap, uid: bytes, conn):
         mail_row, analyses = None, []
         logger.warning("No id_mail returned for %s; sending partial reply", sender_email)
 
-    body = build_reply_body(sender_email, mail_row, analyses, user_was_new)
-    send_reply(sender_email, original_subject, body)
+    send_reply(sender_email, original_subject, mail_row, analyses, user_was_new)
 
     imap.uid('store', uid, '+FLAGS', '\\Seen')
     logger.info("Done — uid=%s id_mail=%s", uid, id_mail)
