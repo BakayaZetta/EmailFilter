@@ -1,8 +1,12 @@
 import subprocess
 import os
 import json
-from mistralai import Mistral
 from dotenv import load_dotenv
+
+try:
+    from mistralai import Mistral
+except Exception:
+    Mistral = None
 
 # Load environment variables from .env file if available
 # (useful for local development)
@@ -30,6 +34,9 @@ def generate_explanation(email_data):
     """
     try:
         model = "mistral-large-latest"
+
+        if Mistral is None:
+            return "Mistral explanation is temporarily unavailable because the Mistral SDK could not be loaded in this environment."
 
         # Get API key from environment variables
         api_key = os.environ.get("MISTRAL_API_KEY")
