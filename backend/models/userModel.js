@@ -226,6 +226,14 @@ const getUserProfileForAdmin = async (id) => {
     return rows.length > 0 ? rows[0] : null;
 };
 
+const completeRegistration = async (userId, { firstName, lastName, hashedPassword }) => {
+    const [result] = await db.query(
+        'UPDATE Utilisateur SET Prenom = ?, Nom = ?, Mot_de_passe = ? WHERE ID_Utilisateur = ?',
+        [firstName, lastName, hashedPassword, userId]
+    );
+    return result.affectedRows > 0;
+};
+
 module.exports = {
     getUsers,
     getUserById,
@@ -239,5 +247,6 @@ module.exports = {
     getUserProfileForAdmin,
     incrementFailedLoginAttempt,
     resetFailedLoginAttempts,
-    setVerificationTrust
+    setVerificationTrust,
+    completeRegistration
 };

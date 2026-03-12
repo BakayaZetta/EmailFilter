@@ -109,6 +109,21 @@ services:
       retries: 5
     restart: unless-stopped
 
+  email-ingestion:
+    build:
+      context: ./email-ingestion
+      dockerfile: Dockerfile
+    container_name: email-ingestion
+    depends_on:
+      mysql:
+        condition: service_healthy
+      detectish:
+        condition: service_healthy
+    networks:
+      - detectish-network
+    restart: unless-stopped
+    env_file: .env
+
 volumes:
   mysql-data:
 

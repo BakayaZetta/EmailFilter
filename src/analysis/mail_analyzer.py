@@ -350,7 +350,7 @@ async def analyze_email(
     email_raw,
     db: Database,
     owner_user_id: Optional[int] = None,
-) -> None:
+) -> Optional[int]:
     '''
     Analyzes an email for SPF, DKIM, DMARC, URL, AI, and ClamAV status and saves the results to the database.
 
@@ -359,7 +359,7 @@ async def analyze_email(
         db (Database): The database object.
 
     Returns:
-        None
+        Optional[int]: Mail ID if saved successfully, otherwise None.
     '''
     id_mail = None  # Initialize id_mail
     try:
@@ -436,10 +436,12 @@ async def analyze_email(
 
     logging.info(f"Conclusion for mail {id_mail}: {conclusion}")
     db.update_mail_status(id_mail, conclusion)
+    return id_mail
 
 if __name__ == "__main__":
     db = Database()
     email_files = ["phishing_email_example/1.eml", "phishing_email_example/2.eml", "phishing_email_example/3.eml"]
     for email_file in email_files:
         email_obj = load_email(email_file)
-        asyncio.run(analyze_email(email_obj, db))
+        email_raw = load_raw_email(email_file)
+        asyncio.run(analyze_email(email_obj, email_raw, db))
