@@ -10,16 +10,23 @@ const router = useRouter();
 const toast = useToast();
 
 const users = ref([]);
-const logs = ref([]);
 const scans = ref([]);
-const queuedScans = ref([]);
+const queuedDbScans = ref([]);
+const queuedLiveScans = ref([]);
 const loading = ref(false);
 const creatingUser = ref(false);
+const clearingQueued = ref(false);
 const selectedUserProfile = ref(null);
 const selectedUserId = ref(null);
 const profileLoading = ref(false);
 
 const staleThresholdMinutes = 30;
+
+const sections = ref({
+  users: true,
+  queued: true,
+  scans: true,
+});
 
 const newUserForm = ref({
   firstName: '',
@@ -36,24 +43,76 @@ const isAdmin = computed(() => {
   return role === 'admin' || role === 'super_admin' || role === 'superadmin';
 });
 
+const queuedCount = computed(() => queuedDbScans.value.length + queuedLiveScans.value.length);
+
+const combinedQueuedRows = computed(() => {
+  const dbRows = queuedDbScans.value.map((scan) => ({
+    source: 'db',
+    key: `db-${scan.ID_Mail}`,
+    jobId: scan.ID_Mail,
+    name: scan.Sujet,
+    sender: scan.Emetteur || 'N/A',
+    userId: scan.ID_Utilisateur,
+    queuedMinutes: Number(scan.queued_minutes || 0),
+    status: scan.Statut,
+    updatedOrReceived: scan.Date_Reception,
+  }));
+
+  const liveRows = queuedLiveScans.value.map((job) => ({
+    source: 'live',
+    key: `live-${job.request_id}`,
+    jobId: job.request_id,
+    name: job.filename || 'upload.eml',
+    sender: 'N/A',
+    userId: 'N/A',
+    queuedMinutes: Number(job.queued_minutes || 0),
+    status: job.live_status || job.status || 'queued',
+    updatedOrReceived: job.updated_at || 'N/A',
+  }));
+
+  return [...liveRows, ...dbRows].sort((a, b) => Number(b.queuedMinutes || 0) - Number(a.queuedMinutes || 0));
+});
+
+const sectionLabel = (isOpen) => (isOpen ? 'Collapse' : 'Expand');
+
+const toggleSection = (name) => {
+  sections.value[name] = !sections.value[name];
+};
+
 const fetchAdminData = async () => {
   loading.value = true;
   try {
-    const [usersData, logsData, scansData, queuedScansData] = await Promise.all([
+    const [usersData, scansData, queuedPayload] = await Promise.all([
       adminService.getUsers(),
-      adminService.getLogs(200),
       adminService.getScans(),
       adminService.getQueuedScans(200)
     ]);
 
     users.value = usersData;
-    logs.value = logsData;
     scans.value = scansData;
-    queuedScans.value = queuedScansData;
+    queuedDbScans.value = Array.isArray(queuedPayload?.dbQueued) ? queuedPayload.dbQueued : [];
+    queuedLiveScans.value = Array.isArray(queuedPayload?.liveQueued) ? queuedPayload.liveQueued : [];
   } catch (error) {
     toast.error(error.response?.data?.message || 'Failed to load admin portal data');
   } finally {
     loading.value = false;
+  }
+};
+
+const clearPendingJobs = async () => {
+  if (!confirm('Clear all DB pending jobs (Analyse_pending)? This will mark them as ERROR.')) {
+    return;
+  }
+
+  clearingQueued.value = true;
+  try {
+    const result = await adminService.clearQueuedScans();
+    toast.success(`Cleared ${result?.clearedCount || 0} pending job(s)`);
+    await fetchAdminData();
+  } catch (error) {
+    toast.error(error.response?.data?.message || 'Failed to clear pending jobs');
+  } finally {
+    clearingQueued.value = false;
   }
 };
 
@@ -155,106 +214,187 @@ onMounted(async () => {
       <div class="max-w-6xl mx-auto space-y-6">
         <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
           <h1 class="text-2xl font-semibold mb-1">Administrator Portal</h1>
-          <p class="text-sm text-gray-500">Manage users, permissions, request logs and all scans.</p>
+          <p class="text-sm text-gray-500">Manage users, permissions, and scan queues.</p>
         </div>
 
         <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
           <div class="flex justify-between items-center mb-3">
             <h2 class="text-lg font-semibold">Users & Permissions</h2>
-            <button
-              @click="fetchAdminData"
-              class="px-3 py-1.5 text-sm rounded-md border border-gray-300 hover:bg-gray-50"
-            >
-              Refresh
-            </button>
-          </div>
-
-          <form class="grid grid-cols-1 md:grid-cols-5 gap-2 mb-4" @submit.prevent="createUser">
-            <input v-model="newUserForm.firstName" type="text" placeholder="First name" class="border border-gray-300 rounded-md px-3 py-2 text-sm" required />
-            <input v-model="newUserForm.lastName" type="text" placeholder="Last name" class="border border-gray-300 rounded-md px-3 py-2 text-sm" required />
-            <input v-model="newUserForm.email" type="email" placeholder="Email" class="border border-gray-300 rounded-md px-3 py-2 text-sm" required />
-            <input v-model="newUserForm.password" type="password" placeholder="Password" class="border border-gray-300 rounded-md px-3 py-2 text-sm" required />
             <div class="flex gap-2">
-              <select v-model="newUserForm.role" class="border border-gray-300 rounded-md px-3 py-2 text-sm w-full">
-                <option value="user">user</option>
-                <option value="admin">admin</option>
-                <option value="super_admin">super_admin</option>
-              </select>
-              <button type="submit" class="px-3 py-1.5 text-sm rounded-md border border-gray-300 hover:bg-gray-50" :disabled="creatingUser">
-                Create
+              <button
+                @click="toggleSection('users')"
+                class="px-3 py-1.5 text-sm rounded-md border border-gray-300 hover:bg-gray-50"
+              >
+                {{ sectionLabel(sections.users) }}
+              </button>
+              <button
+                @click="fetchAdminData"
+                class="px-3 py-1.5 text-sm rounded-md border border-gray-300 hover:bg-gray-50"
+              >
+                Refresh
               </button>
             </div>
-          </form>
+          </div>
 
-          <div class="overflow-x-auto border border-gray-200 rounded-lg">
-            <table class="min-w-full text-sm bg-white">
+          <template v-if="sections.users">
+            <form class="grid grid-cols-1 md:grid-cols-5 gap-2 mb-4" @submit.prevent="createUser">
+              <input v-model="newUserForm.firstName" type="text" placeholder="First name" class="border border-gray-300 rounded-md px-3 py-2 text-sm" required />
+              <input v-model="newUserForm.lastName" type="text" placeholder="Last name" class="border border-gray-300 rounded-md px-3 py-2 text-sm" required />
+              <input v-model="newUserForm.email" type="email" placeholder="Email" class="border border-gray-300 rounded-md px-3 py-2 text-sm" required />
+              <input v-model="newUserForm.password" type="password" placeholder="Password" class="border border-gray-300 rounded-md px-3 py-2 text-sm" required />
+              <div class="flex gap-2">
+                <select v-model="newUserForm.role" class="border border-gray-300 rounded-md px-3 py-2 text-sm w-full">
+                  <option value="user">user</option>
+                  <option value="admin">admin</option>
+                  <option value="super_admin">super_admin</option>
+                </select>
+                <button type="submit" class="px-3 py-1.5 text-sm rounded-md border border-gray-300 hover:bg-gray-50" :disabled="creatingUser">
+                  Create
+                </button>
+              </div>
+            </form>
+
+            <div class="overflow-x-auto border border-gray-200 rounded-lg">
+              <table class="min-w-full text-sm bg-white">
+                <thead>
+                  <tr class="text-left border-b bg-gray-50">
+                    <th class="py-2 px-3 font-medium">ID</th>
+                    <th class="py-2 px-3 font-medium">Name</th>
+                    <th class="py-2 px-3 font-medium">Email</th>
+                    <th class="py-2 px-3 font-medium">Role</th>
+                    <th class="py-2 px-3 font-medium">Profile</th>
+                    <th class="py-2 px-3 font-medium">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template v-for="user in users" :key="user.ID_Utilisateur">
+                    <tr class="border-b">
+                      <td class="py-2 px-3">{{ user.ID_Utilisateur }}</td>
+                      <td class="py-2 px-3">{{ user.Prenom }} {{ user.Nom }}</td>
+                      <td class="py-2 px-3">{{ user.Email }}</td>
+                      <td class="py-2 px-3">
+                        <select
+                          class="border border-gray-300 rounded-md px-2 py-1"
+                          :value="user.Role"
+                          @change="updateRole(user, $event.target.value)"
+                          :disabled="Number(user.ID_Utilisateur) === Number(currentUserId)"
+                        >
+                          <option value="user">user</option>
+                          <option value="admin">admin</option>
+                          <option value="super_admin">super_admin</option>
+                          <option value="disabled">disabled</option>
+                        </select>
+                      </td>
+                      <td class="py-2 px-3">
+                        <button
+                          @click="openUserProfile(user)"
+                          class="px-2 py-1 text-xs rounded-md border border-gray-300 hover:bg-gray-50"
+                        >
+                          {{ Number(selectedUserId) === Number(user.ID_Utilisateur) ? 'Hide profile' : 'View profile' }}
+                        </button>
+                      </td>
+                      <td class="py-2 px-3 text-gray-500 flex items-center gap-2">
+                        <span v-if="Number(user.ID_Utilisateur) === Number(currentUserId)">Current account</span>
+                        <button
+                          v-else
+                          @click="deactivateUser(user)"
+                          class="px-2 py-1 text-xs rounded-md border border-red-300 text-red-600 hover:bg-red-50"
+                        >
+                          Deactivate
+                        </button>
+                      </td>
+                    </tr>
+                    <tr
+                      v-if="Number(selectedUserId) === Number(user.ID_Utilisateur)"
+                      :id="`user-profile-row-${user.ID_Utilisateur}`"
+                      class="bg-gray-50 border-b"
+                    >
+                      <td colspan="6" class="py-3 px-3">
+                        <p v-if="profileLoading" class="text-sm text-gray-500">Loading profile...</p>
+                        <div v-else-if="selectedUserProfile" class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                          <p><strong>Name:</strong> {{ selectedUserProfile.Prenom }} {{ selectedUserProfile.Nom }}</p>
+                          <p><strong>Email:</strong> {{ selectedUserProfile.Email }}</p>
+                          <p><strong>Role:</strong> {{ selectedUserProfile.Role }}</p>
+                          <p><strong>Created At:</strong> {{ selectedUserProfile.created_at || 'N/A' }}</p>
+                          <p><strong>Last Login:</strong> {{ selectedUserProfile.last_login_at || 'Never' }}</p>
+                          <p><strong>Scans Done:</strong> {{ selectedUserProfile.scan_count }}</p>
+                          <p><strong>Last Scan:</strong> {{ selectedUserProfile.last_scan_at || 'N/A' }}</p>
+                        </div>
+                      </td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+          </template>
+        </div>
+
+        <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+          <div class="flex justify-between items-center mb-3">
+            <h2 class="text-lg font-semibold">Queued Scan Jobs</h2>
+            <div class="flex items-center gap-2">
+              <span class="text-xs px-2 py-1 rounded-full border border-amber-300 bg-amber-50 text-amber-700">
+                {{ queuedCount }} pending
+              </span>
+              <button
+                @click="clearPendingJobs"
+                :disabled="clearingQueued"
+                class="px-3 py-1.5 text-sm rounded-md border border-red-300 text-red-600 hover:bg-red-50 disabled:opacity-60"
+              >
+                Clear Pending
+              </button>
+              <button
+                @click="toggleSection('queued')"
+                class="px-3 py-1.5 text-sm rounded-md border border-gray-300 hover:bg-gray-50"
+              >
+                {{ sectionLabel(sections.queued) }}
+              </button>
+            </div>
+          </div>
+
+          <div v-if="sections.queued" class="overflow-x-auto max-h-80 border border-gray-200 rounded-lg">
+            <table class="min-w-full text-sm">
               <thead>
                 <tr class="text-left border-b bg-gray-50">
-                  <th class="py-2 px-3 font-medium">ID</th>
-                  <th class="py-2 px-3 font-medium">Name</th>
-                  <th class="py-2 px-3 font-medium">Email</th>
-                  <th class="py-2 px-3 font-medium">Role</th>
-                  <th class="py-2 px-3 font-medium">Profile</th>
-                  <th class="py-2 px-3 font-medium">Action</th>
+                  <th class="py-2 px-3 font-medium">Source</th>
+                  <th class="py-2 px-3 font-medium">Job ID</th>
+                  <th class="py-2 px-3 font-medium">Subject / File</th>
+                  <th class="py-2 px-3 font-medium">Sender</th>
+                  <th class="py-2 px-3 font-medium">User ID</th>
+                  <th class="py-2 px-3 font-medium">Queued For</th>
+                  <th class="py-2 px-3 font-medium">Status</th>
+                  <th class="py-2 px-3 font-medium">Updated / Received</th>
                 </tr>
               </thead>
               <tbody>
-                <template v-for="user in users" :key="user.ID_Utilisateur">
-                  <tr class="border-b">
-                    <td class="py-2 px-3">{{ user.ID_Utilisateur }}</td>
-                    <td class="py-2 px-3">{{ user.Prenom }} {{ user.Nom }}</td>
-                    <td class="py-2 px-3">{{ user.Email }}</td>
-                    <td class="py-2 px-3">
-                      <select
-                        class="border border-gray-300 rounded-md px-2 py-1"
-                        :value="user.Role"
-                        @change="updateRole(user, $event.target.value)"
-                        :disabled="Number(user.ID_Utilisateur) === Number(currentUserId)"
-                      >
-                        <option value="user">user</option>
-                        <option value="admin">admin</option>
-                        <option value="super_admin">super_admin</option>
-                        <option value="disabled">disabled</option>
-                      </select>
-                    </td>
-                    <td class="py-2 px-3">
-                      <button
-                        @click="openUserProfile(user)"
-                        class="px-2 py-1 text-xs rounded-md border border-gray-300 hover:bg-gray-50"
-                      >
-                        {{ Number(selectedUserId) === Number(user.ID_Utilisateur) ? 'Hide profile' : 'View profile' }}
-                      </button>
-                    </td>
-                    <td class="py-2 px-3 text-gray-500 flex items-center gap-2">
-                      <span v-if="Number(user.ID_Utilisateur) === Number(currentUserId)">Current account</span>
-                      <button
-                        v-else
-                        @click="deactivateUser(user)"
-                        class="px-2 py-1 text-xs rounded-md border border-red-300 text-red-600 hover:bg-red-50"
-                      >
-                        Deactivate
-                      </button>
-                    </td>
-                  </tr>
-                  <tr
-                    v-if="Number(selectedUserId) === Number(user.ID_Utilisateur)"
-                    :id="`user-profile-row-${user.ID_Utilisateur}`"
-                    class="bg-gray-50 border-b"
-                  >
-                    <td colspan="6" class="py-3 px-3">
-                      <p v-if="profileLoading" class="text-sm text-gray-500">Loading profile...</p>
-                      <div v-else-if="selectedUserProfile" class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-                        <p><strong>Name:</strong> {{ selectedUserProfile.Prenom }} {{ selectedUserProfile.Nom }}</p>
-                        <p><strong>Email:</strong> {{ selectedUserProfile.Email }}</p>
-                        <p><strong>Role:</strong> {{ selectedUserProfile.Role }}</p>
-                        <p><strong>Created At:</strong> {{ selectedUserProfile.created_at || 'N/A' }}</p>
-                        <p><strong>Last Login:</strong> {{ selectedUserProfile.last_login_at || 'Never' }}</p>
-                        <p><strong>Scans Done:</strong> {{ selectedUserProfile.scan_count }}</p>
-                        <p><strong>Last Scan:</strong> {{ selectedUserProfile.last_scan_at || 'N/A' }}</p>
-                      </div>
-                    </td>
-                  </tr>
-                </template>
+                <tr v-if="combinedQueuedRows.length === 0">
+                  <td colspan="8" class="py-4 px-3 text-center text-gray-500">No queued jobs at the moment.</td>
+                </tr>
+                <tr v-for="row in combinedQueuedRows" :key="row.key" class="border-b">
+                  <td class="py-2 px-3">
+                    <span
+                      class="text-xs px-2 py-1 rounded-full border"
+                      :class="row.source === 'live' ? 'border-blue-300 bg-blue-50 text-blue-700' : 'border-amber-300 bg-amber-50 text-amber-700'"
+                    >
+                      {{ row.source === 'live' ? 'LIVE' : 'DB' }}
+                    </span>
+                  </td>
+                  <td class="py-2 px-3">{{ row.jobId }}</td>
+                  <td class="py-2 px-3">{{ row.name }}</td>
+                  <td class="py-2 px-3">{{ row.sender }}</td>
+                  <td class="py-2 px-3">{{ row.userId }}</td>
+                  <td class="py-2 px-3">
+                    <span
+                      :class="Number(row.queuedMinutes || 0) >= staleThresholdMinutes
+                        ? 'text-red-600 font-semibold'
+                        : 'text-gray-700'"
+                    >
+                      {{ formatQueuedDuration(row.queuedMinutes) }}
+                    </span>
+                  </td>
+                  <td class="py-2 px-3">{{ row.status }}</td>
+                  <td class="py-2 px-3">{{ row.updatedOrReceived }}</td>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -262,85 +402,16 @@ onMounted(async () => {
 
         <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
           <div class="flex justify-between items-center mb-3">
-            <h2 class="text-lg font-semibold">Queued Scan Jobs</h2>
-            <span class="text-xs px-2 py-1 rounded-full border border-amber-300 bg-amber-50 text-amber-700">
-              {{ queuedScans.length }} pending
-            </span>
+            <h2 class="text-lg font-semibold">All Scans</h2>
+            <button
+              @click="toggleSection('scans')"
+              class="px-3 py-1.5 text-sm rounded-md border border-gray-300 hover:bg-gray-50"
+            >
+              {{ sectionLabel(sections.scans) }}
+            </button>
           </div>
-          <div class="overflow-x-auto max-h-80 border border-gray-200 rounded-lg">
-            <table class="min-w-full text-sm">
-              <thead>
-                <tr class="text-left border-b bg-gray-50">
-                  <th class="py-2 px-3 font-medium">Mail ID</th>
-                  <th class="py-2 px-3 font-medium">Subject</th>
-                  <th class="py-2 px-3 font-medium">Sender</th>
-                  <th class="py-2 px-3 font-medium">User ID</th>
-                  <th class="py-2 px-3 font-medium">Queued For</th>
-                  <th class="py-2 px-3 font-medium">Received</th>
-                  <th class="py-2 px-3 font-medium">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-if="queuedScans.length === 0">
-                  <td colspan="7" class="py-4 px-3 text-center text-gray-500">No queued jobs at the moment.</td>
-                </tr>
-                <tr v-for="scan in queuedScans" :key="`queued-${scan.ID_Mail}`" class="border-b">
-                  <td class="py-2 px-3">{{ scan.ID_Mail }}</td>
-                  <td class="py-2 px-3">{{ scan.Sujet }}</td>
-                  <td class="py-2 px-3">{{ scan.Emetteur || 'N/A' }}</td>
-                  <td class="py-2 px-3">{{ scan.ID_Utilisateur }}</td>
-                  <td class="py-2 px-3">
-                    <span
-                      :class="Number(scan.queued_minutes || 0) >= staleThresholdMinutes
-                        ? 'text-red-600 font-semibold'
-                        : 'text-gray-700'"
-                    >
-                      {{ formatQueuedDuration(scan.queued_minutes) }}
-                    </span>
-                  </td>
-                  <td class="py-2 px-3">{{ scan.Date_Reception }}</td>
-                  <td class="py-2 px-3">
-                    <span class="text-xs px-2 py-1 rounded-full border border-amber-300 bg-amber-50 text-amber-700">
-                      {{ scan.Statut }}
-                    </span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
 
-        <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
-          <h2 class="text-lg font-semibold mb-3">Recent Request Logs</h2>
-          <div class="overflow-x-auto max-h-72 border border-gray-200 rounded-lg">
-            <table class="min-w-full text-sm">
-              <thead>
-                <tr class="text-left border-b bg-gray-50">
-                  <th class="py-2 px-3 font-medium">Time</th>
-                  <th class="py-2 px-3 font-medium">Level</th>
-                  <th class="py-2 px-3 font-medium">Method</th>
-                  <th class="py-2 px-3 font-medium">URL</th>
-                  <th class="py-2 px-3 font-medium">Status</th>
-                  <th class="py-2 px-3 font-medium">Duration</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="(entry, index) in logs" :key="`${entry.timestamp}-${index}`" class="border-b">
-                  <td class="py-2 px-3">{{ entry.timestamp }}</td>
-                  <td class="py-2 px-3">{{ entry.level }}</td>
-                  <td class="py-2 px-3">{{ entry.method }}</td>
-                  <td class="py-2 px-3">{{ entry.url }}</td>
-                  <td class="py-2 px-3">{{ entry.statusCode }}</td>
-                  <td class="py-2 px-3">{{ entry.duration }}ms</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
-          <h2 class="text-lg font-semibold mb-3">All Scans</h2>
-          <div class="overflow-x-auto max-h-96 border border-gray-200 rounded-lg">
+          <div v-if="sections.scans" class="overflow-x-auto max-h-96 border border-gray-200 rounded-lg">
             <table class="min-w-full text-sm">
               <thead>
                 <tr class="text-left border-b bg-gray-50">

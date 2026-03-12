@@ -4,6 +4,22 @@ const requestLogger = require('../middleware/logger');
 const bcrypt = require('bcrypt');
 
 const ALLOWED_ROLES = new Set(['user', 'admin', 'super_admin', 'disabled']);
+const DETECTISH_URL = process.env.DETECTISH_URL || 'http://detectish:6969';
+
+const getLiveScannerJobs = async (limit = 200) => {
+  const url = `${DETECTISH_URL}/analyse/jobs?active_only=true&limit=${encodeURIComponent(limit)}`;
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: { Accept: 'application/json' }
+  });
+
+  if (!response.ok) {
+    throw new Error(`Detectish job API returned ${response.status}`);
+  }
+
+  const payload = await response.json();
+  return Array.isArray(payload.jobs) ? payload.jobs : [];
+};
 
 exports.getUsers = async (req, res) => {
   try {
@@ -154,8 +170,44 @@ exports.getScans = async (req, res) => {
 exports.getQueuedScans = async (req, res) => {
   try {
     const limit = Number(req.query.limit || 100);
-    const queued = await mailModel.getQueuedMails(limit);
-    res.status(200).json(queued);
+    const dbQueued = await mailModel.getQueuedMails(limit);
+
+    let liveJobs = [];
+    try {
+      liveJobs = await getLiveScannerJobs(limit);
+    } catch (error) {
+      liveJobs = [];
+    }
+
+    const liveQueued = liveJobs
+      .filter((job) => ['queued', 'processing'].includes(String(job.status || '').toLowerCase()))
+      .map((job) => ({
+        source: 'live',
+        request_id: job.request_id,
+        filename: job.filename,
+        live_status: job.status,
+        updated_at: job.updated_at,
+        queued_minutes: Math.floor(Number(job.age_seconds || 0) / 60),
+        queued_seconds: Number(job.age_seconds || 0),
+      }));
+
+    res.status(200).json({
+      dbQueued,
+      liveQueued,
+      totalPending: dbQueued.length + liveQueued.length,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.clearQueuedScans = async (req, res) => {
+  try {
+    const result = await mailModel.clearQueuedMails();
+    res.status(200).json({
+      message: 'Pending scans cleared',
+      clearedCount: Number(result?.affectedRows || 0),
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

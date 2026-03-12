@@ -124,6 +124,45 @@ async def get_analysis_status(request_id: str):
     return job
 
 
+@app.get("/analyse/jobs")
+async def list_analysis_jobs(active_only: bool = True, limit: int = 200):
+    """Return scanner job snapshots; by default includes only queued/processing jobs."""
+    safe_limit = max(1, min(int(limit), 1000))
+    now = datetime.utcnow()
+
+    jobs = []
+    for request_id, job in analysis_jobs.items():
+        status = str(job.get("status", "unknown"))
+        if active_only and status not in ("queued", "processing"):
+            continue
+
+        updated_at = job.get("updated_at")
+        age_seconds = None
+        if isinstance(updated_at, str):
+            try:
+                updated_dt = datetime.fromisoformat(updated_at)
+                age_seconds = max(0, int((now - updated_dt).total_seconds()))
+            except ValueError:
+                age_seconds = None
+
+        jobs.append({
+            "request_id": request_id,
+            "status": status,
+            "filename": job.get("filename"),
+            "updated_at": updated_at,
+            "id_mail": job.get("id_mail"),
+            "error": job.get("error"),
+            "age_seconds": age_seconds,
+        })
+
+    jobs.sort(key=lambda item: item.get("updated_at") or "", reverse=True)
+
+    return {
+        "total": len(jobs),
+        "jobs": jobs[:safe_limit],
+    }
+
+
 @app.get("/health")
 def health_check():
     """Health check endpoint."""

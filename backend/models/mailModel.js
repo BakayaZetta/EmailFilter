@@ -50,6 +50,14 @@ const getQueuedMails = async (limit = 100) => {
     );
 };
 
+const clearQueuedMails = async () => {
+    return executeQuery(
+        `UPDATE Mail
+         SET Statut = 'ERROR'
+         WHERE Statut = 'Analyse_pending'`
+    );
+};
+
 /**
  * Récupère un mail par son ID
  * @param {number} id - ID du mail
@@ -303,6 +311,7 @@ const saveEmail = async (emailData) => {
 module.exports = {
     getMails,
     getQueuedMails,
+    clearQueuedMails,
     getMailById,
     getMailsByUserId,
     updateMailStatus,

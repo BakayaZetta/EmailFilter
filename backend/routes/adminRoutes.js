@@ -15,5 +15,6 @@ router.put('/users/:id/deactivate', adminController.deactivateUser);
 router.get('/logs', adminController.getLogs);
 router.get('/scans', adminController.getScans);
 router.get('/scans/queued', adminController.getQueuedScans);
+router.post('/scans/queued/clear', adminController.clearQueuedScans);
 
 module.exports = router;
