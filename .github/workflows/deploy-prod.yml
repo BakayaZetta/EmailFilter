@@ -18,6 +18,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Validate SSH target
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+        run: |
+          set -euo pipefail
+          test -n "$VPS_HOST"
+          test -n "$VPS_USER"
+          test -n "$VPS_SSH_KEY"
+          getent hosts "$VPS_HOST"
+          timeout 5 bash -c "cat < /dev/null > /dev/tcp/$VPS_HOST/22"
+          echo "SSH target secrets and port reachability look valid"
+
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
