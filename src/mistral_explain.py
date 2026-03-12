@@ -3,10 +3,20 @@ import os
 import json
 from dotenv import load_dotenv
 
+Mistral = None
+mistral_import_error = None
+
 try:
-    from mistralai import Mistral
-except Exception:
-    Mistral = None
+    # Newer SDKs may export Mistral at top-level
+    from mistralai import Mistral as _Mistral
+    Mistral = _Mistral
+except Exception as error_top_level:
+    try:
+        # mistralai==2.x exposes Mistral under mistralai.client
+        from mistralai.client import Mistral as _Mistral
+        Mistral = _Mistral
+    except Exception as error_client_pkg:
+        mistral_import_error = f"top-level import failed: {error_top_level}; client import failed: {error_client_pkg}"
 
 # Load environment variables from .env file if available
 # (useful for local development)
@@ -36,7 +46,8 @@ def generate_explanation(email_data):
         model = "mistral-large-latest"
 
         if Mistral is None:
-            return "Mistral explanation is temporarily unavailable because the Mistral SDK could not be loaded in this environment."
+            details = f" Details: {mistral_import_error}" if mistral_import_error else ""
+            return "Mistral explanation is temporarily unavailable because the Mistral SDK could not be loaded in this environment." + details
 
         # Get API key from environment variables
         api_key = os.environ.get("MISTRAL_API_KEY")
