@@ -66,6 +66,8 @@ services:
         condition: service_healthy
     networks:
       - detectish-network
+    ports:
+      - "127.0.0.1:8080:80"
     restart: unless-stopped
     env_file: .env
     healthcheck:
