@@ -34,6 +34,8 @@ Detectish analyzes emails using multiple methods:
 
 The emails are then stored in a MySQL database. The web interface is developed using **Vue.js** for the frontend and **Express.js** for the backend.
 
+The stack can also monitor container health and send degradation or recovery alerts by email.
+
 ## 📸 Detectish: What Does It Look Like?
 
 Here is what the Detectish interface looks like without a connection:
@@ -109,6 +111,13 @@ AI_BENIGN_PERCENTAGE_THRESHOLD=70
 VITE_API_URL=/api
 VITE_BACKEND_URL=http://backend:3000
 VITE_DETECTISH_URL=http://detectish:6969
+
+# Service degradation alerts
+SERVICE_ALERT_EMAIL=ops@example.com
+SERVICE_MONITOR_PROJECT_NAME=emailfilter
+SERVICE_MONITOR_SERVICES=detectish,backend,frontend,clamav,mysql,email-ingestion
+SERVICE_ALERT_POLL_INTERVAL_SECONDS=60
+SERVICE_ALERT_FAILURE_THRESHOLD=2
 ```
 
 ### Installation Steps

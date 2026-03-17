@@ -25,6 +25,7 @@ from email.mime.text import MIMEText
 import time
 import logging
 import os
+import threading
 import requests
 import mysql.connector
 from dotenv import load_dotenv
@@ -54,6 +55,8 @@ DB_NAME           = os.environ.get('DB_NAME', 'EMAILFILTER')
 POLL_INTERVAL     = int(os.environ.get('EMAIL_POLL_INTERVAL', '60'))
 STATUS_TIMEOUT    = int(os.environ.get('STATUS_TIMEOUT_SECONDS', '300'))
 IDLE_TIMEOUT      = int(os.environ.get('EMAIL_IDLE_TIMEOUT_SECONDS', '1740'))
+HEALTHCHECK_FILE  = os.environ.get('HEALTHCHECK_FILE', '/tmp/email-ingestion-heartbeat')
+HEALTHCHECK_INTERVAL_SECONDS = int(os.environ.get('HEALTHCHECK_INTERVAL_SECONDS', '30'))
 
 _LOGO_PATH = os.path.join(os.path.dirname(__file__), 'bakaya_tech.png')
 try:
@@ -67,6 +70,35 @@ VERDICT_LABELS = {
     'QUARANTINE': ('⚠️', 'SUSPICIOUS', 'Potential spam or phishing', '#fffbeb', '#92400e', '#fcd34d'),
     'ERROR':      ('❓', 'INCONCLUSIVE', 'Analysis could not be fully completed', '#f8fafc', '#475569', '#94a3b8'),
 }
+
+_health_lock = threading.Lock()
+_last_progress_timestamp = time.time()
+
+
+def mark_progress():
+    global _last_progress_timestamp
+    with _health_lock:
+        _last_progress_timestamp = time.time()
+
+
+def write_healthcheck_file():
+    with _health_lock:
+        timestamp = _last_progress_timestamp
+
+    with open(HEALTHCHECK_FILE, 'w', encoding='utf-8') as health_file:
+        health_file.write(f"{timestamp:.6f}\n")
+
+
+def start_healthcheck_writer():
+    def _writer():
+        while True:
+            try:
+                write_healthcheck_file()
+            except Exception as exc:
+                logger.warning("Failed to update healthcheck heartbeat: %s", exc)
+            time.sleep(HEALTHCHECK_INTERVAL_SECONDS)
+
+    threading.Thread(target=_writer, name='healthcheck-writer', daemon=True).start()
 
 
 # ── Database helpers ──────────────────────────────────────────────────────────
@@ -467,6 +499,7 @@ def send_reply(to_addr: str, original_subject: str, mail_row, analyses, user_was
 # ── Process one inbox message ─────────────────────────────────────────────────
 
 def process_message(imap, uid: bytes, conn):
+    mark_progress()
     _, data = imap.uid('fetch', uid, '(RFC822)')
     raw_email = data[0][1]
     msg = BytesParser(policy=email.policy.default).parsebytes(raw_email)
@@ -506,6 +539,7 @@ def process_message(imap, uid: bytes, conn):
     send_reply(sender_email, original_subject, mail_row, analyses, user_was_new)
 
     imap.uid('store', uid, '+FLAGS', '\\Seen')
+    mark_progress()
     logger.info("Done — uid=%s id_mail=%s", uid, id_mail)
 
 
@@ -524,6 +558,7 @@ def connect_imap():
 
 
 def process_unseen_messages(imap, conn):
+    mark_progress()
     _, data = imap.uid('search', None, 'UNSEEN')
     uids = data[0].split() if data[0] else []
     logger.info("Found %d unseen message(s)", len(uids))
@@ -537,6 +572,7 @@ def process_unseen_messages(imap, conn):
 
 def wait_for_mail_event(imap) -> bool:
     if not imap_supports_idle(imap):
+        mark_progress()
         time.sleep(POLL_INTERVAL)
         return False
 
@@ -547,6 +583,7 @@ def wait_for_mail_event(imap) -> bool:
     ready = imap.readline().decode(errors='replace').strip()
     if not ready.startswith('+'):
         logger.warning("IMAP IDLE not acknowledged, falling back to interval check: %s", ready)
+        mark_progress()
         time.sleep(POLL_INTERVAL)
         return False
 
@@ -554,18 +591,37 @@ def wait_for_mail_event(imap) -> bool:
     notified = False
     try:
         imap.sock.settimeout(IDLE_TIMEOUT)
-        line = imap.readline().decode(errors='replace').strip()
+        raw_line = imap.readline()
+        if not raw_line:
+            raise OSError('IMAP connection closed during IDLE wait')
+
+        line = raw_line.decode(errors='replace').strip()
         if line:
-            notified = 'EXISTS' in line or 'RECENT' in line
             logger.info("IMAP IDLE wake-up: %s", line)
+            if 'BYE' in line.upper():
+                raise imaplib.IMAP4.abort(f'IMAP server closed IDLE session: {line}')
+            notified = 'EXISTS' in line or 'RECENT' in line
+            mark_progress()
     except socket.timeout:
         logger.info("IMAP IDLE heartbeat timeout reached; re-checking inbox")
+        mark_progress()
     finally:
         try:
-            imap.send(b"DONE\r\n")
+            try:
+                imap.send(b"DONE\r\n")
+            except OSError as exc:
+                raise imaplib.IMAP4.abort(f'Failed to terminate IMAP IDLE cleanly: {exc}') from exc
+
             while True:
-                line = imap.readline().decode(errors='replace').strip()
+                raw_line = imap.readline()
+                if not raw_line:
+                    raise imaplib.IMAP4.abort('IMAP connection closed while leaving IDLE')
+
+                line = raw_line.decode(errors='replace').strip()
+                if 'BYE' in line.upper():
+                    raise imaplib.IMAP4.abort(f'IMAP server closed connection while leaving IDLE: {line}')
                 if line.startswith(tag_text):
+                    mark_progress()
                     break
         finally:
             imap.sock.settimeout(None)
@@ -574,6 +630,8 @@ def wait_for_mail_event(imap) -> bool:
 
 
 def main():
+    mark_progress()
+    start_healthcheck_writer()
     logger.info(
         "Email ingestion service started. Watching %s via IMAP IDLE with %ds fallback heartbeat",
         SCAN_EMAIL, POLL_INTERVAL
@@ -595,6 +653,7 @@ def main():
         try:
             if imap is None:
                 imap = connect_imap()
+                mark_progress()
                 logger.info("Connected to IMAP inbox for %s", SCAN_EMAIL)
 
             process_unseen_messages(imap, conn)
